@@ -115,21 +115,25 @@ El contrato de mensajes JSON es una **propuesta propia del grupo** para un gatew
 
 | Comando | Se habilita cuando | Si no, la app muestra |
 |---|---|---|
-| Iniciar misión | Robot en base, batería de al menos 40 % y suficiente para la ruta, conexión CONECTADO, sin falla ni comando pendiente | El motivo, por ejemplo "Batería insuficiente para la ronda completa (necesita 40 %)" |
+| Iniciar misión | Robot en base, conexión CONECTADO (no degradada), batería suficiente para la ruta elegida (40 % la ronda completa, 35 % la sala técnica, 34 % las salidas de emergencia), sin falla ni comando pendiente | "El robot tiene que estar en la base para iniciar", "Conexión degradada: esperá a que se estabilice para iniciar" o "Batería insuficiente para ronda completa (necesita 40 %)" |
 | Pausar | Robot en ronda | "Solo se puede pausar durante la ronda" |
-| Reanudar | Misión pausada o robot detenido, sin alerta crítica sin reconocer | "Reconocé la alerta antes de reanudar" |
-| Cancelar misión | En ronda, pausada, esperando decisión o detenido | "No hay una misión en curso para cancelar" |
-| Regresar a punto seguro | Cualquier estado fuera de la base, salvo falla | "El robot ya está en la base" o "Falla del robot: requiere técnico" |
-| Detención operativa (software) | Robot en movimiento o esperando decisión; el botón es siempre visible | "El robot no está en movimiento" (el botón se mantiene visible, aclarando que no reemplaza la parada física) |
-| Reconocer alerta | Hay una alerta activa sin reconocer | "No hay alertas pendientes de reconocer" |
+| Reanudar | Misión pausada, robot detenido o esperando una decisión (REQUIERE_DECISIÓN: reanudar lleva la elección del operador), sin alerta crítica sin reconocer | "No hay una misión pausada o detenida para reanudar" o "Reconocé la alerta antes de reanudar" |
+| Cancelar misión | En ronda, pausada, esperando decisión o detenido | "No hay una misión para cancelar" |
+| Regresar a punto seguro | Cualquier estado fuera de la base y que no esté ya regresando, salvo falla | "El robot ya está en la base", "El robot ya está regresando" o "El robot tiene una falla: requiere técnico" |
+| Detención operativa (software) | Robot en movimiento (preparando, en ronda, regresando o esperando decisión) o con el enlace caído; el botón es siempre visible | "El robot no está en movimiento" (el botón se mantiene visible, aclarando que no reemplaza la parada física) |
+| Reconocer alerta | Hay una alerta activa sin reconocer | "No hay alertas sin reconocer" |
+
+Además de la matriz de estado, la política rechaza todo comando de misión con "Sin conexión con el robot: no se pueden enviar órdenes" si el enlace está en SIN_DATOS o peor, y con "Hay una orden pendiente de respuesta" si ya hay una sin resolver. Con el robot en FALLA solo se puede reconocer la alerta ("El robot tiene una falla: requiere técnico").
 
 Cada comando tiene un estado visible: **pendiente** (enviado, esperando), **confirmada** (el gateway lo aceptó), **rechazada** (con motivo legible) o **sin respuesta** (vence a los 4 s). Además, la telemetría puede marcar la **ejecución verificada** (por ejemplo, llega el estado PAUSADA después de "Pausar"). La app distingue enviada, aceptada y verificada.
 
 Reglas de diseño:
 
-- Un solo comando de misión pendiente a la vez. La detención operativa siempre puede enviarse.
+- Un solo comando de misión pendiente a la vez. La detención operativa no queda bloqueada por una orden pendiente.
 - Con conexión SIN_DATOS o peor, todos los comandos se deshabilitan con motivo, salvo la detención operativa, que se envía igual y probablemente termine sin respuesta.
-- Cancelar, regreso y detención usan **mantener presionado 1 s**; iniciar misión muestra un resumen previo de condiciones.
+- **Control exclusivo.** Un solo operador da órdenes a cada robot: se toma el control en Selección (`ControlSession`, compartida por Selección, Supervisión y Control). Sin control propio, las órdenes quedan deshabilitadas con el motivo "Tomá el control del robot en Selección". Quedan fuera de esa regla la detención operativa y reconocer una alerta.
+- **Detener siempre gana.** La detención operativa (software) no depende del control exclusivo: cualquier operador conectado puede enviarla, tenga o no el control, porque frenar al robot nunca debe quedar bloqueado por una regla de permisos.
+- Cancelar, regresar a la base y la detención usan **mantener presionado 1 s** (`HoldToConfirm`); iniciar misión muestra un resumen previo de condiciones.
 - Los comandos llevan un tiempo de vida (`ttlMs`): si llegan vencidos, el robot los descarta.
 
 > **Detención operativa (software).** Es una orden simulada enviada al robot. **No reemplaza la parada física.** Además, una orden enviada no equivale a una orden ejecutada.
@@ -190,16 +194,16 @@ Detalle completo (causa, consecuencia, medida y verificación) en [`docs/riesgos
 | # | Riesgo | Medida principal |
 |---|---|---|
 | RG1 | Colisión o susto a una persona cercana | Velocidad reducida, parada a 2 m de una persona, aviso por voz, ronda después de las 23:30 |
-| RG2 | Orden accidental | Mantener presionado 1 s en las órdenes destructivas, estado PENDIENTE visible, un solo comando de misión pendiente |
+| RG2 | Orden accidental | Mantener presionado 1 s en cancelar, regresar y detener, estado PENDIENTE visible, un solo comando de misión pendiente |
 | RG3 | Pérdida de conexión | Datos marcados como antiguos, comandos deshabilitados con motivo, resincronización al volver; política del robot declarada como supuesto |
 | RG4 | Batería insuficiente para volver | Bloqueo de inicio, cálculo de "alcanza para volver", regreso propuesto a 15 % |
 | RG5 | Privacidad de personas detectadas | Una sola foto por incidente, mostrada para decidir y no guardada; sin video ni grabación continua; registro mínimo, retención de 30 días, historial solo para supervisor |
-| RG6 | Dos operadores con órdenes contradictorias | Sesión exclusiva por robot |
+| RG6 | Dos operadores con órdenes contradictorias | Control exclusivo por robot (`ControlSession`): sin control propio las órdenes quedan deshabilitadas; la detención operativa siempre está disponible |
 | RG7 | Escalones fuera del rango del robot | Relevar escaleras antes de habilitar la ruta |
 
 ## 14. Decisiones y limitaciones
 
-Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6) `messageId` como UUID v4 (D7), coeficientes de batería y celda degradada en el escenario 2 (D8), foto adjunta al incidente (D9) y panel de simulación con los cinco escenarios del plan (D10).
+Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6), `messageId` como UUID v4 (D7), coeficientes de batería y celda degradada en el escenario 2 (D8), foto adjunta al incidente (D9) panel de simulación con los cinco escenarios del plan (D10) y control exclusivo con `ControlSession`, sin que la detención operativa dependa de él (D11).
 
 Limitaciones que importan para evaluar el trabajo:
 
@@ -242,7 +246,7 @@ La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mis
 
 | Pantalla | Qué resuelve | Referencia en el Figma |
 |---|---|---|
-| Selección de robot | Elegir el robot y tomar el control exclusivo (riesgo RG6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
+| Selección de robot | Elegir el robot y tomar el control exclusivo (`ControlSession`, riesgo RG6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
 | Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto | `02-supervision-*.png` |
 | Telemetría | Todas las lecturas del robot y del servicio, con su antigüedad. Con el enlace caído quedan como último dato conocido | `03-telemetria.png` |
 | Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio. "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
