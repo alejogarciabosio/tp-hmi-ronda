@@ -46,7 +46,8 @@ internal class FakeSimulationControl : SimulationControl {
     override fun setBatteryPercent(percent: Int) { calls += "battery:$percent" }
     override fun setTechRoomTempC(celsius: Double) { calls += "temp:$celsius" }
     override fun setExitObstructed(exitId: String, obstructed: Boolean) { calls += "exit:$exitId:$obstructed" }
-    override fun reset() { calls += "reset"; settings.value = SimulationSettings() }
+    override fun setTimeScale(scale: Double) { calls += "scale:$scale"; settings.value = settings.value.copy(timeScale = scale) }
+    override fun reset() { calls += "reset"; settings.value = SimulationSettings(timeScale = settings.value.timeScale) }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
