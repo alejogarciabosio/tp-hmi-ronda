@@ -8,6 +8,7 @@ import ar.edu.uade.ronda.core.model.AlertResolution
 import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandType
+import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.IncidentDecision
 import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.policy.CommandAvailability
@@ -107,18 +108,26 @@ class SupervisionViewModel(
     )
 
     /** Como `ControlViewModel.sendIf`: solo sale si el botón sigue habilitado o se puede reintentar. */
-    private fun sendIf(button: (SupervisionUiState) -> CommandButtonUi, type: CommandType, params: CommandParams = CommandParams()) {
+    private fun sendIf(button: (SupervisionUiState) -> CommandButtonUi, type: CommandType, params: CommandParams = CommandParams()): Boolean {
         val state = button(current()).state
-        if (state == CommandUiState.DISABLED || state == CommandUiState.PENDING) return
+        if (state == CommandUiState.DISABLED || state == CommandUiState.PENDING) return false
         repository.send(type, params)
+        return true
     }
 
-    fun onPause() = sendIf({ it.pause }, CommandType.PAUSE_MISSION)
+    fun onPause() { sendIf({ it.pause }, CommandType.PAUSE_MISSION) }
 
-    fun onResume() = sendIf({ it.resume }, CommandType.RESUME_MISSION)
+    fun onResume() {
+        // Detenido durante una decisión (D15): al reanudar el robot la vuelve a pedir y la hoja tiene
+        // que volver a abrirse aunque el operador la hubiera cerrado antes de detenerlo.
+        val reasking = repository.telemetry.value?.operationalState == OperationalState.DETENIDO &&
+            repository.activeIncident.value != null
+        if (sendIf({ it.resume }, CommandType.RESUME_MISSION) && reasking) setDismissed(null)
+    }
 
-    fun onReturnToBase() =
+    fun onReturnToBase() {
         sendIf({ it.returnToBase }, CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE))
+    }
 
     /** La pantalla lo llama recién cuando se completó el mantener apretado. No depende del control. */
     fun onOperationalStop() {

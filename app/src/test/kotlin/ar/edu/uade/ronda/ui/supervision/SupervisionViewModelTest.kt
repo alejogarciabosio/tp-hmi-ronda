@@ -255,6 +255,30 @@ class SupervisionViewModelTest {
     }
 
     @Test
+    fun `detenido durante una decision se puede reanudar y la hoja vuelve a abrirse`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 4))
+        repo.activeIncident.value = incident()
+        runCurrent()
+        // El operador cierra la hoja y detiene al robot: el repositorio conserva el incidente (D15).
+        vm.onDismissDecision()
+        repo.publish(tele(500, OperationalState.DETENIDO, index = 4))
+        runCurrent()
+        var s = vm.uiState.value
+        assertNull(s.decision, "detenido no hay opciones que elegir: primero se reanuda")
+        assertEquals(CommandUiState.ENABLED, s.resume.state)
+        vm.onResume()
+        assertEquals(CommandType.RESUME_MISSION, repo.sent.single().first)
+        // El robot vuelve a pedir la decisión y la hoja se abre otra vez.
+        repo.publish(tele(1_000, OperationalState.REQUIERE_DECISION, index = 4))
+        runCurrent()
+        s = vm.uiState.value
+        assertNotNull(s.decision)
+        assertFalse(s.decisionDismissed)
+    }
+
+    @Test
     fun `las opciones de decision envian el comando con sus parametros`() = runTest(dispatcher) {
         val vm = viewModel()
         repo.availability.value = enabledAll()

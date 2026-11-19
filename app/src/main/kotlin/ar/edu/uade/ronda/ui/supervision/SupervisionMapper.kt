@@ -92,7 +92,8 @@ internal object SupervisionMapper {
             returnToBase = returnToBase,
             stop = i.availability[CommandType.OPERATIONAL_STOP].let { StopButtonUi(it?.enabled ?: false, it?.reason) },
             lastCommand = lastCommand(i),
-            decision = i.incident?.let { decision(it, i) },
+            // Detenido en medio de una decisión (D15) no hay nada que elegir: primero se reanuda y el robot vuelve a pedirla.
+            decision = i.incident?.takeIf { t?.operationalState != OperationalState.DETENIDO }?.let { decision(it, i) },
             decisionDismissed = dismissed,
             guardNotice = guard,
             lowBatteryReturn = if (t != null && !stale) lowBatteryReturn(t, returnToBase) else null,
@@ -294,14 +295,16 @@ internal object SupervisionMapper {
     // ---- Comandos ----
 
     /**
-     * Con una decisión abierta, reanudar sin elegir opción lo rechaza el robot. Ese motivo solo
+     * Con una decisión abierta, reanudar sin elegir opción lo rechaza el robot. Detenido durante la
+     * decisión (D15) es distinto: reanudar es justamente lo que hace que el robot vuelva a pedirla. Ese motivo solo
      * reemplaza al de la política cuando la orden se podría enviar: si no, se ve la causa real
      * (sin conexión, orden pendiente, sin control).
      */
     fun resumeButton(i: SupervisionInputs, label: String = "Reanudar", kind: CommandKind = CommandKind.SECONDARY): CommandButtonUi {
         val b = button(label, kind, CommandType.RESUME_MISSION, i)
         val av = i.availability[CommandType.RESUME_MISSION]
-        return if (i.incident != null && av?.enabled == true && b.state != CommandUiState.PENDING) {
+        val stopped = i.telemetry?.operationalState == OperationalState.DETENIDO
+        return if (!stopped && i.incident != null && av?.enabled == true && b.state != CommandUiState.PENDING) {
             b.copy(state = CommandUiState.DISABLED, reason = DECISION_PENDING_REASON)
         } else b
     }
