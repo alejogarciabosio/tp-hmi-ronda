@@ -21,7 +21,13 @@ class HistoryDaoTest {
 
     @Before fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(ctx, RondaDatabase::class.java).allowMainThreadQueries().build()
+        // Ejecutores sincrónicos: el refresco de invalidación de Room no queda corriendo en otro hilo
+        // después de cerrar la base, que con Robolectric hacía fallar el test siguiente de vez en cuando.
+        db = Room.inMemoryDatabaseBuilder(ctx, RondaDatabase::class.java)
+            .allowMainThreadQueries()
+            .setQueryExecutor { it.run() }
+            .setTransactionExecutor { it.run() }
+            .build()
         repo = RoomHistoryRepository(db.missionDao(), db.eventDao())
     }
 

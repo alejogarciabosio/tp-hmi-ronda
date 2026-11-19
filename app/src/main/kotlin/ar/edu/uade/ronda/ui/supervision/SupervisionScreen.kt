@@ -85,7 +85,7 @@ fun SupervisionScreen(
 ) {
     Column(modifier.fillMaxSize().background(RondaColors.ink950)) {
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TopRow(onSimulation = { onNavigate(Route.SIMULACION) })

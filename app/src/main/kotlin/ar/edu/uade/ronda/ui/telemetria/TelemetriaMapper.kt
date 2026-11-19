@@ -82,7 +82,7 @@ internal object TelemetriaMapper {
             TelemetryReadoutUi("Conexión", t.latencyMs.toString(), "ms", connLevel, null, age, connText),
             TelemetryReadoutUi(
                 "Batería", pct.toString(), "%", lvl(batteryLevel),
-                if (t.battery.charging) Trend.RISING else Trend.FALLING, age, batteryDetail,
+                if (t.battery.charging) Trend.RISING else null, age, batteryDetail,
             ),
             TelemetryReadoutUi(
                 "Posición", BuildingPlan.floorLabel(t.pose.floor), "", lvl(StatusLevel.OK), null, age,

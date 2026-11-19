@@ -19,6 +19,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import ar.edu.uade.ronda.core.model.BuildingLayout
+import ar.edu.uade.ronda.ui.supervision.BuildingPlan
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,8 +71,11 @@ fun FloorPlanCanvas(ui: FloorPlanUi, modifier: Modifier = Modifier) {
         drawText(measurer, "E", px(0.88f, 0.60f), label)
         drawText(measurer, "O", px(0.12f, 0.60f), label)
         if (ui.floor == 0) {
-            drawRect(RondaColors.bone100, px(0.07f, 0.84f), Size(14.dp.toPx(), 14.dp.toPx()), style = Stroke(wall))
-            drawText(measurer, "BASE", px(0.07f, 0.74f), label)
+            // El cuadro BASE va donde el plano ubica la base, así el robot en base queda encima.
+            val side = 22.dp.toPx()
+            val b = px(BASE_X, BASE_Y)
+            drawRect(RondaColors.bone100, b - Offset(side / 2f, side / 2f), Size(side, side), style = Stroke(wall))
+            drawText(measurer, "BASE", b + Offset(side / 2f + 4.dp.toPx(), -side / 2f), label)
         }
 
         // Ruta punteada entre PC consecutivos del mismo piso.
@@ -112,7 +117,7 @@ fun FloorPlanCanvas(ui: FloorPlanUi, modifier: Modifier = Modifier) {
                 drawPath(chevron, RondaColors.ink950, style = Stroke(1.dp.toPx()))
             }
         }
-        drawText(measurer, ui.floorLabel, Offset(w * 0.06f, h * 0.10f), label.copy(color = RondaColors.bone400))
+        drawText(measurer, ui.floorLabel, Offset(w * 0.06f, h * 0.84f), label.copy(color = RondaColors.bone400))
     }
 }
 
@@ -130,3 +135,6 @@ private fun FloorPlanPreview() = PreviewSurface {
         FloorPlanCanvas(Sample.planPb.copy(robot = null))
     }
 }
+
+private val BASE_X = BuildingPlan.normX(BuildingLayout.base.x)
+private val BASE_Y = BuildingPlan.normY(BuildingLayout.base.y)
