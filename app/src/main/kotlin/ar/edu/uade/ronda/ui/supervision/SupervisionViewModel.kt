@@ -10,6 +10,7 @@ import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.IncidentDecision
 import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.policy.CommandAvailability
+import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.core.repository.RobotRepository
 import ar.edu.uade.ronda.ui.session.ControlSession
 import kotlinx.coroutines.delay
@@ -18,19 +19,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 
 /**
  * Supervisión: deriva un único [SupervisionUiState] del repositorio y traduce los eventos
  * de la pantalla en comandos. Solo conoce la interfaz [RobotRepository].
+ *
+ * La historia de puntos de control llega de afuera ([checkpoints], la arma `CheckpointHistory`
+ * con el alcance de la aplicación): si se armara acá, se perdería al salir de la pantalla.
  */
 class SupervisionViewModel(
     private val repository: RobotRepository,
     private val clock: Clock,
     private val session: ControlSession,
+    private val checkpoints: StateFlow<CheckpointLog>,
     tickMs: Long = 500,
 ) : ViewModel() {
 
@@ -46,9 +49,6 @@ class SupervisionViewModel(
         }
     }
 
-    private val checkpointLog: Flow<CheckpointLog> =
-        repository.telemetry.filterNotNull().scan(CheckpointLog()) { log, t -> log.next(t) }
-
     private val fromRepository = combine(
         repository.telemetry, repository.connection, repository.lastTelemetryAt,
         repository.activeIncident, repository.commands,
@@ -57,7 +57,7 @@ class SupervisionViewModel(
     }
 
     private val local = combine(
-        repository.availability, session.controlledId, checkpointLog, selectedFloor, dismissedIncidentId, ticker,
+        repository.availability, session.controlledId, checkpoints, selectedFloor, dismissedIncidentId, ticker,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         Inputs2(ControlSession.gate(values[0] as Map<CommandType, CommandAvailability>, values[1] as String?),
@@ -78,7 +78,7 @@ class SupervisionViewModel(
                 repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
                 repository.activeIncident.value, repository.commands.value,
                 ControlSession.gate(repository.availability.value, session.controlledId.value),
-                CheckpointLog(), null, null, clock.nowMs(),
+                checkpoints.value, null, null, clock.nowMs(),
             ),
         ),
     )

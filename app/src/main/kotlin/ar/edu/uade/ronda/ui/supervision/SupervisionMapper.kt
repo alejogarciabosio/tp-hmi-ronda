@@ -17,6 +17,8 @@ import ar.edu.uade.ronda.core.model.Severity
 import ar.edu.uade.ronda.core.model.TempTrend
 import ar.edu.uade.ronda.core.policy.BatteryPolicy
 import ar.edu.uade.ronda.core.policy.CommandAvailability
+import ar.edu.uade.ronda.core.repository.CheckpointLog
+import ar.edu.uade.ronda.core.repository.CheckpointOutcome
 import ar.edu.uade.ronda.core.repository.TrackedCommand
 import ar.edu.uade.ronda.ui.model.CheckpointState
 import ar.edu.uade.ronda.ui.model.CheckpointUi
@@ -50,38 +52,6 @@ internal data class SupervisionInputs(
     val dismissedIncidentId: String?,
     val nowMs: Long,
 )
-
-internal data class CheckpointResolution(val state: CheckpointState, val at: Long)
-
-/**
- * Recuerda cómo terminó cada punto de control. El robot informa cuántos verificó, no cuáles:
- * se deduce al ver avanzar el índice y comparar los contadores de la telemetría.
- */
-internal data class CheckpointLog(
-    val missionId: String? = null,
-    val lastIndex: Int = 0,
-    val lastVerified: Int = 0,
-    val lastIssues: Int = 0,
-    val resolved: Map<Int, CheckpointResolution> = emptyMap(),
-) {
-    fun next(t: RobotTelemetry): CheckpointLog {
-        val m = t.mission ?: return CheckpointLog()
-        val verified = t.service.checkpointsVerified
-        val issues = t.service.checkpointsWithIssues
-        if (m.id != missionId) return CheckpointLog(m.id, m.checkpointIndex, verified, issues)
-        val advanced = m.checkpointIndex > lastIndex
-        val finishedLast = t.operationalState == OperationalState.COMPLETADA && lastIndex !in resolved
-        val newResolved = if (advanced || finishedLast) {
-            val state = when {
-                verified <= lastVerified -> CheckpointState.SKIPPED
-                issues > lastIssues -> CheckpointState.WITH_ISSUE
-                else -> CheckpointState.VERIFIED
-            }
-            resolved + (lastIndex to CheckpointResolution(state, t.timestamp))
-        } else resolved
-        return CheckpointLog(m.id, m.checkpointIndex, verified, issues, newResolved)
-    }
-}
 
 internal object SupervisionMapper {
     private val battery = BatteryPolicy()
@@ -184,15 +154,21 @@ internal object SupervisionMapper {
             val n = idx + 1
             val resolved = if (mission != null && log.missionId == mission.id) log.resolved[n] else null
             val state = when {
-                resolved != null -> resolved.state
+                resolved != null -> checkpointState(resolved.outcome)
                 mission != null && mission.checkpointIndex == n && t.operationalState != OperationalState.COMPLETADA -> CheckpointState.CURRENT
                 else -> CheckpointState.PENDING
             }
             CheckpointUi(
-                n, stop.name, state, resolved?.takeIf { it.state != CheckpointState.SKIPPED }?.let { clockFormat.format(Instant.ofEpochMilli(it.at)) },
+                n, stop.name, state, resolved?.takeIf { it.outcome != CheckpointOutcome.SKIPPED }?.let { clockFormat.format(Instant.ofEpochMilli(it.at)) },
                 stop.floor, BuildingPlan.normX(stop.x), BuildingPlan.normY(stop.y),
             )
         }
+    }
+
+    private fun checkpointState(o: CheckpointOutcome) = when (o) {
+        CheckpointOutcome.VERIFIED -> CheckpointState.VERIFIED
+        CheckpointOutcome.WITH_ISSUE -> CheckpointState.WITH_ISSUE
+        CheckpointOutcome.SKIPPED -> CheckpointState.SKIPPED
     }
 
     /** Cuatro filas alrededor del punto actual, como en el Figma. */

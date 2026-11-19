@@ -3,6 +3,7 @@ package ar.edu.uade.ronda.ui.supervision
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.*
+import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import ar.edu.uade.ronda.ui.model.CheckpointState
 import ar.edu.uade.ronda.ui.model.CommandChipStatus
 import ar.edu.uade.ronda.ui.model.CommandUiState
@@ -35,9 +36,18 @@ class SupervisionViewModelTest {
     @BeforeTest fun setUp() { Dispatchers.setMain(dispatcher) }
     @AfterTest fun tearDown() { Dispatchers.resetMain() }
 
+    private var history: CheckpointHistory? = null
+
+    /** Como en AppContainer: una sola historia de puntos de control para todos los ViewModels. */
+    private fun TestScope.history(): CheckpointHistory =
+        history ?: CheckpointHistory(repo.telemetry, backgroundScope).also { history = it }
+
+    private fun TestScope.newViewModel() =
+        SupervisionViewModel(repo, Clock { testScheduler.currentTime }, ControlSession("RONDA-01"), history().log)
+
     /** El reloj es el del planificador de pruebas: avanzar el tiempo virtual avanza la antigüedad. */
     private fun TestScope.viewModel(): SupervisionViewModel {
-        val vm = SupervisionViewModel(repo, Clock { testScheduler.currentTime }, ControlSession("RONDA-01"))
+        val vm = newViewModel()
         vm.uiState.onEach { }.launchIn(backgroundScope)
         runCurrent()
         return vm
@@ -375,10 +385,36 @@ class SupervisionViewModelTest {
     }
 
     @Test
-    fun `al completar la ronda el ultimo punto queda resuelto`() {
-        var log = CheckpointLog()
-        log = log.next(tele(1, index = 8, verified = 7))
-        log = log.next(tele(2, OperationalState.COMPLETADA, index = 8, verified = 8))
-        assertEquals(CheckpointState.VERIFIED, log.resolved.getValue(8).state)
+    fun `la historia de puntos de control sobrevive a salir de la pantalla mas de 5 segundos`() = runTest(dispatcher) {
+        val vm = newViewModel()
+        val sub = vm.uiState.onEach { }.launchIn(backgroundScope)
+        runCurrent()
+        repo.publish(tele(1_000, index = 1, verified = 0)); runCurrent()
+        repo.publish(tele(2_000, index = 2, verified = 1)); runCurrent()
+        sub.cancel()
+        // El operador se va de Supervisión: mientras tanto el robot verifica el PC2.
+        advanceTimeBy(6_000); runCurrent()
+        repo.publish(tele(8_000, index = 3, verified = 2)); runCurrent()
+        vm.uiState.onEach { }.launchIn(backgroundScope)
+        runCurrent()
+        val byIndex = vm.uiState.value.plan.checkpoints.associateBy { it.index }
+        assertEquals(CheckpointState.VERIFIED, byIndex.getValue(1).state)
+        assertNotNull(byIndex.getValue(1).time)
+        assertEquals(CheckpointState.VERIFIED, byIndex.getValue(2).state)
+        assertEquals(CheckpointState.CURRENT, byIndex.getValue(3).state)
+    }
+
+    @Test
+    fun `un viewmodel nuevo muestra los puntos ya verificados de la ronda en curso`() = runTest(dispatcher) {
+        val first = viewModel()
+        repo.publish(tele(1_000, index = 1, verified = 0)); runCurrent()
+        repo.publish(tele(2_000, index = 2, verified = 1)); runCurrent()
+        assertEquals(CheckpointState.VERIFIED, first.uiState.value.plan.checkpoints[0].state)
+        // Al navegar, el ViewModel anterior se destruye y se crea otro.
+        val second = viewModel()
+        val byIndex = second.uiState.value.plan.checkpoints.associateBy { it.index }
+        assertEquals(CheckpointState.VERIFIED, byIndex.getValue(1).state)
+        assertNotNull(byIndex.getValue(1).time)
+        assertEquals(CheckpointState.CURRENT, byIndex.getValue(2).state)
     }
 }

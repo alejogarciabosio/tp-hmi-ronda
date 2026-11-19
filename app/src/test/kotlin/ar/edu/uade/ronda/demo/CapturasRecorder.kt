@@ -43,6 +43,7 @@ import ar.edu.uade.ronda.ui.telemetria.TelemetriaRoute
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import ar.edu.uade.ronda.ui.theme.RondaColors
 import ar.edu.uade.ronda.ui.theme.RondaTheme
+import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -81,6 +82,7 @@ class CapturasRecorder {
     private val clock = Clock { START_MS + scheduler.currentTime }
     private val repoScope = CoroutineScope(dispatcher)
     private val repo = SimulatedRobotRepository.create(repoScope, clock, seed = 42)
+    private val history = CheckpointHistory(repo.telemetry, repoScope)
     private val control = repo.control
     private val session = ControlSession("RONDA-01")
     private lateinit var out: File
@@ -101,7 +103,7 @@ class CapturasRecorder {
 
     @Test fun supervision() {
         startRound(); runUntil("3 puntos de control") { verified() >= 3 }
-        show { SupervisionRoute(SupervisionViewModel(repo, clock, session), {}) }
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("app-02-supervision")
     }
 
@@ -168,7 +170,7 @@ class CapturasRecorder {
 
     @Test fun escenario1() {
         startRound(); runUntil("4 puntos de control") { verified() >= 4 }
-        show { SupervisionRoute(SupervisionViewModel(repo, clock, session), {}) }
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-1-ronda-normal")
     }
 
@@ -177,7 +179,7 @@ class CapturasRecorder {
         startRound()
         runUntil("decisión de batería", maxMs = 900_000) { repo.activeIncident.value != null }
         advance(1_500)
-        show { SupervisionRoute(SupervisionViewModel(repo, clock, session), {}) }
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-2-bateria-baja")
     }
 
@@ -186,7 +188,7 @@ class CapturasRecorder {
         startRound(); runUntil("2 puntos de control") { verified() >= 2 }
         control.cutLinkFor(15_000)
         advance(9_000)
-        show { SupervisionRoute(SupervisionViewModel(repo, clock, session), {}) }
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-3-desconexion")
     }
 
@@ -194,7 +196,7 @@ class CapturasRecorder {
         control.loadScenario(SimScenario.OBSTACLE); advance(1_000)
         startRound(); runUntil("incidente", maxMs = 900_000) { repo.activeIncident.value != null }
         advance(1_500)
-        show { SupervisionRoute(SupervisionViewModel(repo, clock, session), {}) }
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-4-obstaculo")
     }
 
@@ -202,7 +204,7 @@ class CapturasRecorder {
         control.loadScenario(SimScenario.PERSON_IN_RESTRICTED_ZONE); advance(1_000)
         startRound(); runUntil("incidente", maxMs = 900_000) { repo.activeIncident.value != null }
         advance(1_500)
-        show { SupervisionRoute(SupervisionViewModel(repo, clock, session), {}) }
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-5-persona")
     }
 

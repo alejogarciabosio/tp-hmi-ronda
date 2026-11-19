@@ -16,7 +16,7 @@ import ar.edu.uade.ronda.ui.model.CommandChipStatus
 import ar.edu.uade.ronda.ui.model.CommandChipUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.model.CommandUiState
-import ar.edu.uade.ronda.ui.supervision.CheckpointLog
+import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.ui.supervision.SupervisionInputs
 import ar.edu.uade.ronda.ui.supervision.SupervisionMapper
 import java.time.Instant

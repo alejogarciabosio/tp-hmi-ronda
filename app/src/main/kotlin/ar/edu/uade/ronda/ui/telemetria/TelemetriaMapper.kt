@@ -13,7 +13,7 @@ import ar.edu.uade.ronda.ui.model.StatusLevel
 import ar.edu.uade.ronda.ui.model.TelemetryReadoutUi
 import ar.edu.uade.ronda.ui.model.Trend
 import ar.edu.uade.ronda.ui.supervision.BuildingPlan
-import ar.edu.uade.ronda.ui.supervision.CheckpointLog
+import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.ui.supervision.SupervisionInputs
 import ar.edu.uade.ronda.ui.supervision.SupervisionMapper
 

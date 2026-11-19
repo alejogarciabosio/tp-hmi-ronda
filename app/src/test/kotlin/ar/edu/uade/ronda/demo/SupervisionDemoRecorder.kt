@@ -33,6 +33,7 @@ import ar.edu.uade.ronda.core.sim.SimulatedRobotRepository
 import ar.edu.uade.ronda.ui.supervision.SupervisionRoute
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
 import ar.edu.uade.ronda.ui.theme.RondaTheme
+import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,6 +67,7 @@ class SupervisionDemoRecorder {
     private val clock = Clock { START_MS + scheduler.currentTime }
     private val repoScope = CoroutineScope(dispatcher)
     private val repo = SimulatedRobotRepository.create(repoScope, clock, seed = 42)
+    private val history = CheckpointHistory(repo.telemetry, repoScope)
     private val control = repo.control
 
     private lateinit var out: File
@@ -81,7 +83,7 @@ class SupervisionDemoRecorder {
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test fun grabar() {
-        val vm = SupervisionViewModel(repo, clock, ControlSession("RONDA-01"))
+        val vm = SupervisionViewModel(repo, clock, ControlSession("RONDA-01"), history.log)
         rule.mainClock.autoAdvance = false
         rule.setContent {
             RondaTheme {

@@ -11,7 +11,7 @@ import ar.edu.uade.ronda.data.local.MissionRecord
 import ar.edu.uade.ronda.data.local.MissionResult
 import ar.edu.uade.ronda.ui.model.StatusBadgeUi
 import ar.edu.uade.ronda.ui.model.StatusLevel
-import ar.edu.uade.ronda.ui.supervision.CheckpointLog
+import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.ui.supervision.SupervisionInputs
 import ar.edu.uade.ronda.ui.supervision.SupervisionMapper
 import java.time.Instant

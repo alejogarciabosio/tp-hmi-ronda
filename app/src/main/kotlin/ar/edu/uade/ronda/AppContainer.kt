@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.SystemClock
 import ar.edu.uade.ronda.core.control.SimulationControl
+import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import ar.edu.uade.ronda.core.repository.RobotRepository
 import ar.edu.uade.ronda.core.sim.SimulatedRobotRepository
 import ar.edu.uade.ronda.data.local.EventRecorder
@@ -52,13 +53,19 @@ class AppContainer(
     val historyRepository: HistoryRepository =
         RoomHistoryRepository(database.missionDao(), database.eventDao())
 
+    /**
+     * Historia de puntos de control de la ronda en curso. Vive con la aplicación para que
+     * salir de Supervisión o recrear su ViewModel no la borre; se reinicia con cada misión.
+     */
+    val checkpointHistory = CheckpointHistory(robotRepository.telemetry, appScope)
+
     /** Control exclusivo del robot: lo comparten Selección, Supervisión y Control. */
     val controlSession = ControlSession()
 
     val eventRecorder = EventRecorder(historyRepository, appScope)
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
-        initializer { SupervisionViewModel(robotRepository, clock, controlSession) }
+        initializer { SupervisionViewModel(robotRepository, clock, controlSession, checkpointHistory.log) }
         initializer { SeleccionViewModel(robotRepository, controlSession) }
         initializer { TelemetriaViewModel(robotRepository, clock) }
         initializer { MisionesViewModel(robotRepository, clock) }

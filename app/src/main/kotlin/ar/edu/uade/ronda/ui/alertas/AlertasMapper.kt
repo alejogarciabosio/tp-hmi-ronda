@@ -16,7 +16,7 @@ import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.model.CommandUiState
 import ar.edu.uade.ronda.ui.model.StatusLevel
-import ar.edu.uade.ronda.ui.supervision.CheckpointLog
+import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.ui.supervision.SnapshotUi
 import ar.edu.uade.ronda.ui.supervision.SupervisionInputs
 import ar.edu.uade.ronda.ui.supervision.SupervisionMapper

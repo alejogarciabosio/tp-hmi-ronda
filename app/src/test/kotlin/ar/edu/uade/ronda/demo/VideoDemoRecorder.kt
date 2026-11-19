@@ -48,6 +48,7 @@ import ar.edu.uade.ronda.ui.theme.RondaTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -88,6 +89,7 @@ class VideoDemoRecorder {
     private val clock = Clock { START_MS + scheduler.currentTime }
     private val repoScope = CoroutineScope(dispatcher)
     private val repo = SimulatedRobotRepository.create(repoScope, clock, seed = 42)
+    private val checkpointHistory = CheckpointHistory(repo.telemetry, repoScope)
     private val control = repo.control
     private val session = ControlSession()
     private val history = MemoryHistory()
@@ -114,7 +116,7 @@ class VideoDemoRecorder {
     @Test fun grabar() {
         EventRecorder(history, repoScope).start(repo.telemetry.filterNotNull(), repo.events, repo.commands.toOutcomes())
         val factory = viewModelFactory {
-            initializer { SupervisionViewModel(repo, clock, session) }
+            initializer { SupervisionViewModel(repo, clock, session, checkpointHistory.log) }
             initializer { SeleccionViewModel(repo, session) }
             initializer { TelemetriaViewModel(repo, clock) }
             initializer { MisionesViewModel(repo, clock) }

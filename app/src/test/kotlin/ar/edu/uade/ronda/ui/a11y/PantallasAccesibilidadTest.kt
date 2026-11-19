@@ -13,6 +13,8 @@ import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.Severity
 import ar.edu.uade.ronda.core.model.Alert
+import ar.edu.uade.ronda.core.repository.CheckpointLog
+import kotlinx.coroutines.flow.MutableStateFlow
 import ar.edu.uade.ronda.ui.alertas.AlertasRoute
 import ar.edu.uade.ronda.ui.alertas.AlertasViewModel
 import ar.edu.uade.ronda.ui.control.ControlRoute
@@ -91,10 +93,10 @@ class PantallasAccesibilidadTest {
 
     @Test fun seleccion() = check("Selección") { SeleccionRoute(SeleccionViewModel(repo(), ControlSession())) { nav(it) } }
 
-    @Test fun supervision() = check("Supervisión") { SupervisionRoute(SupervisionViewModel(repo(), clock, ControlSession("RONDA-01")), { nav(it) }) }
+    @Test fun supervision() = check("Supervisión") { SupervisionRoute(SupervisionViewModel(repo(), clock, ControlSession("RONDA-01"), MutableStateFlow(CheckpointLog())), { nav(it) }) }
 
     @Test fun supervisionSinDatos() = check("Supervisión sin datos") {
-        SupervisionRoute(SupervisionViewModel(repo(ConnectionState.NO_DATA), clock, ControlSession("RONDA-01")), { nav(it) })
+        SupervisionRoute(SupervisionViewModel(repo(ConnectionState.NO_DATA), clock, ControlSession("RONDA-01"), MutableStateFlow(CheckpointLog())), { nav(it) })
     }
 
     @Test fun telemetria() = check("Telemetría") { TelemetriaRoute(TelemetriaViewModel(repo(), clock), { nav(it) }, {}) }
