@@ -49,7 +49,7 @@ Limitación sobre GO2-5: el Document Center es una aplicación que se renderiza 
 | Voz / parlante | "Funciones de voz"; parlante de 3 W | GO2-1 (voz), GO2-6 (3 W) | GO2-8 no describe parlante. El SDK incluye control de volumen y luz (`vui_client`, GO2-3). La potencia del parlante la da un solo distribuidor. |
 | Evasión de obstáculos | Evasión inteligente, **solo hacia adelante** | GO2-6, GO2-8 | GO2-3 incluye un ejemplo con interruptor del servicio de evasión. |
 | Mapeo | "Mapeo 3D con LiDAR" como función de software | GO2-1 | Mapa persistente por puntos de control y navegación entre pisos: no documentado en las fuentes leídas. |
-| Base de carga | "Compatible con pila de carga": X y EDU | GO2-1 | Acople autónomo mediante API: no confirmado. |
+| Base de carga | "Compatible con pila de carga": X y EDU | GO2-1 | El manual (GO2-8) agrega que la EDU soporta carga en pila y puede planificar la ruta de carga; ver la ampliación del 2026-11-20. Acople autónomo mediante API del SDK: no confirmado. |
 | Temperatura de operación | 5 a 35 °C | GO2-7, GO2-8 | GO2-1 no la lista. |
 | Agua / polvo | No es resistente al agua ni al polvo; sin grado IP | GO2-7, GO2-8 | GO2-1 no lista IP. |
 | Restricciones de uso | Mantener 2 m de obstáculos y multitudes; velocidad reducida en suelos de baja fricción (hielo, baldosa lisa); no enviar comandos de alto nivel y de control remoto a la vez | GO2-8 | |
@@ -69,3 +69,55 @@ Limitación sobre GO2-5: el Document Center es una aplicación que se renderiza 
 | Velocidad de marcha | **No figura** en las fuentes leídas | G1-1, G1-2 | No se afirma ningún valor. |
 | Desarrollo secundario | Solo EDU | G1-1 | G1-2: la versión base no menciona SDK. |
 | Precio | G1 base USD 13,5 mil (oficial, sin impuestos ni flete); USD 17.900 en RobotShop | G1-1, G1-2 | Difieren: el distribuidor vende por pedido especial e incluye su margen. |
+
+## Ampliación del 2026-11-20 (capacidades, batería y antecedentes)
+
+Consulta de todas las páginas: **2026-11-20**. GO2-1 y GO2-8 se volvieron a leer con otras preguntas; lo nuevo se anota abajo.
+
+### Fuentes nuevas
+
+| ID | Tipo | Fuente | URL | Consulta |
+|---|---|---|---|---|
+| GO2-9 | Ficha de distribuidor | OpenElab, batería Go2 BT2-06 de larga duración (15000 mAh / 432 Wh, 28,8 V nominal, 33,6 V de carga, 3,5-9 A) | https://openelab.io/pl/products/unitree-go2-battery-long-batterylife | 2026-11-20 |
+| GO2-10 | Ficha de distribuidor | Robostore, batería Go2 ("8000 mAh, 236,8 Wh (estándar), 15000 mAh 432 Wh (extendida)"; tope de carga 33,6 V) | https://robostore.com/products/unitree-go2-ai-robot-dog-battery | 2026-11-20 |
+| GO2-11 | Ficha de distribuidor | QuakeLogic, datasheet Go2 EDU+ (rango de tensión 28-33,6 V, potencia máxima 3000 W, autonomía 2-4 h, escalón 16 cm, pendiente 40 °) | https://quakelogic.net/datasheets/QL-Unitree-Go2-EDU+.pdf | 2026-11-20 |
+| GO2-12 | Proyecto comunitario | `Kodo-Robotics/go2-autonomous-patrol` (ROS 2, Nav2, YOLO, acople por AprilTag sobre un Go2 EDU) | https://github.com/Kodo-Robotics/go2-autonomous-patrol | 2026-11-20 |
+| GO2-13 | Prensa | Shanghai Daily / City News Service, 28-09-2025: patrullaje urbano con tres Unitree B1 y tres Go2 | https://www.citynewsservice.cn/articles/shanghaidaily/news/shanghai-deploys-robot-dogs-drones-for-city-patrols-dmjb0gen | 2026-11-20 |
+| GO2-14 | Guía de distribuidor | GlobalDroneHQ, guía de cuadrúpedos para patrullaje de seguridad | https://globaldronehq.com/blogs/guides/quadruped-robots-security-patrol | 2026-11-20 |
+| SPOT-1 | Oficial | Boston Dynamics, página de producto Spot (564 Wh, ~90 min, reposo ~180 min, carga ~60 min, 1,6 m/s, escalón 300 mm, -20 a 55 °C, "autonomously charging") | https://bostondynamics.com/products/spot/ | 2026-11-20 |
+| ANY-1 | Oficial | ANYbotics, página de ANYmal (90 min, docking station, 2 km por carga, 0,75 m/s, IP67) | https://www.anybotics.com/anymal | 2026-11-20 |
+| AMR-1 | Configuración de referencia | Open-RMF `rmf_demos`, `tinyRobot_config.yaml` (`recharge_threshold: 0.10`) | https://raw.githubusercontent.com/open-rmf/rmf_demos/main/rmf_demos/config/office/tinyRobot_config.yaml | 2026-11-20 |
+| AMR-2 | Artículo técnico | Automated Warehouse, "Power Management for Autonomous Mobile Robots" (no da porcentajes; solo dice que el robot vigila la carga y decide cuándo ir al cargador) | https://www.automatedwarehouseonline.com/power-management-for-autonomous-mobile-robots/ | 2026-11-20 |
+
+### Datos nuevos del Go2
+
+| Dato | Valor | Fuente | Observación |
+|---|---|---|---|
+| Energía de la batería EDU | 15000 mAh a 28,8 V nominal = **432 Wh** (cuenta: 15 Ah x 28,8 V) | GO2-9, GO2-10 | Unitree (GO2-1) publica solo mAh y un rango de 28-33,6 V; los 432 Wh salen de dos distribuidores. La de 8000 mAh figura como 236,8 Wh (GO2-10), coherente con 28,8 V. GO2-11 lista 8000 y 15000 mAh a la vez para la EDU+. |
+| Potencia máxima | ~3000 W | GO2-1, GO2-11 | Es un pico de trabajo; no sirve para estimar autonomía. |
+| Condición de la autonomía | "2-4 h" medida "sin carga, de pie y caminando de forma alternada"; baja con marcha rápida, cuerpo bajo y carga | GO2-8 | No hay distancia por carga ni consumo en reposo publicados. No se encontró ninguna medición independiente del Go2 EDU. |
+| Batería baja | Luz amarilla: "se agachará automáticamente en 10 minutos"; con una sola barra el manual pide detener y apagar el robot | GO2-8 | |
+| Detección de personas | **No figura** como función nativa del Go2. GO2-1 lista "seguimiento de persona (ISS 2.0)" (opcional en Air, incluido en Pro/X/EDU) junto con "posicionamiento inalámbrico"; el manual (GO2-8) habla de la altura del control remoto respecto de la cabeza del robot | GO2-1, GO2-8 | Se interpreta que ISS 2.0 es un seguimiento apoyado en el control remoto, no un detector visual (interpretación propia). El proyecto GO2-12 detecta personas con un YOLO propio sobre la cámara frontal, lo que indica que hay que desarrollarlo. |
+| Evasión de obstáculos | LiDAR 360 x 96 ° para percepción; el manual dice que la evasión **solo soporta obstáculos hacia adelante** | GO2-1, GO2-8 | Confirma GO2-8. |
+| Carga autónoma | La EDU "soporta carga en pila de carga" y "puede planificar la ruta de carga y realizar carga autónoma" | GO2-8 (manual), GO2-1 (compatibilidad X y EDU) | El texto del manual se leyó mediante la herramienta de lectura, sin ver la página original. El servicio equivalente en el SDK no se pudo leer (GO2-5 no se renderiza). El proyecto GO2-12 resuelve el acople con Nav2 y AprilTag, es decir, por fuera del firmware. |
+| Escalones y escaleras | Escalón máx. ~16 cm (Air ~15 cm); el manual no recomienda subir escaleras de más de 16 cm | GO2-1, GO2-8 | **Ángulo de escalera: no figura en ninguna fuente.** Lo publicado es pendiente máxima: 40 ° (Pro/X/EDU), 30 ° (Air). |
+| Temperatura | 5 a 35 °C | GO2-8 | Sin grado IP. |
+
+### Antecedentes de patrullaje con cuadrúpedos
+
+| Producto | Qué hace | Autonomía y carga | Fuente |
+|---|---|---|---|
+| Spot (Boston Dynamics) | Rutas grabadas y misiones autónomas; carga sola en dock | 564 Wh; ~90 min (reposo ~180 min); 1,6 m/s; -20 a 55 °C | SPOT-1 |
+| ANYmal (ANYbotics) | Inspección industrial; va al dock con batería baja | 90 min; 2 km por carga; 0,75 m/s; IP67 | ANY-1 |
+| Go2 con ROS 2 (proyecto comunitario) | Rutas por waypoints, pausa y reanudación, geocercas, voz por parlante, detección de personas con YOLO, acople por AprilTag | Sin datos de batería; hoja de ruta sin completar, no probado en robot real según el README | GO2-12 |
+| Go2 y B1 en Shanghai | Patrullaje de calles y obras con cámaras infrarroja y ojo de pez, alertas a un centro de control | Sin datos de batería | GO2-13 |
+
+La guía GO2-14 (de un distribuidor, no neutral) coincide con el planteo del caso: el robot cubre la ronda y deja registro, pero "respuesta, criterio e intervención siguen siendo humanos"; advierte que el límite de un patrullaje suele ser la recarga y que la autonomía publicada es "sin carga y sobre terreno plano". No se halló una instalación documentada de un Go2 para ronda nocturna en un edificio de oficinas o educativo; los antecedentes son industriales o urbanos.
+
+### Búsquedas sin resultado
+
+- Página del Document Center sobre carga automática, servicio de evasión y VUI: no legible (GO2-5).
+- Resolución exacta del ángulo de escalera: ninguna fuente.
+- Consumo en reposo del Go2 (W): ninguna fuente.
+- Práctica de reserva de batería en AMR: no hay una norma. Ver `docs/supuestos-simulacion.md`.
+- Un hilo de Open-RMF sobre un factor de seguridad de 1,2 para volver al cargador apareció en una búsqueda, pero la página dio 403 y no se pudo abrir; no se usa.
