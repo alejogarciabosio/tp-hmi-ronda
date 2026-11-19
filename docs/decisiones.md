@@ -46,6 +46,13 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Validación.** `ContractCodec` los trata como string opaco y no valida el formato: el receptor solo necesita igualdad para correlacionar, y ser estricto rompería ante un gateway que use otro formato único. El formato se verifica en tests sobre los ejemplos y el generador.
 - **Consecuencias.** Unicidad global entre emisores y reinicios, sin coordinar contadores. Las evidencias son menos cómodas de leer; se compensa con `type`, `command` y el orden temporal.
 
+## D8. Coeficientes de batería y rediseño del escenario 2
+
+- **Contexto.** El modelo anterior (0,08 %/m, 0,003 %/s detenido, 3,5 % por punto de control, reserva 10 %) daba ~25 min de autonomía caminando contra las 2-4 h declaradas por Unitree. `docs/supuestos-simulacion.md` (§2) recalcula los coeficientes a partir de los 432 Wh y esa autonomía.
+- **Decisión.** Se aplican los valores de ese documento: 0,010 %/m, 0,007 %/s detenido, 1,0 % por punto de control, reserva 15 % y carga en base de 0,015 %/s. El mínimo para la ronda completa sigue en 40 % como regla operativa del grupo (§2.6): `START_MARGIN_PERCENT` pasa de 2 a 17 puntos para que `percentToStart` dé 8 x 1,0 + 15 + 17 = 40. Las rutas cortas quedan en 35 % (sala técnica) y 34 % (salidas).
+- **Escenario 2.** Con estos coeficientes la ronda completa gasta ~5 a 7 % de la batería, así que ya no se llega al umbral con 45 % y consumo doble. Se evaluó que el robot ya estuviera en ronda con poca batería, pero la política de arranque lo impide: sale con el mínimo operativo. Se eligió partir del mínimo (40 %) con una celda degradada inyectada por `drainFactor = 6`: es una falla de batería, un caso real (envejecimiento, frío, celda desbalanceada) y es exactamente el motivo por el que el 40 % deja margen. La alerta a 25 % salta a mitad de ronda (PC 4), el robot propone regresar al 15 % (PC 7) y el operador confirma.
+- **Consecuencias.** El robot estima el regreso con el consumo nominal; con la celda degradada llega a la base con ~2 %, por debajo de la reserva de 15 %. Se deja así porque ilustra el riesgo que la reserva cubre. En las demás ejecuciones el consumo es el realista y la batería casi no se mueve en una demo corta; el factor de aceleración solo se aplica en este escenario y se declara en la presentación.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo R7)
