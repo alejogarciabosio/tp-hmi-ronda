@@ -25,6 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** Maneja el simulador a mano: avanza el tiempo y habla JSON, como lo haría el transporte. */
@@ -220,6 +221,9 @@ class RobotSimulatorTest {
         assertEquals(IncidentType.OBSTACLE, ev.incident.type)
         assertEquals(listOf("WAIT_30S", "SKIP_CHECKPOINT", "RETURN_TO_SAFE_POINT"), ev.incident.options.map { it.id })
         assertTrue(h.events.any { it is RobotEvent.AlertRaised && it.alert.type == AlertType.OBSTACLE })
+        assertEquals("sim-obstaculo", ev.incident.snapshot?.id)
+        assertNull(ev.incident.snapshot?.data)
+        assertEquals("sim-obstaculo", h.events.filterIsInstance<RobotEvent.AlertRaised>().single { it.alert.type == AlertType.OBSTACLE }.alert.snapshot?.id)
 
         val sinDecision = h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId))
         assertEquals(RejectReason.INVALID_STATE, sinDecision.reasonCode)
@@ -274,6 +278,7 @@ class RobotSimulatorTest {
         assertEquals(OperationalState.FALLA, t.operationalState)
         assertEquals(0.0, t.motion.speedMps)
         assertEquals(AlertType.ROBOT_FAULT, t.alerts.last().type)
+        assertEquals("sim-falla", t.alerts.last().snapshot?.id)
         assertEquals(RejectReason.INVALID_STATE, h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId)).reasonCode)
         assertEquals(RejectReason.INVALID_STATE, h.send(CommandType.RETURN_TO_SAFE_POINT).reasonCode)
     }
@@ -310,6 +315,7 @@ class RobotSimulatorTest {
         h.runUntil { it.operationalState == OperationalState.REQUIERE_DECISION }
         val ev = h.events.filterIsInstance<RobotEvent.DecisionRequired>().last()
         assertEquals(IncidentType.BATTERY_RETURN, ev.incident.type)
+        assertNull(ev.incident.snapshot)
         assertTrue(h.last!!.battery.percent <= 15)
     }
 
