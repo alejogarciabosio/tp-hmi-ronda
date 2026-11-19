@@ -73,9 +73,15 @@ val recordingDemo = gradle.startParameter.taskNames.any { it.endsWith("recordDem
 val demoFramesDir = layout.buildDirectory.dir("demo-frames").get().asFile
 val recordingCapturas = gradle.startParameter.taskNames.any { it.endsWith("recordCapturas") }
 val capturasDir = rootProject.file("docs/evidencias/capturas")
+val recordingVideo = gradle.startParameter.taskNames.any { it.endsWith("recordVideo") }
+val videoFramesDir = layout.buildDirectory.dir("video-frames").get().asFile
 
 tasks.withType<Test>().configureEach {
-    if (recordingCapturas) {
+    if (recordingVideo) {
+        filter { includeTestsMatching("*VideoDemoRecorder*") }
+        systemProperty("ronda.video.frames", videoFramesDir.absolutePath)
+        outputs.upToDateWhen { false }
+    } else if (recordingCapturas) {
         filter { includeTestsMatching("*CapturasRecorder*") }
         systemProperty("ronda.capturas.dir", capturasDir.absolutePath)
         outputs.upToDateWhen { false }
@@ -84,7 +90,7 @@ tasks.withType<Test>().configureEach {
         systemProperty("ronda.demo.frames", demoFramesDir.absolutePath)
         outputs.upToDateWhen { false }
     } else {
-        filter { excludeTestsMatching("*SupervisionDemoRecorder*"); excludeTestsMatching("*CapturasRecorder*") }
+        filter { excludeTestsMatching("*SupervisionDemoRecorder*"); excludeTestsMatching("*CapturasRecorder*"); excludeTestsMatching("*VideoDemoRecorder*") }
     }
 }
 
@@ -101,5 +107,11 @@ tasks.register("recordDemo") {
 tasks.register("recordCapturas") {
     group = "verification"
     description = "Genera las capturas de las pantallas y escenarios en docs/evidencias/capturas"
+    dependsOn("testDebugUnitTest")
+}
+
+tasks.register("recordVideo") {
+    group = "verification"
+    description = "Graba los cuadros del video de demostración en app/build/video-frames (los compone docs/evidencias/video/componer_video.py)"
     dependsOn("testDebugUnitTest")
 }
