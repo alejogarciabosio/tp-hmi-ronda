@@ -13,7 +13,7 @@ Plan de la cuenta: **Starter** → estructura de 3 páginas con secciones (`docs
 | | Componentes (`5:3`) | **Hecho.** 14 component sets con variantes, todo ligado a variables. |
 | `02 Pantallas y flujos` (id `1:5`) | Pantallas · Flujo normal · Flujo con falla | **Pendiente.** |
 
-Bloqueo: después de ~20 llamadas de escritura (`use_figma`) el MCP de Figma devolvió *"You've reached the Figma MCP tool call limit on the Starter plan"*. En Starter el cupo cuenta también las escrituras, no solo `get_screenshot`/`get_metadata`. Hay que esperar a que se renueve el cupo o pasar el archivo a un plan Education/Professional para seguir (ver "Cómo retomar").
+Bloqueo: después de ~20 llamadas de escritura (`use_figma`) el MCP de Figma devolvió *"You've reached the Figma MCP tool call limit on the Starter plan"*. En Starter el cupo cuenta también las escrituras, no solo `get_screenshot`/`get_metadata`. Reintento único el 2026-11-19 03:38 UTC (listar páginas con `use_figma`): mismo error de límite. Hay que esperar a que se renueve el cupo o pasar el archivo a un plan Education/Professional para seguir (ver "Cómo retomar").
 
 Detalle pendiente chico en Fundamentos: las 4 columnas de la muestra de grilla (`Grilla 412×917` dentro de `11:262`) quedaron en ámbar opaco; hay que bajarles la opacidad de capa a 14 %. El export `01-sistema-fundamentos.png` las muestra así.
 
