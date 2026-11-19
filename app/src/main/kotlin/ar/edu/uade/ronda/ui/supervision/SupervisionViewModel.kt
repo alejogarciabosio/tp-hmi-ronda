@@ -33,6 +33,7 @@ class SupervisionViewModel(
 
     private val selectedFloor = MutableStateFlow<Int?>(null)
     private val dismissedIncidentId = MutableStateFlow<String?>(null)
+    private val notice = MutableStateFlow<String?>(null)
 
     /** Hace que las antigüedades ("hace 12 s") sigan corriendo aunque no llegue telemetría. */
     private val ticker: Flow<Unit> = flow {
@@ -56,13 +57,13 @@ class SupervisionViewModel(
         repository.availability, checkpointLog, selectedFloor, dismissedIncidentId, ticker,
     ) { availability, log, floor, dismissed, _ -> Inputs2(availability, log, floor, dismissed) }
 
-    val uiState: StateFlow<SupervisionUiState> = combine(fromRepository, local) { a, b ->
+    val uiState: StateFlow<SupervisionUiState> = combine(fromRepository, local, notice) { a, b, message ->
         SupervisionMapper.map(
             SupervisionInputs(
                 a.telemetry, a.connection, a.lastAt, a.incident, a.commands,
                 b.availability, b.log, b.floor, b.dismissed, clock.nowMs(),
             ),
-        )
+        ).copy(notice = message)
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000),
         SupervisionMapper.map(
@@ -89,10 +90,16 @@ class SupervisionViewModel(
 
     fun onDismissDecision() { dismissedIncidentId.value = repository.activeIncident.value?.id }
 
+    fun onNoticeDismissed() { notice.value = null }
+
     fun onReopenDecision() { dismissedIncidentId.value = null }
 
     fun onDecisionOption(optionId: String) {
-        val incident = repository.activeIncident.value ?: return
+        notice.value = null
+        val incident = repository.activeIncident.value ?: run {
+            notice.value = "La decisión ya no está pendiente: el robot no espera una respuesta."
+            return
+        }
         val params = when (optionId) {
             OPTION_WAIT -> CommandParams(decision = IncidentDecision.WAIT_30S)
             OPTION_SKIP -> CommandParams(decision = IncidentDecision.SKIP_CHECKPOINT)
@@ -102,7 +109,11 @@ class SupervisionViewModel(
             OPTION_AUTHORIZED, OPTION_GUARD, OPTION_CONTINUE -> {
                 // La persona detectada llega como alerta: la resolución se envía al reconocerla.
                 val alert = repository.telemetry.value?.unacknowledgedAlerts
-                    ?.firstOrNull { it.type == AlertType.PERSON_DETECTED } ?: return
+                    ?.firstOrNull { it.type == AlertType.PERSON_DETECTED }
+                if (alert == null) {
+                    notice.value = "No se envió la orden: no hay una alerta de persona sin reconocer. Revisá Alertas."
+                    return
+                }
                 CommandParams(
                     alertId = alert.id,
                     resolution = when (optionId) {
@@ -112,7 +123,10 @@ class SupervisionViewModel(
                     },
                 )
             }
-            else -> return
+            else -> {
+                notice.value = "Opción de decisión desconocida: no se envió ninguna orden."
+                return
+            }
         }
         repository.send(commandFor(optionId), params)
     }

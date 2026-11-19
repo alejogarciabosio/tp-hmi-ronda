@@ -239,6 +239,28 @@ class SupervisionViewModelTest {
     }
 
     @Test
+    fun `una opcion de persona sin alerta de persona avisa en vez de callar`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 5))
+        repo.activeIncident.value = incident(IncidentType.PERSON_IN_RESTRICTED_ZONE)
+        runCurrent()
+        vm.onDecisionOption("SEND_GUARD"); runCurrent()
+        assertTrue(repo.sent.isEmpty())
+        assertTrue(vm.uiState.value.notice!!.contains("alerta de persona"))
+        vm.onNoticeDismissed(); runCurrent()
+        assertNull(vm.uiState.value.notice)
+    }
+
+    @Test
+    fun `una decision que ya no esta pendiente avisa`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onDecisionOption("WAIT_30S"); runCurrent()
+        assertTrue(repo.sent.isEmpty())
+        assertNotNull(vm.uiState.value.notice)
+    }
+
+    @Test
     fun `cerrar la hoja la oculta hasta reabrirla y un incidente nuevo vuelve a abrirla`() = runTest(dispatcher) {
         val vm = viewModel()
         repo.availability.value = enabledAll()

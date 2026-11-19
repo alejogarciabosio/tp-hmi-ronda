@@ -63,6 +63,7 @@ fun SupervisionRoute(viewModel: SupervisionViewModel, onNavigate: (Route) -> Uni
         onDecisionOption = viewModel::onDecisionOption,
         onDismissDecision = viewModel::onDismissDecision,
         onReopenDecision = viewModel::onReopenDecision,
+        onNoticeDismissed = viewModel::onNoticeDismissed,
         modifier = modifier,
     )
 }
@@ -79,6 +80,7 @@ fun SupervisionScreen(
     onDecisionOption: (String) -> Unit,
     onDismissDecision: () -> Unit,
     onReopenDecision: () -> Unit,
+    onNoticeDismissed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize().background(RondaColors.ink950)) {
@@ -111,7 +113,7 @@ fun SupervisionScreen(
                     state.readouts.forEach { r ->
                         TelemetryReadout(
                             r,
-                            Modifier.clickable(onClickLabel = "Abrir telemetría") { onNavigate(Route.TELEMETRIA) },
+                            Modifier.clickable(role = Role.Button, onClickLabel = "Abrir telemetría") { onNavigate(Route.TELEMETRIA) },
                         )
                     }
                 }
@@ -126,6 +128,15 @@ fun SupervisionScreen(
             }
 
             Section("ÓRDENES") {
+                state.notice?.let { msg ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StateSymbol(StatusLevel.WARNING, size = 18.dp)
+                            Text(msg, style = RondaType.textoCuerpo, color = RondaColors.bone100, modifier = Modifier.weight(1f))
+                        }
+                        CommandButton(CommandButtonUi("Entendido", CommandKind.SECONDARY), onNoticeDismissed)
+                    }
+                }
                 state.lastCommand?.let { LastCommandRow(it) }
                 if (state.decision != null && state.decisionDismissed) {
                     CommandButton(CommandButtonUi("Decidir cómo seguir", CommandKind.PRIMARY), onReopenDecision)

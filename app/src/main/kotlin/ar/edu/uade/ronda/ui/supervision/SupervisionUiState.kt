@@ -48,4 +48,6 @@ data class SupervisionUiState(
     val decision: DecisionUi? = null,
     /** Hay una decisión pendiente cuya hoja se cerró: se ofrece un botón para reabrirla. */
     val decisionDismissed: Boolean = false,
+    /** Aviso legible cuando una acción no se pudo enviar (p. ej. falta la alerta a reconocer). */
+    val notice: String? = null,
 )
