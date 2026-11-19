@@ -13,6 +13,10 @@ import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.RobotEvent
 import ar.edu.uade.ronda.core.model.Severity
 import ar.edu.uade.ronda.core.model.Snapshot
+import ar.edu.uade.ronda.core.model.Command
+import ar.edu.uade.ronda.core.model.CommandParams
+import ar.edu.uade.ronda.core.model.CommandType
+import ar.edu.uade.ronda.core.model.IncidentDecision
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -43,6 +47,23 @@ class EventRecorderTest {
         recorder.recordCommand(CommandOutcome(c, CommandStatus.CONFIRMED, 1200))
         assertEquals(1, repo.events.size)
         assertEquals("CONFIRMED", repo.events.getValue("c1").commandStatus)
+    }
+
+    @Test fun laDecisionConservaElPuntoDondeSeTomoAunqueElRobotYaAvanzo() = runTest {
+        val repo = FakeHistory()
+        val recorder = EventRecorder(repo, TestScope(testScheduler))
+        recorder.recordTelemetry(telemetry(1, OperationalState.REQUIERE_DECISION, progress().copy(checkpointIndex = 4)))
+        val skip = Command(
+            "c9", "RONDA-01", 1000, "garita", CommandType.RESUME_MISSION,
+            CommandParams(decision = IncidentDecision.SKIP_CHECKPOINT),
+        )
+        recorder.recordCommand(CommandOutcome(skip, CommandStatus.PENDING, 1000))
+        recorder.recordTelemetry(telemetry(2, OperationalState.EN_RONDA, progress().copy(checkpointIndex = 5)))
+        recorder.recordCommand(CommandOutcome(skip, CommandStatus.VERIFIED, 1500))
+        val fila = repo.events.getValue("c9")
+        assertEquals("VERIFIED", fila.commandStatus)
+        assertEquals("SKIP_CHECKPOINT", fila.commandOption)
+        assertEquals(4, fila.checkpointIndex)
     }
 
     @Test fun eventoTomaLaMisionAbierta() = runTest {

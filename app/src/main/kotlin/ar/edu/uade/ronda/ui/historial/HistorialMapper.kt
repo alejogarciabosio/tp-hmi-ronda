@@ -94,7 +94,8 @@ internal object HistorialMapper {
                     "NO_RESPONSE" -> "sin respuesta"
                     else -> e.commandStatus?.lowercase() ?: ""
                 }
-                "Orden: $name · $status"
+                val option = e.commandOption?.let { Etiquetas.opcion(it, e.checkpointIndex) }
+                listOfNotNull("Orden: $name", option, status.ifEmpty { null }).joinToString(" · ")
             }
             else -> e.message
         }

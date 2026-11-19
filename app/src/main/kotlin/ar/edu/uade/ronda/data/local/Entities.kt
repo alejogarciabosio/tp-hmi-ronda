@@ -25,6 +25,8 @@ enum class EventKind { ALERTA, INCIDENTE, COMANDO }
 /**
  * Fila del registro. `sourceId` es el messageId del evento o del comando: un comando
  * se actualiza en el lugar cuando cambia su estado, así que hay una fila por orden.
+ * `commandOption` es la decisión del operador en crudo (`SEND_GUARD`, `SKIP_CHECKPOINT`...)
+ * y `checkpointIndex` el punto de la ruta donde la tomó; la UI los traduce al mostrarlos.
  * Privacidad: no se guardan imágenes ni datos de personas, solo el texto del evento.
  */
 @Entity(
@@ -41,4 +43,6 @@ data class EventRecord(
     val missionId: String? = null,
     val commandType: String? = null,
     val commandStatus: String? = null,
+    val commandOption: String? = null,
+    val checkpointIndex: Int? = null,
 )

@@ -17,6 +17,9 @@ class EventRecorder(
 ) {
     private val tracker = MissionTracker()
 
+    /** Punto donde se dio cada orden: las actualizaciones de estado llegan con el robot ya más adelante. */
+    private val checkpointAtSend = HashMap<String, Int?>()
+
     fun start(
         telemetry: Flow<RobotTelemetry>,
         events: Flow<RobotEvent>,
@@ -36,6 +39,14 @@ class EventRecorder(
     }
 
     suspend fun recordCommand(o: CommandOutcome) {
-        history.saveEvent(HistoryMapper.toRecord(o, tracker.currentMissionId))
+        val checkpoint = synchronized(checkpointAtSend) {
+            if (checkpointAtSend.size > MAX_REMEMBERED) checkpointAtSend.clear()
+            checkpointAtSend.getOrPut(o.command.messageId) { tracker.currentCheckpointIndex }
+        }
+        history.saveEvent(HistoryMapper.toRecord(o, tracker.currentMissionId, checkpoint))
+    }
+
+    private companion object {
+        const val MAX_REMEMBERED = 200
     }
 }

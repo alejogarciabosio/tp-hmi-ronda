@@ -25,6 +25,7 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Contexto.** El historial de misiones y eventos debe sobrevivir al cierre de la app y funcionar sin servidor.
 - **Decisión.** Room con `MissionRecord` y `EventRecord`, detrás de `HistoryRepository`.
 - **Consecuencias.** Persistencia local estándar de Android. La entidad queda en `:app`; `:core` no la conoce.
+- **Versión 2 del esquema.** Suma `commandOption` y `checkpointIndex` a `events` para registrar la decisión del operador (D12). Se usa `fallbackToDestructiveMigration`: es un prototipo sin datos reales que preservar y la retención es de 30 días; en producción correspondería una migración.
 
 ## D5. Progreso por puntos de control, no por porcentaje
 
@@ -78,7 +79,7 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 
 - **Contexto.** En el escenario 5, "Enviar vigilante" dejaba el incidente abierto: el robot seguía en `REQUIERE_DECISION` y la hoja de decisión volvía a ofrecer las mismas tres opciones, como si el operador no hubiera decidido. Eso invita a decidir dos veces y no dice qué está haciendo el robot.
 - **Decisión.** Cualquier respuesta aceptada a un incidente lo cierra: el robot reconoce la alerta asociada, deja `REQUIERE_DECISION` y no vuelve a pedir lo mismo. Ante una persona en zona restringida, `AUTHORIZED_PERSON` la registra como autorizada y la ronda sigue; `CONTINUE_ROUND` sigue y marca el punto con observación; `SEND_GUARD` mantiene la distancia y deja al robot `PAUSADA` en el punto (con observación) hasta que el operador reanude. Ante un obstáculo, esperar, saltar y regresar ya cerraban la decisión. La tabla completa está en `docs/contrato/README.md`.
-- **En la app.** Al elegir una opción, la hoja se cierra en el acto; si el robot rechaza la orden, el incidente sigue abierto y "Decidir cómo seguir" la reabre. Mientras el robot espera tras `SEND_GUARD`, Supervisión muestra arriba "Vigilante en camino · el robot espera tu orden para seguir" y la franja de estado pide reanudar.
+- **En la app.** Al elegir una opción, la hoja se cierra en el acto; si el robot rechaza la orden, el incidente sigue abierto y "Decidir cómo seguir" la reabre. Mientras el robot espera tras `SEND_GUARD`, Supervisión muestra arriba "Vigilante en camino · el robot espera tu orden para seguir" y la franja de estado pide reanudar. El historial guarda la opción elegida junto a la orden ("Orden: Reconocer alerta · Enviar vigilante · confirmada", "Orden: Reanudar · Saltar el PC4 · verificada"): la base guarda el valor crudo (`commandOption`, `checkpointIndex`) y la pantalla lo traduce con `Etiquetas`, así la capa de datos no depende de la UI. Sin imágenes ni datos de la persona.
 - **Consecuencias.** La espera del vigilante es una pausa común: se reanuda, se regresa o se cancela con las mismas órdenes de siempre, y no hace falta un estado nuevo en el contrato. El robot no sabe cuándo llegó el vigilante; lo decide el operador.
 
 ## Limitaciones

@@ -12,6 +12,7 @@ import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.policy.CommandAvailability
 import ar.edu.uade.ronda.core.repository.TrackedCommand
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
+import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.ui.model.CommandChipStatus
 import ar.edu.uade.ronda.ui.model.CommandChipUi
 import ar.edu.uade.ronda.ui.model.CommandKind
@@ -114,6 +115,7 @@ internal object ControlMapper {
             c.command.type == CommandType.RESUME_MISSION && p.decision == IncidentDecision.SKIP_CHECKPOINT -> "Saltar PC actual"
             c.command.type == CommandType.RESUME_MISSION && p.decision == IncidentDecision.WAIT_30S -> "Esperar 30 s"
             c.command.type == CommandType.START_MISSION && p.routeId != null -> "Iniciar: ${p.routeId?.displayName}"
+            p.resolution != null -> "${SupervisionMapper.commandName(c.command.type)} · ${Etiquetas.opcion(p.resolution!!.name)}"
             else -> SupervisionMapper.commandName(c.command.type)
         }
         val detail = when (c.status) {

@@ -35,6 +35,31 @@ class HistoryMapperTest {
         assertEquals("c1", r.sourceId)
     }
 
+    @Test fun laOrdenGuardaLaDecisionDelOperadorEnCrudo() {
+        val c = Command(
+            "c2", "RONDA-01", 1000, "garita", CommandType.ACKNOWLEDGE_ALERT,
+            CommandParams(alertId = "a7", resolution = AlertResolution.SEND_GUARD),
+        )
+        val r = HistoryMapper.toRecord(CommandOutcome(c, CommandStatus.CONFIRMED, 1100), "m1", checkpointIndex = 5)
+        assertEquals("SEND_GUARD", r.commandOption)
+        assertEquals(5, r.checkpointIndex)
+    }
+
+    @Test fun laOrdenDeSaltarGuardaLaDecisionYElPunto() {
+        val c = Command(
+            "c3", "RONDA-01", 1000, "garita", CommandType.RESUME_MISSION,
+            CommandParams(decision = IncidentDecision.SKIP_CHECKPOINT),
+        )
+        val r = HistoryMapper.toRecord(CommandOutcome(c, CommandStatus.VERIFIED, 1100), "m1", checkpointIndex = 4)
+        assertEquals("SKIP_CHECKPOINT", r.commandOption)
+        assertEquals(4, r.checkpointIndex)
+    }
+
+    @Test fun unaOrdenSinDecisionNoGuardaOpcion() {
+        val r = HistoryMapper.toRecord(CommandOutcome(command("c4", CommandType.PAUSE_MISSION), CommandStatus.VERIFIED, 1100))
+        assertNull(r.commandOption)
+    }
+
     @Test fun trackerAbreActualizaYCierraMision() {
         val t = MissionTracker()
         assertNull(t.onTelemetry(telemetry(1, OperationalState.EN_BASE)))

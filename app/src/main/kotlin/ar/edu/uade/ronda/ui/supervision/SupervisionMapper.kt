@@ -317,7 +317,9 @@ internal object SupervisionMapper {
             CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
             else -> ageText(i.nowMs - c.sentAt)
         }
-        return LastCommandUi(commandName(c.command.type), CommandChipUi(chip), detail)
+        val option = c.command.params.resolution?.let { Etiquetas.opcion(it.name) }
+        val label = listOfNotNull(commandName(c.command.type), option).joinToString(" · ")
+        return LastCommandUi(label, CommandChipUi(chip), detail)
     }
 
     // ---- Decisión ----

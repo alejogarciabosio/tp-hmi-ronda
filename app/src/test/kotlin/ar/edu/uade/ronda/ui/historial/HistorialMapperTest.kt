@@ -19,6 +19,14 @@ class HistorialMapperTest {
         EventRecord("e1", now - HOUR, "ALERTA", "PERSON_DETECTED", "CRITICAL", "Persona en zona restringida"),
         EventRecord("e2", now - 2 * HOUR, "INCIDENTE", "OBSTACLE", "WARNING", "Obstáculo en PC4"),
         EventRecord("e3", now - 3 * HOUR, "COMANDO", "PAUSE_MISSION", "INFO", "PAUSE_MISSION", commandType = "PAUSE_MISSION", commandStatus = "VERIFIED"),
+        EventRecord(
+            "e4", now - 4 * HOUR, "COMANDO", "ACKNOWLEDGE_ALERT", "INFO", "ACKNOWLEDGE_ALERT",
+            commandType = "ACKNOWLEDGE_ALERT", commandStatus = "CONFIRMED", commandOption = "SEND_GUARD", checkpointIndex = 5,
+        ),
+        EventRecord(
+            "e5", now - 5 * HOUR, "COMANDO", "RESUME_MISSION", "INFO", "RESUME_MISSION",
+            commandType = "RESUME_MISSION", commandStatus = "VERIFIED", commandOption = "SKIP_CHECKPOINT", checkpointIndex = 4,
+        ),
     )
 
     private fun map(view: HistoryView = HistoryView.TODOS, sev: SeverityFilter = SeverityFilter.TODAS, period: PeriodFilter = PeriodFilter.SIETE) =
@@ -49,6 +57,12 @@ class HistorialMapperTest {
     @Test fun lasOrdenesSeLeenConSuEstado() {
         val e3 = map().eventGroups.flatMap { it.events }.first { it.id == "e3" }
         assertEquals("Orden: Pausar · verificada", e3.text)
+    }
+
+    @Test fun lasOrdenesDeDecisionDicenQueEligioElOperador() {
+        val rows = map().eventGroups.flatMap { it.events }.associateBy { it.id }
+        assertEquals("Orden: Reconocer alerta · Enviar vigilante · confirmada", rows.getValue("e4").text)
+        assertEquals("Orden: Reanudar · Saltar el PC4 · verificada", rows.getValue("e5").text)
     }
 
     private companion object {
