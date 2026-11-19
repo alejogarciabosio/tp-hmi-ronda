@@ -1,0 +1,48 @@
+package ar.edu.uade.ronda.data.local
+
+import ar.edu.uade.ronda.core.model.CommandStatus
+import ar.edu.uade.ronda.core.model.OperationalState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class EventRecorderTest {
+    @Test fun consumeFlujosYPersiste() = runTest {
+        val repo = FakeHistory()
+        val recorder = EventRecorder(repo, TestScope(testScheduler))
+        recorder.recordTelemetry(telemetry(1, OperationalState.EN_RONDA, progress()))
+        recorder.start(
+            telemetry = flowOf(telemetry(5, OperationalState.COMPLETADA, progress(), verified = 8)),
+            events = flowOf(alertEvent()),
+            commands = flowOf(command("c1").let {
+                CommandOutcome(it, CommandStatus.PENDING, 1000)
+            }),
+        )
+        advanceUntilIdle()
+        assertEquals("COMPLETADA", repo.missions.getValue("m1").result)
+        assertEquals(2, repo.events.size)
+    }
+
+    @Test fun elEstadoDelComandoActualizaLaMismaFila() = runTest {
+        val repo = FakeHistory()
+        val recorder = EventRecorder(repo, TestScope(testScheduler))
+        val c = command("c1")
+        recorder.recordCommand(CommandOutcome(c, CommandStatus.PENDING, 1000))
+        recorder.recordCommand(CommandOutcome(c, CommandStatus.CONFIRMED, 1200))
+        assertEquals(1, repo.events.size)
+        assertEquals("CONFIRMED", repo.events.getValue("c1").commandStatus)
+    }
+
+    @Test fun eventoTomaLaMisionAbierta() = runTest {
+        val repo = FakeHistory()
+        val recorder = EventRecorder(repo, TestScope(testScheduler))
+        recorder.recordTelemetry(telemetry(1, OperationalState.EN_RONDA, progress("m9")))
+        recorder.recordEvent(alertEvent())
+        assertEquals("m9", repo.events.getValue("e1").missionId)
+    }
+}
