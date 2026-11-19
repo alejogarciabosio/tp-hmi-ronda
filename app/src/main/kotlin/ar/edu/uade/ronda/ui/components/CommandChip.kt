@@ -33,7 +33,9 @@ private fun CommandChipStatus.look() = when (this) {
 /** Estado de un comando enviado. "Enviada" no es "ejecutada": lo dice el texto. */
 @Composable
 fun CommandChip(ui: CommandChipUi, modifier: Modifier = Modifier) {
-    val look = ui.status.look()
+    val look = if (ui.withoutAck && ui.status == CommandChipStatus.VERIFIED) {
+        ChipLook("VERIFICADA · SIN CONFIRMACIÓN", StatusLevel.OK, "Verificada por telemetría (sin confirmación)")
+    } else ui.status.look()
     Row(
         modifier
             .semantics(mergeDescendants = true) { contentDescription = look.spoken }
@@ -52,5 +54,6 @@ fun CommandChip(ui: CommandChipUi, modifier: Modifier = Modifier) {
 private fun CommandChipPreview() = PreviewSurface {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CommandChipStatus.entries.forEach { CommandChip(CommandChipUi(it)) }
+        CommandChip(CommandChipUi(CommandChipStatus.VERIFIED, withoutAck = true))
     }
 }

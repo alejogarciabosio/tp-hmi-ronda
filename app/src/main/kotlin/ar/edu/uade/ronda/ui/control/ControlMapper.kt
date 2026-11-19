@@ -127,7 +127,7 @@ internal object ControlMapper {
             c.verifiedWithoutAck -> SupervisionMapper.VERIFIED_WITHOUT_ACK
             else -> null
         }
-        return CommandLogRowUi(c.id, time(c.sentAt), label, CommandChipUi(chip), detail)
+        return CommandLogRowUi(c.id, time(c.sentAt), label, CommandChipUi(chip, c.verifiedWithoutAck), detail)
     }
 
     private fun rejection(c: TrackedCommand): String = c.reasonText ?: when (c.reasonCode) {

@@ -34,7 +34,8 @@ data class CommandButtonUi(
 
 enum class CommandChipStatus { PENDING, CONFIRMED, VERIFIED, REJECTED, NO_RESPONSE }
 
-data class CommandChipUi(val status: CommandChipStatus)
+/** [withoutAck]: verificada por telemetría sin que llegara la confirmación del robot. */
+data class CommandChipUi(val status: CommandChipStatus, val withoutAck: Boolean = false)
 
 enum class CheckpointState { PENDING, CURRENT, VERIFIED, WITH_ISSUE, SKIPPED }
 

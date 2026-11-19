@@ -154,6 +154,7 @@ class ControlViewModelTest {
         val c = tracked(CommandType.PAUSE_MISSION, CommandStatus.VERIFIED, 1_000).copy(verifiedWithoutAck = true)
         val s = ControlMapper.map(inputs(listOf(c)))
         assertEquals("Verificada por telemetría (sin confirmación)", s.log.single().detail)
+        assertTrue(s.log.single().chip.withoutAck)
         val sup = ar.edu.uade.ronda.ui.supervision.SupervisionMapper.map(
             ar.edu.uade.ronda.ui.supervision.SupervisionInputs(
                 tele(1_000), ConnectionState.CONNECTED, 1_000, null, listOf(c), enabledAll(),
