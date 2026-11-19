@@ -30,7 +30,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-private class FakeSimulationControl : SimulationControl {
+internal class FakeSimulationControl : SimulationControl {
     override val settings = MutableStateFlow(SimulationSettings())
     val calls = mutableListOf<String>()
 

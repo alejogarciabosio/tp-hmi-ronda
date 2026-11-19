@@ -62,7 +62,7 @@ fun CommandButton(ui: CommandButtonUi, onClick: () -> Unit, modifier: Modifier =
     val desc = buildString {
         append(ui.label)
         if (disabled) append(". No disponible")
-        chip?.let { append(". Estado de la orden: ${it.name.lowercase().replace('_', ' ')}") }
+        chip?.let { append(". Estado de la orden: ${it.spokenName()}") }
         ui.reason?.let { append(". $it") }
     }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -105,4 +105,13 @@ private fun CommandButtonPreview() = PreviewSurface {
         CommandButton(CommandButtonUi("Iniciar ronda", CommandKind.PRIMARY, CommandUiState.REJECTED, "Rechazada: batería insuficiente"), {})
         CommandButton(CommandButtonUi("Regresar a base", CommandKind.PRIMARY, CommandUiState.NO_RESPONSE, "Sin respuesta: no se sabe si se ejecutó"), {})
     }
+}
+
+/** Lo que lee el lector de pantalla: en castellano, no el nombre del enum. */
+internal fun CommandChipStatus.spokenName(): String = when (this) {
+    CommandChipStatus.PENDING -> "pendiente"
+    CommandChipStatus.CONFIRMED -> "confirmada"
+    CommandChipStatus.VERIFIED -> "verificada"
+    CommandChipStatus.REJECTED -> "rechazada"
+    CommandChipStatus.NO_RESPONSE -> "sin respuesta"
 }

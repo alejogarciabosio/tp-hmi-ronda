@@ -1,6 +1,9 @@
 package ar.edu.uade.ronda.ui.seleccion
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +29,7 @@ import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.PreviewSurface
 import ar.edu.uade.ronda.ui.components.StatusBadge
 import ar.edu.uade.ronda.ui.navigation.Route
+import ar.edu.uade.ronda.ui.theme.MinTouchTarget
 import ar.edu.uade.ronda.ui.theme.RondaColors
 import ar.edu.uade.ronda.ui.theme.RondaShapes
 import ar.edu.uade.ronda.ui.theme.RondaType
@@ -46,7 +51,15 @@ fun SeleccionScreen(state: SeleccionUiState, onTakeControl: (String) -> Unit, on
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Selección de robot", style = RondaType.pantallaTitulo, color = RondaColors.bone100,
                 modifier = Modifier.weight(1f).semantics { heading() })
-            Text("Simulación", style = RondaType.rotuloChico, color = RondaColors.bone400)
+            Box(
+                Modifier
+                    .heightIn(min = MinTouchTarget)
+                    .clickable(role = Role.Button, onClickLabel = "Abrir el panel de simulación") { onNavigate(Route.SIMULACION) }
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Simulación", style = RondaType.rotuloChico, color = RondaColors.bone400)
+            }
         }
         Text("Elegí el robot para la ronda nocturna. Un solo operador puede dar órdenes a cada robot.",
             style = RondaType.textoCuerpo, color = RondaColors.bone100)
