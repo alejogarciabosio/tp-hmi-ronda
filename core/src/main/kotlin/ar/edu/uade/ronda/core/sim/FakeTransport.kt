@@ -37,6 +37,10 @@ class FakeTransport(
     private val _settings = MutableStateFlow(SimulationSettings())
     override val settings: StateFlow<SimulationSettings> = _settings.asStateFlow()
 
+    private companion object {
+        const val ACK_LATENCY_MS = 200L
+    }
+
     private val heldEvents = ArrayDeque<String>()
 
     init {
@@ -55,13 +59,9 @@ class FakeTransport(
             simulator.onMessage(clock.nowMs(), text)
         }
         val acks = outputs.filter { it.kind == OutputKind.ACK }
-        val delayMs = _settings.value.responseDelayMs
-        if (delayMs > 0) {
-            scope.launch {
-                delay(delayMs)
-                deliver(acks)
-            }
-        } else {
+        // La respuesta tarda un viaje de ida y vuelta, más la demora que pida el panel.
+        scope.launch {
+            delay(ACK_LATENCY_MS + _settings.value.responseDelayMs)
             deliver(acks)
         }
         deliver(outputs.filter { it.kind != OutputKind.ACK })
