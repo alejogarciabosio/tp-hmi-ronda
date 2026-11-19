@@ -45,17 +45,19 @@ import kotlinx.coroutines.launch
 class AppContainer(
     context: Context,
     private val clock: Clock = SystemClock,
+    /** Alcance de la app. Los tests de punta a punta pasan uno con tiempo virtual. */
+    private val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    db: RondaDatabase? = null,
+    seed: Long = 42L,
 ) {
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    private val simulated = SimulatedRobotRepository.create(appScope, clock)
+    private val simulated = SimulatedRobotRepository.create(appScope, clock, seed)
 
     val robotRepository: RobotRepository = simulated
 
     /** Controles del panel de simulación (F7). No forman parte de `RobotRepository`. */
     val simulationControl: SimulationControl = simulated.control
 
-    private val database = RondaDatabase.create(context)
+    private val database = db ?: RondaDatabase.create(context)
 
     val historyRepository: HistoryRepository =
         RoomHistoryRepository(database.missionDao(), database.eventDao())
