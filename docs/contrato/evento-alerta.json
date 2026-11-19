@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "type": "EVENT",
+  "messageId": "e-0011",
+  "robotId": "RONDA-01",
+  "timestamp": 1763500012000,
+  "timestampIso": "2025-11-18T21:06:52.000Z",
+  "event": "ALERT_RAISED",
+  "severity": "WARNING",
+  "alert": {
+    "id": "a-0008",
+    "type": "LOW_BATTERY",
+    "severity": "WARNING",
+    "message": "Batería en 25 %. Conviene regresar a la base.",
+    "raisedAt": 1763500012000,
+    "acknowledged": false
+  }
+}

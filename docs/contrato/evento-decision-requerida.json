@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "type": "EVENT",
+  "messageId": "e-0012",
+  "robotId": "RONDA-01",
+  "timestamp": 1763500020000,
+  "timestampIso": "2025-11-18T21:07:00.000Z",
+  "event": "DECISION_REQUIRED",
+  "severity": "CRITICAL",
+  "incident": {
+    "id": "i-0003",
+    "type": "OBSTACLE",
+    "checkpointIndex": 4,
+    "message": "Un objeto bloquea el Pasillo 1°A. El robot se detuvo.",
+    "options": [
+      { "id": "WAIT_30S", "label": "Esperar 30 s" },
+      { "id": "SKIP_CHECKPOINT", "label": "Saltar el PC4" },
+      { "id": "RETURN_TO_SAFE_POINT", "label": "Regresar a la base" }
+    ]
+  }
+}
