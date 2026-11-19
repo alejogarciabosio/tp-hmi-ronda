@@ -1,5 +1,9 @@
 package ar.edu.uade.ronda.ui.components
 
+import ar.edu.uade.ronda.ui.theme.RondaShapes
+
+import androidx.compose.foundation.border
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +36,7 @@ fun StateStrip(ui: StateStripUi, modifier: Modifier = Modifier) {
             .semantics(mergeDescendants = true) {
                 heading()
                 contentDescription =
+                    (ui.simulationBadge?.let { "$it, tiempo acelerado. " } ?: "") +
                     "Estado ${ui.stateLabel}. ${ui.connectionLabel}. ¿Tenés que actuar? ${ui.actionText}"
             },
     ) {
@@ -42,6 +47,12 @@ fun StateStrip(ui: StateStripUi, modifier: Modifier = Modifier) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StateSymbol(ui.level, size = 24.dp)
                 Text(ui.stateLabel.uppercase(), style = RondaType.estadoTitulo, color = RondaColors.bone100, modifier = Modifier.weight(1f))
+                ui.simulationBadge?.let {
+                    Text(
+                        it, style = RondaType.datoChico, color = RondaColors.signalAmber,
+                        modifier = Modifier.border(1.dp, RondaColors.signalAmber, RondaShapes.r2).padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StateSymbol(ui.connectionLevel, size = 12.dp)

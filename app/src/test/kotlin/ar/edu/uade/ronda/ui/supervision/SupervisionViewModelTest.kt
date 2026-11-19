@@ -634,4 +634,15 @@ class SupervisionViewModelTest {
         assertEquals("Enlace degradado · 2,0 s", s.strip.connectionLabel)
         assertEquals(StatusLevel.WARNING, s.strip.connectionLevel)
     }
+
+    @Test
+    fun `con el tiempo acelerado la franja lo avisa`() = runTest(dispatcher) {
+        val scale = kotlinx.coroutines.flow.MutableStateFlow(1.0)
+        val vm = SupervisionViewModel(repo, Clock { testScheduler.currentTime }, ControlSession("RONDA-01"), history().log, timeScale = scale)
+        vm.uiState.onEach { }.launchIn(backgroundScope)
+        runCurrent()
+        assertNull(vm.uiState.value.strip.simulationBadge)
+        scale.value = 8.0; runCurrent()
+        assertEquals("SIMULACIÓN ×8", vm.uiState.value.strip.simulationBadge)
+    }
 }

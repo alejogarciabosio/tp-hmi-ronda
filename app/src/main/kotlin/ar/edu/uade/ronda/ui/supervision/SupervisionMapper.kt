@@ -54,6 +54,8 @@ internal data class SupervisionInputs(
     val selectedFloor: Int?,
     val dismissedIncidentId: String?,
     val nowMs: Long,
+    /** Escala de tiempo de la simulación (1, 4 u 8); fuera de ×1 la franja lo avisa. */
+    val timeScale: Double = 1.0,
 )
 
 internal object SupervisionMapper {
@@ -75,7 +77,7 @@ internal object SupervisionMapper {
         val guard = guardNotice(i, t, stale)
         val returnToBase = button("Regresar a base", CommandKind.PRIMARY, CommandType.RETURN_TO_SAFE_POINT, i)
         return SupervisionUiState(
-            strip = strip(i, t, stale, ageMs, guard != null),
+            strip = strip(i, t, stale, ageMs, guard != null).copy(simulationBadge = simulationBadge(i.timeScale)),
             staleBanner = if (t != null && stale && ageMs != null) staleBanner(ageMs) else null,
             hasData = t != null,
             plan = FloorPlanUi(floor, BuildingPlan.floorLabel(floor), allCheckpoints, robot),
@@ -119,6 +121,9 @@ internal object SupervisionMapper {
         } ?: return null
         return if (last.command.params.resolution == AlertResolution.SEND_GUARD) GUARD_NOTICE else null
     }
+
+    fun simulationBadge(scale: Double): String? =
+        if (scale > 1.0) "SIMULACIÓN ×${scale.toInt()}" else null
 
     const val GUARD_NOTICE = "Vigilante en camino · el robot espera tu orden para seguir"
 

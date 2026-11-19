@@ -30,7 +30,11 @@ import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -61,6 +65,10 @@ class AppContainer(
      */
     val checkpointHistory = CheckpointHistory(robotRepository.telemetry, appScope)
 
+    /** Escala de tiempo del simulador, para el rótulo "SIMULACIÓN ×N" de Supervisión. */
+    private val timeScale: StateFlow<Double> =
+        simulationControl.settings.map { it.timeScale }.stateIn(appScope, SharingStarted.Eagerly, simulationControl.settings.value.timeScale)
+
     /** Control exclusivo del robot: lo comparten Selección, Supervisión, Misiones y Control. */
     val controlSession = ControlSession()
 
@@ -70,7 +78,10 @@ class AppContainer(
     val linkMonitor = LinkMonitor(robotRepository, clock, appScope)
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
-        initializer { SupervisionViewModel(robotRepository, clock, controlSession, checkpointHistory.log, savedState = createSavedStateHandle()) }
+        initializer { SupervisionViewModel(
+                robotRepository, clock, controlSession, checkpointHistory.log,
+                savedState = createSavedStateHandle(), timeScale = timeScale,
+            ) }
         initializer { SeleccionViewModel(robotRepository, controlSession) }
         initializer { TelemetriaViewModel(robotRepository, clock) }
         initializer { MisionesViewModel(robotRepository, clock, controlSession) }

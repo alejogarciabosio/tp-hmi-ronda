@@ -39,6 +39,8 @@ class SupervisionViewModel(
     private val checkpoints: StateFlow<CheckpointLog>,
     tickMs: Long = 500,
     private val savedState: SavedStateHandle = SavedStateHandle(),
+    /** Escala de tiempo del simulador; la arma AppContainer (la pantalla no ve el panel de simulación). */
+    private val timeScale: StateFlow<Double> = MutableStateFlow(1.0),
 ) : ViewModel() {
 
     private val selectedFloor = MutableStateFlow<Int?>(null)
@@ -75,11 +77,11 @@ class SupervisionViewModel(
             values[2] as CheckpointLog, values[3] as Int?, values[4] as String?)
     }
 
-    val uiState: StateFlow<SupervisionUiState> = combine(fromRepository, local, notice) { a, b, message ->
+    val uiState: StateFlow<SupervisionUiState> = combine(fromRepository, local, notice, timeScale) { a, b, message, scale ->
         SupervisionMapper.map(
             SupervisionInputs(
                 a.telemetry, a.connection, a.lastAt, a.incident, a.commands,
-                b.availability, b.log, b.floor, b.dismissed, clock.nowMs(),
+                b.availability, b.log, b.floor, b.dismissed, clock.nowMs(), scale,
             ),
         ).copy(notice = message)
     }.stateIn(
@@ -89,7 +91,7 @@ class SupervisionViewModel(
                 repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
                 repository.activeIncident.value, repository.commands.value,
                 ControlSession.gate(repository.availability.value, session.controlledId.value),
-                checkpoints.value, null, null, clock.nowMs(),
+                checkpoints.value, null, null, clock.nowMs(), timeScale.value,
             ),
         ),
     )

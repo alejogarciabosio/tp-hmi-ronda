@@ -68,6 +68,8 @@ data class StateStripUi(
     /** "CONECTADO · 0,4 s": siempre con antigüedad. */
     val connectionLabel: String,
     val connectionLevel: StatusLevel,
+    /** "SIMULACIÓN ×4" cuando el tiempo está acelerado: nadie debe confundirlo con tiempo real. */
+    val simulationBadge: String? = null,
 )
 
 data class StaleBannerUi(
