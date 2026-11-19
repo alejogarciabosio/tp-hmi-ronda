@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import ar.edu.uade.ronda.ui.components.NavBarRoutes
 import ar.edu.uade.ronda.ui.components.PreviewSurface
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
@@ -53,7 +54,7 @@ fun RondaNavHost(
 ) {
     val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL, Route.DESCONEXION, Route.SIMULACION)
     NavHost(navController, startDestination.path, modifier) {
-        val go: (Route) -> Unit = { navController.navigate(it.path) { launchSingleTop = true } }
+        val go: (Route) -> Unit = { navController.navigateTo(it) }
         val back: () -> Unit = { navController.popBackStack() }
         composable(Route.SUPERVISION.path) {
             val vm: SupervisionViewModel = viewModel(factory = viewModelFactory)
@@ -94,6 +95,22 @@ fun RondaNavHost(
         Route.entries.filter { it !in implemented }.forEach { route ->
             composable(route.path) { PlaceholderScreen(route, go) }
         }
+    }
+}
+
+/**
+ * Las pestañas no se apilan: se vuelve a Supervisión (sin sacarla) y se guarda el estado de la
+ * pestaña que se deja, como pide la navegación inferior de Material. El resto se apila una vez.
+ */
+fun NavHostController.navigateTo(route: Route) {
+    if (route in NavBarRoutes) {
+        navigate(route.path) {
+            popUpTo(Route.SUPERVISION.path) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    } else {
+        navigate(route.path) { launchSingleTop = true }
     }
 }
 
