@@ -747,6 +747,10 @@ class RobotSimulator(
         return stop.id.removePrefix("PC").toIntOrNull() ?: currentPosition()
     }
 
+    // "el Pasillo A", "la Escalera E", "la Sala técnica 1°": el texto se arma con el nombre de la zona.
+    private fun conArticulo(zona: String): String =
+        if (zona.startsWith("Escalera") || zona.startsWith("Sala") || zona.startsWith("Salida") || zona.startsWith("Garita")) "la $zona" else "el $zona"
+
     private fun raiseObstacle(now: Long) {
         val stop = stops[nextStop]
         raiseAlert(now, AlertType.OBSTACLE, Severity.WARNING, "Objeto detectado en el pasillo, a ${INCIDENT_DISTANCE_M.toInt()} m.", snapshot("sim-obstaculo", now))
@@ -754,7 +758,7 @@ class RobotSimulator(
             now,
             Incident(
                 nextId("i"), IncidentType.OBSTACLE, currentCheckpointNumber(),
-                "Un objeto bloquea el ${stop.zone}. El robot se detuvo.",
+                "Un objeto bloquea ${conArticulo(stop.zone)}. El robot se detuvo.",
                 listOf(
                     IncidentOption("WAIT_30S", "Esperar 30 s"),
                     IncidentOption("SKIP_CHECKPOINT", "Saltar el ${stop.id}"),
