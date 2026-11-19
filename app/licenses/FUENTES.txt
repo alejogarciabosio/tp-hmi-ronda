@@ -1,0 +1,2 @@
+Archivo (variable), IBM Plex Sans (variable) e IBM Plex Mono: SIL Open Font License 1.1.
+Fuente de los archivos: repositorio google/fonts (carpetas ofl/archivo, ofl/ibmplexsans, ofl/ibmplexmono).
