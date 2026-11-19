@@ -13,6 +13,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,20 +23,26 @@ import ar.edu.uade.ronda.ui.components.PreviewSurface
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.components.CommandButton
+import ar.edu.uade.ronda.ui.supervision.SupervisionRoute
+import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
 import ar.edu.uade.ronda.ui.theme.RondaColors
 import ar.edu.uade.ronda.ui.theme.RondaType
 
 @Composable
 fun RondaNavHost(
+    viewModelFactory: ViewModelProvider.Factory,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
     startDestination: Route = Route.SUPERVISION,
 ) {
     NavHost(navController, startDestination.path, modifier) {
-        Route.entries.forEach { route ->
-            composable(route.path) {
-                PlaceholderScreen(route) { navController.navigate(it.path) { launchSingleTop = true } }
-            }
+        val go: (Route) -> Unit = { navController.navigate(it.path) { launchSingleTop = true } }
+        composable(Route.SUPERVISION.path) {
+            val vm: SupervisionViewModel = viewModel(factory = viewModelFactory)
+            SupervisionRoute(vm, go)
+        }
+        Route.entries.filter { it != Route.SUPERVISION }.forEach { route ->
+            composable(route.path) { PlaceholderScreen(route, go) }
         }
     }
 }

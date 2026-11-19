@@ -13,10 +13,14 @@ import ar.edu.uade.ronda.ui.theme.RondaTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val container = (application as RondaApp).container
         setContent {
             RondaTheme {
                 Surface(Modifier.fillMaxSize()) {
-                    RondaNavHost(modifier = Modifier.safeDrawingPadding())
+                    RondaNavHost(
+                        viewModelFactory = container.viewModelFactory,
+                        modifier = Modifier.safeDrawingPadding(),
+                    )
                 }
             }
         }
