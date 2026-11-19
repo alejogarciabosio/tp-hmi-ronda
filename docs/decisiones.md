@@ -34,8 +34,8 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 
 ## D6. Mantener presionado para los comandos críticos
 
-- **Contexto.** Cancelar, regresar y la detención operativa tienen consecuencia física; un diálogo de confirmación repetido se acepta por reflejo.
-- **Decisión.** Estos comandos usan mantener presionado 1 s. Iniciar misión muestra un resumen previo de condiciones.
+- **Contexto.** Cancelar, regresar a la base y la detención operativa tienen consecuencia física; un diálogo de confirmación repetido se acepta por reflejo.
+- **Decisión.** Estos tres comandos usan mantener presionado 1 s (`HoldToConfirm`, el mismo componente en Control, Supervisión y Desconexión). "Regresar a la base" se confirma igual que "Cancelar"; "Regresar a punto seguro" y el resto de las órdenes son de un toque. Iniciar misión muestra un resumen previo de condiciones.
 - **Consecuencias.** Evita toques accidentales sin sumar un diálogo modal; la detención operativa sigue accesible en todo momento. Es una orden de software y no reemplaza la parada de emergencia física.
 
 ## D7. `messageId` y `correlationId` como UUID v4
@@ -67,6 +67,13 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Detalles.** La demora es de 5 s y no de 3 s como en el Figma: las órdenes vencen a los 4 s, y con 3 s la respuesta llegaba a tiempo y nunca se veía SIN RESPUESTA. El rechazo armado no se puede desarmar desde el simulador: se consume con la próxima orden, y el interruptor lo refleja. El ViewModel del panel recibe la interfaz `SimulationControl` (`core.control`), nunca la implementación de `core.sim`.
 - **Consecuencias.** El panel es una herramienta de demo, marcada con franjas y el rótulo SIMULACIÓN. En una instalación real no existe.
 
+## D11. Control exclusivo con `ControlSession`; la detención operativa no depende del control
+
+- **Contexto.** Dos operadores con órdenes contradictorias sobre el mismo robot es un riesgo (RG6). Al mismo tiempo, frenar al robot nunca debe quedar bloqueado por una regla de permisos.
+- **Decisión.** `ui/session/ControlSession` guarda qué robot controla este operador (`StateFlow<String?>`, una instancia en `AppContainer`). Selección lo toma o lo suelta; Supervisión y Control lo leen. `ControlSession.gate` se aplica a la disponibilidad que calcula `CommandPolicy`: sin control propio, toda orden queda deshabilitada con el motivo "Tomá el control del robot en Selección". Quedan fuera la **detención operativa (software)**, que conserva su disponibilidad ("detener siempre gana"), y **Reconocer alerta**, que la pantalla de Alertas toma de la política sin pasar por el filtro.
+- **Por qué fuera de `CommandPolicy`.** El control es estado de la sesión de la app, no del robot ni del contrato: la política del dominio sigue siendo una función del estado del robot y es la misma con o sin sesión.
+- **Consecuencias.** Es una regla local de la app: no hay arbitraje entre dos celulares (el simulador tiene un solo cliente), así que el "RONDA-03 en uso por otra garita" de Selección es un dato de ejemplo. Un gateway real tendría que aplicar la exclusividad del lado del robot. La detención operativa sigue siendo una orden de software y no reemplaza la parada de emergencia física.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo RG7)
@@ -86,7 +93,8 @@ El plan preveía un selector ×1/×4 en el panel. No se implementó: el simulado
 - **Batería mínima por ruta:** la app exige 40 % para la ronda completa, 35 % para la sala técnica y 34 % para las salidas de emergencia (`BatteryPolicy`, D8). El Figma muestra 20 % y 15 % para las rutas cortas, valores anteriores al recálculo de D8.
 - **Posición de la base:** la app dibuja la base donde la ubica `BuildingLayout.base`, arriba a la izquierda de PB, para que el robot en base quede sobre el cuadro BASE. El Figma y `recorrido.svg` la ubican abajo a la izquierda, en la garita (ver `design/FIGMA.md`).
 - **Panel de simulación:** botones de escenario y demora distintos (ver D10) y sin selector de velocidad (L3).
+- **Color del dato viejo:** la app usa `#908B7C` (ver L5); el Figma conserva `#6E6A5E` en `estado/sin-datos`.
 
 ### L5. Contraste del gris de dato viejo
 
-El gris que marca un dato no vigente o un control deshabilitado tiene un contraste de 3,4:1 sobre el fondo, por debajo del 4,5:1 de WCAG para texto. Es intencional: el dato viejo no tiene que leerse como vigente. Nunca va solo, porque lo acompañan el símbolo de estado, el tachado y el motivo escrito (`ContrasteTest`).
+El gris que marca un dato no vigente o un control deshabilitado (`stateStale`, `#908B7C`) tiene un contraste de 5,46:1 sobre el fondo principal (`ink950`) y de 4,73:1 sobre la tarjeta elegida (`ink850`), por encima del 4,5:1 de WCAG para texto (`ContrasteTest`). Un valor anterior (`#6E6A5E`, 3,4:1) no pasaba y se aclaró. Sigue siendo más tenue que el texto secundario (6,9:1) para que el dato viejo no se lea como vigente, y nunca va solo: lo acompañan el símbolo de estado, el tachado y el motivo escrito.
