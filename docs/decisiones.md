@@ -38,6 +38,12 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Decisión.** Estos comandos usan mantener presionado 1 s. Iniciar misión muestra un resumen previo de condiciones.
 - **Consecuencias.** Evita toques accidentales sin sumar un diálogo modal; la detención operativa sigue accesible en todo momento. Es una orden de software y no reemplaza la parada de emergencia física.
 
+## D7. `messageId` cortos en lugar de UUID
+
+- **Contexto.** El plan §6 proponía UUID en `messageId`.
+- **Decisión.** Los ejemplos y el simulador usan ids cortos con prefijo por emisor (`c-0001`, `r-0002`, `t-000412`, `e-0011`).
+- **Consecuencias.** Se leen mejor en las evidencias y en los logs. Son únicos dentro de una sesión del simulador; un gateway real, con varios emisores y reinicios, debería generar UUID. El contrato no exige un formato, solo unicidad.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo R7)
