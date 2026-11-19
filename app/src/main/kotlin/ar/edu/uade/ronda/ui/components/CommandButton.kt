@@ -37,16 +37,19 @@ import ar.edu.uade.ronda.ui.theme.RondaType
  */
 @Composable
 fun CommandButton(ui: CommandButtonUi, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val enabled = ui.state == CommandUiState.ENABLED
+    // Solo DISABLED bloquea el toque; PENDING aún espera respuesta. REJECTED y NO_RESPONSE se pueden reintentar.
+    val disabled = ui.state == CommandUiState.DISABLED
+    val clickable = ui.state != CommandUiState.DISABLED && ui.state != CommandUiState.PENDING
+    val enabled = !disabled
     val accent = when (ui.kind) {
         CommandKind.PRIMARY -> RondaColors.signalAmber
         CommandKind.SECONDARY -> RondaColors.bone100
         CommandKind.DESTRUCTIVE -> RondaColors.stateError
     }
-    val container = if (enabled && ui.kind == CommandKind.PRIMARY) RondaColors.signalAmber else RondaColors.ink950
+    val container = if (ui.state == CommandUiState.ENABLED && ui.kind == CommandKind.PRIMARY) RondaColors.signalAmber else RondaColors.ink950
     val content = when {
-        !enabled -> RondaColors.stateStale
-        ui.kind == CommandKind.PRIMARY -> RondaColors.onSignal
+        disabled -> RondaColors.stateStale
+        ui.kind == CommandKind.PRIMARY && ui.state == CommandUiState.ENABLED -> RondaColors.onSignal
         else -> accent
     }
     val chip = when (ui.state) {
@@ -58,7 +61,7 @@ fun CommandButton(ui: CommandButtonUi, onClick: () -> Unit, modifier: Modifier =
     }
     val desc = buildString {
         append(ui.label)
-        if (!enabled) append(". No disponible")
+        if (disabled) append(". No disponible")
         chip?.let { append(". Estado de la orden: ${it.name.lowercase().replace('_', ' ')}") }
         ui.reason?.let { append(". $it") }
     }
@@ -69,10 +72,10 @@ fun CommandButton(ui: CommandButtonUi, onClick: () -> Unit, modifier: Modifier =
                 .heightIn(min = 48.dp)
                 .background(container, RondaShapes.r2)
                 .border(BorderStroke(1.dp, if (enabled) accent else RondaColors.ink700), RondaShapes.r2)
-                .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                .clickable(enabled = clickable, role = Role.Button, onClick = onClick)
                 .semantics(mergeDescendants = true) {
                     contentDescription = desc
-                    if (!enabled) disabled()
+                    if (!clickable) disabled()
                 }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center,
@@ -80,7 +83,7 @@ fun CommandButton(ui: CommandButtonUi, onClick: () -> Unit, modifier: Modifier =
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     ui.label.uppercase(), style = RondaType.botonEtiqueta, color = content,
-                    textDecoration = if (!enabled && chip == null) TextDecoration.LineThrough else null,
+                    textDecoration = if (disabled) TextDecoration.LineThrough else null,
                 )
                 chip?.let { CommandChip(CommandChipUi(it)) }
             }
