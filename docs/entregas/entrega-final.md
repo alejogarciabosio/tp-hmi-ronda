@@ -173,7 +173,7 @@ Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a 
 | 2 | Batería baja | Sale con 40 % (mínimo operativo) y una celda degradada que multiplica el consumo; al cruzar 25 % (cerca del PC 4) aparece la advertencia con la acción "Regresar a base" y, a 15 % (PC 7), el robot propone el regreso (una sola opción). Llega a la base con ~2 %: el robot estima el regreso con consumo nominal, limitación registrada en D8 |
 | 3 | Desconexión | Corte forzado de 15 s; datos marcados como antiguos, comandos sin confirmar y recuperación con resincronización |
 | 4 | Incidente (obstáculo) | En PC4 un objeto bloquea el pasillo; el robot se detiene a 2 m y ofrece tres opciones (esperar 30 s, saltar PC4, regresar); el operador salta el punto y queda con observación |
-| 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; el operador decide entre registrar como autorizada, enviar a un vigilante o continuar. No se guarda imagen |
+| 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; llega una foto de la cámara frontal y el operador, viéndola, decide entre registrar como autorizada, enviar a un vigilante o continuar. La foto se muestra para decidir y no se guarda en el historial |
 
 **La máquina propone, la persona decide.** El Go2 no detecta personas de forma nativa; se propone un modelo propio (YOLO, clase `person`) sobre la cámara frontal (ver §6). Ese detector puede dar falsos positivos (una sombra, un objeto, un reflejo) y falsos negativos; un proveedor de videovigilancia plantea que la salida de un detector es "una pista, no una decisión" y que corresponde triaje más verificación humana (HIL-1; opinión de práctica, no una norma). Por eso, ante una posible persona, el robot se detiene a 2 m, adjunta la foto de la cámara frontal y espera: el operador la ve y elige registrar como autorizada, enviar a un vigilante o continuar. El robot nunca declara "intruso" por su cuenta. Que el modelo corra en tiempo real en el Orin del robot no se midió: los benchmarks son de kits de desarrollo (JET-1, JET-2). En el simulador, la detección y la foto son datos generados. La foto de una persona es un dato personal: su retención se trata en D9 y R5.
 
@@ -193,7 +193,7 @@ Detalle completo (causa, consecuencia, medida y verificación) en [`docs/riesgos
 | R2 | Orden accidental | Mantener presionado 1 s en las órdenes destructivas, estado PENDIENTE visible, un solo comando de misión pendiente |
 | R3 | Pérdida de conexión | Datos marcados como antiguos, comandos deshabilitados con motivo, resincronización al volver; política del robot declarada como supuesto |
 | R4 | Batería insuficiente para volver | Bloqueo de inicio, cálculo de "alcanza para volver", regreso propuesto a 15 % |
-| R5 | Privacidad de personas detectadas | Sin imágenes, registro mínimo, retención de 30 días, historial solo para supervisor |
+| R5 | Privacidad de personas detectadas | Una sola foto por incidente, mostrada para decidir y no guardada; sin video ni grabación continua; registro mínimo, retención de 30 días, historial solo para supervisor |
 | R6 | Dos operadores con órdenes contradictorias | Sesión exclusiva por robot |
 | R7 | Escalones fuera del rango del robot | Relevar escaleras antes de habilitar la ruta |
 

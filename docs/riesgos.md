@@ -78,10 +78,10 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 - **Causa.** La detección de personas no figura como función nativa del Go2 en las fuentes leídas; habría que desarrollarla sobre la cámara frontal y el LiDAR (un proyecto comunitario lo hace con un detector YOLO propio, GO2-12). Guardar imágenes crearía datos personales sin necesidad.
 - **Consecuencia.** Exposición de datos personales, incumplimiento de normas de protección de datos, rechazo del servicio.
 - **Medidas.**
-  - Lógica: la app y el contrato JSON (propuesta propia del grupo, no el protocolo oficial de Unitree) no transportan ni guardan imágenes de personas. El evento registra solo "persona detectada, PC5, 02:14, decisión del operador".
+  - Lógica: el contrato JSON (propuesta propia del grupo, no el protocolo oficial de Unitree) transporta una única foto por incidente, solo para que el operador decida (D9). La foto **se muestra y no se guarda**: no entra en el historial ni en la base local, y se descarta al resolverse el incidente. El evento registra solo "persona detectada, PC5, 02:14, decisión del operador". No hay grabación continua ni video.
   - Procedimiento: retención de eventos de 30 días; acceso al historial solo para el rol supervisor; aviso en el edificio de que existe un robot de ronda. El plazo y los roles son propuestas del grupo, a validar con el área legal del edificio.
-  - Interfaz: la pantalla de alertas no muestra imágenes; no hay función de captura en la app.
-- **Verificación.** Revisión del esquema Room (ninguna columna de imagen) y del contrato JSON propuesto, que no es el protocolo oficial de Unitree (ningún campo de imagen). E5: el registro del evento contiene solo los campos listados.
+  - Interfaz: la foto aparece solo en la hoja de decisión del incidente activo, con su hora de captura; el historial y la pantalla de alertas resueltas no muestran imágenes; no hay función para guardar ni compartir la foto.
+- **Verificación.** Revisión del esquema Room (ninguna columna de imagen) y del contrato JSON propuesto, que no es el protocolo oficial de Unitree (la foto viaja solo en el evento del incidente). E5: el registro del evento contiene solo los campos listados y la foto deja de mostrarse una vez tomada la decisión.
 
 ## R6. Dos operadores con órdenes contradictorias
 
