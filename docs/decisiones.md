@@ -74,6 +74,13 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Por qué fuera de `CommandPolicy`.** El control es estado de la sesión de la app, no del robot ni del contrato: la política del dominio sigue siendo una función del estado del robot y es la misma con o sin sesión.
 - **Consecuencias.** Es una regla local de la app: no hay arbitraje entre dos celulares (el simulador tiene un solo cliente), así que el "RONDA-03 en uso por otra garita" de Selección es un dato de ejemplo. Un gateway real tendría que aplicar la exclusividad del lado del robot. La detención operativa sigue siendo una orden de software y no reemplaza la parada de emergencia física.
 
+## D12. Toda decisión del operador cierra el incidente
+
+- **Contexto.** En el escenario 5, "Enviar vigilante" dejaba el incidente abierto: el robot seguía en `REQUIERE_DECISION` y la hoja de decisión volvía a ofrecer las mismas tres opciones, como si el operador no hubiera decidido. Eso invita a decidir dos veces y no dice qué está haciendo el robot.
+- **Decisión.** Cualquier respuesta aceptada a un incidente lo cierra: el robot reconoce la alerta asociada, deja `REQUIERE_DECISION` y no vuelve a pedir lo mismo. Ante una persona en zona restringida, `AUTHORIZED_PERSON` la registra como autorizada y la ronda sigue; `CONTINUE_ROUND` sigue y marca el punto con observación; `SEND_GUARD` mantiene la distancia y deja al robot `PAUSADA` en el punto (con observación) hasta que el operador reanude. Ante un obstáculo, esperar, saltar y regresar ya cerraban la decisión. La tabla completa está en `docs/contrato/README.md`.
+- **En la app.** Al elegir una opción, la hoja se cierra en el acto; si el robot rechaza la orden, el incidente sigue abierto y "Decidir cómo seguir" la reabre. Mientras el robot espera tras `SEND_GUARD`, Supervisión muestra arriba "Vigilante en camino · el robot espera tu orden para seguir" y la franja de estado pide reanudar.
+- **Consecuencias.** La espera del vigilante es una pausa común: se reanuda, se regresa o se cancela con las mismas órdenes de siempre, y no hace falta un estado nuevo en el contrato. El robot no sabe cuándo llegó el vigilante; lo decide el operador.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo RG7)

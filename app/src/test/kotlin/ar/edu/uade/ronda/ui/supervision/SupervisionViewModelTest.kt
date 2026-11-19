@@ -4,6 +4,7 @@ import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.*
 import ar.edu.uade.ronda.core.repository.CheckpointHistory
+import ar.edu.uade.ronda.core.repository.TrackedCommand
 import ar.edu.uade.ronda.ui.model.CheckpointState
 import ar.edu.uade.ronda.ui.model.CommandChipStatus
 import ar.edu.uade.ronda.ui.model.CommandUiState
@@ -416,5 +417,65 @@ class SupervisionViewModelTest {
         assertEquals(CheckpointState.VERIFIED, byIndex.getValue(1).state)
         assertNotNull(byIndex.getValue(1).time)
         assertEquals(CheckpointState.CURRENT, byIndex.getValue(2).state)
+    }
+
+    private fun personAlert(acknowledged: Boolean = false) =
+        Alert("a7", AlertType.PERSON_DETECTED, Severity.CRITICAL, "Persona detectada", 0, acknowledged)
+
+    private fun personIncident() = Incident(
+        "i2", IncidentType.PERSON_IN_RESTRICTED_ZONE, 5, "Persona en zona restringida",
+        listOf(
+            IncidentOption("AUTHORIZED_PERSON", "Persona autorizada (registrar)"),
+            IncidentOption("SEND_GUARD", "Enviar vigilante"),
+            IncidentOption("CONTINUE_ROUND", "Continuar ronda"),
+        ),
+    )
+
+    private fun ackGuard(status: CommandStatus, at: Long) = TrackedCommand(
+        Command("g$at", "RONDA-01", at, "garita", CommandType.ACKNOWLEDGE_ALERT,
+            CommandParams(alertId = "a7", resolution = AlertResolution.SEND_GUARD)),
+        status, at, at,
+    )
+
+    @Test
+    fun `elegir una opcion cierra la hoja enseguida y si se rechaza se puede reabrir`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 5, alerts = listOf(personAlert())))
+        repo.activeIncident.value = personIncident()
+        runCurrent()
+        vm.onDecisionOption("SEND_GUARD"); runCurrent()
+        assertTrue(vm.uiState.value.decisionDismissed, "la hoja no vuelve a ofrecer las mismas opciones")
+        // Mientras el robot no cierre el incidente (p. ej. si rechaza la orden), se puede reabrir.
+        vm.onReopenDecision(); runCurrent()
+        assertFalse(vm.uiState.value.decisionDismissed)
+    }
+
+    @Test
+    fun `con el vigilante en camino avisa que el robot espera la orden y reanudar queda habilitado`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 5, alerts = listOf(personAlert())))
+        repo.activeIncident.value = personIncident()
+        runCurrent()
+        assertNull(vm.uiState.value.guardNotice)
+
+        // El robot confirma: cierra el incidente y queda pausado en el PC5.
+        repo.commands.value = listOf(ackGuard(CommandStatus.VERIFIED, 500))
+        repo.activeIncident.value = null
+        repo.publish(tele(1_000, OperationalState.PAUSADA, index = 5, alerts = listOf(personAlert(acknowledged = true))))
+        runCurrent()
+        val s = vm.uiState.value
+        assertNull(s.decision, "la hoja no vuelve")
+        assertEquals("Vigilante en camino · el robot espera tu orden para seguir", s.guardNotice)
+        assertEquals(CommandUiState.ENABLED, s.resume.state)
+        assertTrue(s.strip.needsAction)
+        assertTrue(s.strip.actionText.contains("reanudá"))
+
+        // Al reanudar, el aviso desaparece.
+        repo.commands.value = repo.commands.value + tracked("r1", CommandType.RESUME_MISSION, CommandStatus.VERIFIED, 2_000)
+        repo.publish(tele(2_500, OperationalState.EN_RONDA, index = 5, alerts = listOf(personAlert(acknowledged = true))))
+        runCurrent()
+        assertNull(vm.uiState.value.guardNotice)
     }
 }

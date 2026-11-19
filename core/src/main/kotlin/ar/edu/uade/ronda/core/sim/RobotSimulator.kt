@@ -341,16 +341,23 @@ class RobotSimulator(
             ?: return Rejection(RejectReason.UNKNOWN_TARGET, "La alerta $alertId no existe.")
         if (alert.acknowledged) return invalid("La alerta ya estaba reconocida.")
         if (alert.type == AlertType.PERSON_DETECTED && state == REQUIERE_DECISION) {
-            when (resolution) {
-                null -> return invalid("Indicá cómo se resuelve la detección de persona.")
-                // El vigilante va en camino: el robot espera y la alerta sigue abierta hasta que se resuelva.
-                AlertResolution.SEND_GUARD -> return null
-                AlertResolution.AUTHORIZED_PERSON -> {}
-                AlertResolution.CONTINUE_ROUND -> issueOnNextVerify = true
-            }
+            if (resolution == null) return invalid("Indicá cómo se resuelve la detección de persona.")
+            // Cualquier decisión del operador cierra el incidente: no se vuelve a ofrecer la hoja.
             replaceAlert(alert.copy(acknowledged = true))
             incident = null
-            exitHold(now)
+            when (resolution) {
+                AlertResolution.AUTHORIZED_PERSON -> exitHold(now)
+                AlertResolution.CONTINUE_ROUND -> {
+                    issueOnNextVerify = true
+                    exitHold(now)
+                }
+                AlertResolution.SEND_GUARD -> {
+                    // El vigilante va en camino: el robot mantiene la distancia y queda pausado en el
+                    // punto hasta que el operador reanude. La persona queda como observación del punto.
+                    issueOnNextVerify = true
+                    state = PAUSADA
+                }
+            }
             return null
         }
         replaceAlert(alert.copy(acknowledged = true))

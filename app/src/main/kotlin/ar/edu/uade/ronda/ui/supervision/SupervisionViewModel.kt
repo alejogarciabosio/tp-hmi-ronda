@@ -137,6 +137,9 @@ class SupervisionViewModel(
             }
         }
         repository.send(commandFor(optionId), params)
+        // Cualquier decisión cierra la hoja: no se vuelve a ofrecer lo mismo. Si el robot rechaza
+        // la orden, el incidente sigue abierto y "Decidir cómo seguir" permite reabrirla.
+        dismissedIncidentId.value = incident.id
     }
 
     private data class Inputs1(

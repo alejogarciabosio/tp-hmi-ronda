@@ -2,6 +2,7 @@ package ar.edu.uade.ronda.ui.supervision
 
 import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.Alert
+import ar.edu.uade.ronda.core.model.AlertResolution
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
@@ -68,8 +69,9 @@ internal object SupervisionMapper {
             RobotPoseUi(it.floor, BuildingPlan.normX(it.x), BuildingPlan.normY(it.y), ((it.headingDeg + 90.0) % 360.0).toFloat())
         }
         val dismissed = i.incident != null && i.incident.id == i.dismissedIncidentId
+        val guard = guardNotice(i, t, stale)
         return SupervisionUiState(
-            strip = strip(i, t, stale, ageMs),
+            strip = strip(i, t, stale, ageMs, guard != null),
             staleBanner = if (t != null && stale && ageMs != null) staleBanner(ageMs) else null,
             hasData = t != null,
             plan = FloorPlanUi(floor, BuildingPlan.floorLabel(floor), allCheckpoints, robot),
@@ -89,12 +91,28 @@ internal object SupervisionMapper {
             lastCommand = lastCommand(i),
             decision = i.incident?.let { decision(it, i) },
             decisionDismissed = dismissed,
+            guardNotice = guard,
         )
     }
 
+    /**
+     * Tras "Enviar vigilante" el robot cierra la decisión y queda PAUSADO en el punto (D12):
+     * se avisa mientras siga así y la última orden con efecto haya sido esa.
+     */
+    private fun guardNotice(i: SupervisionInputs, t: RobotTelemetry?, stale: Boolean): String? {
+        if (t == null || stale || t.operationalState != OperationalState.PAUSADA) return null
+        val last = i.commands.lastOrNull { c ->
+            (c.status == CommandStatus.CONFIRMED || c.status == CommandStatus.VERIFIED) &&
+                (c.command.type != CommandType.ACKNOWLEDGE_ALERT || c.command.params.resolution == AlertResolution.SEND_GUARD)
+        } ?: return null
+        return if (last.command.params.resolution == AlertResolution.SEND_GUARD) GUARD_NOTICE else null
+    }
+
+    const val GUARD_NOTICE = "Vigilante en camino · el robot espera tu orden para seguir"
+
     // ---- Franja de estado ----
 
-    private fun strip(i: SupervisionInputs, t: RobotTelemetry?, stale: Boolean, ageMs: Long?): StateStripUi {
+    private fun strip(i: SupervisionInputs, t: RobotTelemetry?, stale: Boolean, ageMs: Long?, guardOnTheWay: Boolean): StateStripUi {
         val connLabel = when {
             t == null -> "Sin datos · todavía no llegó telemetría"
             i.connection == ConnectionState.CONNECTED -> "Conectado · ${seconds(ageMs ?: 0)}"
@@ -114,6 +132,7 @@ internal object SupervisionMapper {
             stale -> true to "Sí: sin datos del robot, su estado actual es desconocido"
             s == OperationalState.REQUIERE_DECISION -> true to "Sí: decidí cómo seguir en PC${t.mission?.checkpointIndex ?: i.incident?.checkpointIndex ?: "?"}"
             s == OperationalState.DETENIDO -> true to "Sí: reanudar o regresar a base"
+            guardOnTheWay -> true to "Sí: reanudá la ronda cuando el vigilante lo indique"
             s == OperationalState.FALLA -> true to "Sí: el robot requiere un técnico"
             t.unacknowledgedAlerts.any { it.severity == Severity.CRITICAL } -> true to "Sí: hay una alerta crítica sin reconocer"
             else -> false to "No"

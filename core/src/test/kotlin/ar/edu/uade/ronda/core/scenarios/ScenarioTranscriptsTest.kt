@@ -120,7 +120,7 @@ class ScenarioTranscriptsTest {
     fun `transcripcion escenario 5 persona en zona restringida`() = runTest {
         val (rig, tr) = rigAndTranscript(
             "Escenario 5: persona en zona restringida fuera de horario",
-            "En el PC5 (sala técnica) el robot detecta una persona, mantiene 2 m y espera. El operador envía al vigilante y luego la reconoce como persona autorizada. No se guardan imágenes: el evento registra solo el hecho, el punto y la decisión.",
+            "En el PC5 (sala técnica) el robot detecta una persona, mantiene 2 m y espera. El operador envía al vigilante: la decisión se cierra y el robot queda pausado en el punto hasta que el operador reanuda. No se guardan imágenes: el evento registra solo el hecho, el punto y la decisión.",
             SimScenario.PERSON_IN_RESTRICTED_ZONE,
         )
         rig.until(what = "telemetría") { rig.repo.telemetry.value != null }
@@ -131,14 +131,15 @@ class ScenarioTranscriptsTest {
             "elige \"Enviar vigilante\"", CommandType.ACKNOWLEDGE_ALERT,
             CommandParams(alertId = alerta.id, resolution = AlertResolution.SEND_GUARD),
         )
-        rig.until(what = "confirmada") { rig.statusOf(guardia) == CommandStatus.CONFIRMED }
+        rig.until(what = "verificada") { rig.statusOf(guardia) == CommandStatus.VERIFIED }
+        rig.untilState(OperationalState.PAUSADA)
         rig.advance(20_000)
-        tr.note("el robot sigue esperando: estado ${rig.state}")
-        val ok = tr.operator(
-            "el vigilante confirma: elige \"Persona autorizada (registrar)\"", CommandType.ACKNOWLEDGE_ALERT,
-            CommandParams(alertId = alerta.id, resolution = AlertResolution.AUTHORIZED_PERSON),
+        tr.note("la decisión quedó cerrada; el robot mantiene la distancia y espera en el PC5: estado ${rig.state}")
+        val seguir = tr.operator(
+            "el vigilante llegó: el operador reanuda la ronda", CommandType.RESUME_MISSION,
+            CommandParams(missionId = rig.missionId),
         )
-        rig.until(what = "verificada") { rig.statusOf(ok) == CommandStatus.VERIFIED }
+        rig.until(what = "verificada") { rig.statusOf(seguir) == CommandStatus.VERIFIED }
         rig.untilState(OperationalState.COMPLETADA)
         rig.untilState(OperationalState.EN_BASE)
         tr.save("escenario-5-persona-zona-restringida.txt")

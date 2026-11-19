@@ -242,6 +242,9 @@ class RobotSimulatorTest {
         h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId, decision = IncidentDecision.WAIT_30S))
         val enEspera = h.tick()
         assertEquals(OperationalState.EN_RONDA, enEspera.operationalState)
+        // Esperar cerró la decisión: una segunda opción ya no se acepta.
+        val segunda = h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId, decision = IncidentDecision.SKIP_CHECKPOINT))
+        assertEquals(AckStatus.REJECTED, segunda.status)
         assertEquals(0.0, enEspera.motion.speedMps)
         h.run(20_000)
         assertEquals(0.0, h.last!!.motion.speedMps, "sigue esperando a los 20 s")
@@ -249,23 +252,72 @@ class RobotSimulatorTest {
         assertEquals(0, t.service.checkpointsWithIssues)
     }
 
-    @Test
-    fun `persona en sala tecnica se resuelve reconociendo la alerta con resolution`() {
+    private fun personaEnPc5(): Pair<SimHarness, String> {
         val h = SimHarness(); h.sim.planIncident("PC5", IncidentType.PERSON_IN_RESTRICTED_ZONE); h.tick(); h.start()
         val t = h.runUntil { it.operationalState == OperationalState.REQUIERE_DECISION }
         assertEquals(5, t.mission?.checkpointIndex)
         val alert = t.alerts.single { it.type == AlertType.PERSON_DETECTED }
         assertFalse(alert.acknowledged)
-
         // sin resolution no alcanza
         assertEquals(RejectReason.INVALID_STATE, h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alert.id)).reasonCode)
-        // enviar vigilante: el robot sigue esperando
-        h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alert.id, resolution = AlertResolution.SEND_GUARD))
-        assertEquals(OperationalState.REQUIERE_DECISION, h.tick().operationalState)
-        h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alert.id, resolution = AlertResolution.CONTINUE_ROUND))
+        return h to alert.id
+    }
+
+    @Test
+    fun `persona autorizada cierra el incidente y la ronda sigue sin observacion`() {
+        val (h, alertId) = personaEnPc5()
+        val ack = h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alertId, resolution = AlertResolution.AUTHORIZED_PERSON))
+        assertEquals(AckStatus.CONFIRMED, ack.status)
+        val t = h.tick()
+        assertEquals(OperationalState.EN_RONDA, t.operationalState)
+        assertTrue(t.alerts.single { it.type == AlertType.PERSON_DETECTED }.acknowledged)
+        val seguir = h.runUntil { it.service.checkpointsVerified == 5 }
+        assertEquals(0, seguir.service.checkpointsWithIssues)
+    }
+
+    @Test
+    fun `enviar vigilante cierra el incidente y deja al robot pausado hasta que el operador reanude`() {
+        val (h, alertId) = personaEnPc5()
+        val ack = h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alertId, resolution = AlertResolution.SEND_GUARD))
+        assertEquals(AckStatus.CONFIRMED, ack.status)
+        val pausado = h.tick()
+        assertEquals(OperationalState.PAUSADA, pausado.operationalState, "el robot espera la orden del operador")
+        assertTrue(pausado.alerts.single { it.type == AlertType.PERSON_DETECTED }.acknowledged)
+        assertEquals(0.0, pausado.motion.speedMps)
+        // Ya no hay decisión abierta: volver a elegir una opción se rechaza.
+        val otraVez = h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alertId, resolution = AlertResolution.SEND_GUARD))
+        assertEquals(AckStatus.REJECTED, otraVez.status)
+        // El robot mantiene la distancia mientras espera: no avanza solo.
+        h.run(60_000)
+        assertEquals(OperationalState.PAUSADA, h.last!!.operationalState)
+        assertEquals(4, h.last!!.service.checkpointsVerified)
+        assertEquals(1, h.events.count { it is RobotEvent.DecisionRequired }, "no vuelve a pedir la decisión")
+
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId)).status)
+        assertEquals(OperationalState.EN_RONDA, h.tick().operationalState)
+        val seguir = h.runUntil { it.service.checkpointsVerified == 5 }
+        assertEquals(1, seguir.service.checkpointsWithIssues, "la persona no autorizada queda como observación del PC5")
+    }
+
+    @Test
+    fun `continuar ronda cierra el incidente y marca observacion en el punto`() {
+        val (h, alertId) = personaEnPc5()
+        h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alertId, resolution = AlertResolution.CONTINUE_ROUND))
         assertEquals(OperationalState.EN_RONDA, h.tick().operationalState)
         val seguir = h.runUntil { it.service.checkpointsVerified == 5 }
         assertEquals(1, seguir.service.checkpointsWithIssues)
+    }
+
+    @Test
+    fun `obstaculo regresar a la base cierra la decision`() {
+        val h = SimHarness(); h.sim.planIncident("PC4", IncidentType.OBSTACLE); h.tick(); h.start()
+        h.runUntil { it.operationalState == OperationalState.REQUIERE_DECISION }
+        val ack = h.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE))
+        assertEquals(AckStatus.CONFIRMED, ack.status)
+        assertEquals(OperationalState.REGRESANDO, h.tick().operationalState)
+        // Sin decisión pendiente, reanudar con una opción ya no aplica.
+        val tarde = h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId, decision = IncidentDecision.WAIT_30S))
+        assertEquals(AckStatus.REJECTED, tarde.status)
     }
 
     @Test

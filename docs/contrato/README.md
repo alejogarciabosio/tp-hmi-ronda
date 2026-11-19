@@ -66,7 +66,20 @@ Las `options` de `DECISION_REQUIRED` son las que la UI ofrece al operador. La re
 
 La opción `RETURN_TO_SAFE_POINT` lleva `safePointId` (`BASE` o `DESCANSO_ESCALERA_E`); la app lo copia al comando `RETURN_TO_SAFE_POINT` que envía. Las demás opciones no llevan `safePointId`.
 
-Las opciones del incidente de persona en zona restringida (`AUTHORIZED_PERSON`, `SEND_GUARD`, `CONTINUE_ROUND`) son exactamente los valores de `resolution` en `ACKNOWLEDGE_ALERT` (con el `alertId` de la alerta `PERSON_DETECTED`): `AUTHORIZED_PERSON` registra a la persona autorizada y el robot sigue, `SEND_GUARD` avisa al vigilante y el robot espera sin cerrar la alerta, `CONTINUE_ROUND` sigue la ronda y marca el punto con observación.
+Las opciones del incidente de persona en zona restringida (`AUTHORIZED_PERSON`, `SEND_GUARD`, `CONTINUE_ROUND`) son exactamente los valores de `resolution` en `ACKNOWLEDGE_ALERT` (con el `alertId` de la alerta `PERSON_DETECTED`): `AUTHORIZED_PERSON` registra a la persona autorizada y el robot sigue, `SEND_GUARD` avisa al vigilante y el robot queda `PAUSADA` en el punto, `CONTINUE_ROUND` sigue la ronda y marca el punto con observación.
+
+**Cualquier decisión cierra el incidente activo** (ver D12 en `docs/decisiones.md`). Al aceptar la respuesta, el robot reconoce la alerta asociada, deja `REQUIERE_DECISION` y no vuelve a pedir la misma decisión; una segunda respuesta al mismo incidente se rechaza con `INVALID_STATE`. El estado siguiente depende de la opción:
+
+| Incidente | Opción | Comando | Estado siguiente | Punto de control |
+|---|---|---|---|---|
+| Obstáculo | `WAIT_30S` | `RESUME_MISSION` + `decision` | `EN_RONDA`, detenido 30 s y reintenta | se verifica si el paso se libera |
+| Obstáculo | `SKIP_CHECKPOINT` | `RESUME_MISSION` + `decision` | `EN_RONDA` hacia el punto siguiente | salteado, con observación |
+| Obstáculo / batería crítica | `RETURN_TO_SAFE_POINT` | `RETURN_TO_SAFE_POINT` + `safePointId` | `REGRESANDO` | no se verifica |
+| Persona | `AUTHORIZED_PERSON` | `ACKNOWLEDGE_ALERT` + `resolution` | `EN_RONDA` | sin observación |
+| Persona | `SEND_GUARD` | `ACKNOWLEDGE_ALERT` + `resolution` | `PAUSADA`: mantiene la distancia y espera `RESUME_MISSION` del operador | con observación |
+| Persona | `CONTINUE_ROUND` | `ACKNOWLEDGE_ALERT` + `resolution` | `EN_RONDA` | con observación |
+
+Con `SEND_GUARD` la app muestra "Vigilante en camino · el robot espera tu orden para seguir" mientras el robot siga pausado; el operador reanuda con `RESUME_MISSION` (o regresa o cancela) cuando el vigilante resolvió.
 
 ## Valores de los enums
 

@@ -168,7 +168,7 @@ class EscenariosTest {
     }
 
     @Test
-    fun `escenario 5 persona en sala tecnica - el robot espera, el operador resuelve y la ronda sigue`() = runTest {
+    fun `escenario 5 persona en sala tecnica - el operador envia al vigilante, el robot espera pausado y la ronda sigue al reanudar`() = runTest {
         val rig = ScenarioRig(this)
         rig.control.loadScenario(SimScenario.PERSON_IN_RESTRICTED_ZONE)
         rig.until(what = "telemetría") { rig.repo.telemetry.value != null }
@@ -182,17 +182,22 @@ class EscenariosTest {
         assertEquals(listOf("AUTHORIZED_PERSON", "SEND_GUARD", "CONTINUE_ROUND"), incidente.options.map { it.id })
         val alerta = rig.telemetry.alerts.single { it.type == AlertType.PERSON_DETECTED }
 
-        // enviar vigilante: confirmada, pero el robot sigue esperando
+        // enviar vigilante: cierra la decisión y el robot queda pausado esperando la orden del operador
         val vigilante = rig.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alerta.id, resolution = AlertResolution.SEND_GUARD))
-        rig.until(what = "confirmada") { rig.statusOf(vigilante) == CommandStatus.CONFIRMED }
+        rig.until(what = "alerta reconocida") { rig.statusOf(vigilante) == CommandStatus.VERIFIED }
+        rig.untilState(OperationalState.PAUSADA)
+        assertNull(rig.repo.activeIncident.value, "la hoja de decisión no vuelve")
         rig.advance(10_000)
-        assertEquals(OperationalState.REQUIERE_DECISION, rig.state)
+        assertEquals(OperationalState.PAUSADA, rig.state)
+        assertNull(rig.repo.activeIncident.value)
+        assertTrue(rig.repo.availability.value.getValue(CommandType.RESUME_MISSION).enabled)
+        assertEquals(1, rig.events.count { it is RobotEvent.DecisionRequired }, "no se vuelve a pedir la decisión")
 
-        val autorizada = rig.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alerta.id, resolution = AlertResolution.AUTHORIZED_PERSON))
-        rig.until(what = "alerta reconocida") { rig.statusOf(autorizada) == CommandStatus.VERIFIED }
-        rig.untilState(OperationalState.EN_RONDA)
+        val reanudar = rig.send(CommandType.RESUME_MISSION, CommandParams(missionId = rig.missionId))
+        rig.until(what = "reanudada") { rig.statusOf(reanudar) == CommandStatus.VERIFIED }
         rig.untilState(OperationalState.COMPLETADA)
         assertEquals(8, rig.telemetry.service.checkpointsVerified)
+        assertEquals(1, rig.telemetry.service.checkpointsWithIssues, "el PC5 queda con observación")
         assertIs<RobotEvent.DecisionRequired>(rig.events.last { it is RobotEvent.DecisionRequired })
     }
 

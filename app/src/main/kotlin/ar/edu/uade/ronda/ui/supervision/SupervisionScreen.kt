@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ar.edu.uade.ronda.ui.components.ActionCallout
 import ar.edu.uade.ronda.ui.components.CheckpointRail
 import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.CommandChip
@@ -93,6 +94,7 @@ fun SupervisionScreen(
         ) {
             TopRow(onSimulation = { onNavigate(Route.SIMULACION) })
             StateStrip(state.strip)
+            state.guardNotice?.let { ActionCallout(it, StatusLevel.WARNING, Modifier.padding(horizontal = 16.dp)) }
             state.staleBanner?.let {
                 StaleDataBanner(
                     it,
