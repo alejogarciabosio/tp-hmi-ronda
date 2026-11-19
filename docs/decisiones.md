@@ -53,6 +53,13 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Escenario 2.** Con estos coeficientes la ronda completa gasta ~5 a 7 % de la batería, así que ya no se llega al umbral con 45 % y consumo doble. Se evaluó que el robot ya estuviera en ronda con poca batería, pero la política de arranque lo impide: sale con el mínimo operativo. Se eligió partir del mínimo (40 %) con una celda degradada inyectada por `drainFactor = 6`: es una falla de batería, un caso real (envejecimiento, frío, celda desbalanceada) y es exactamente el motivo por el que el 40 % deja margen. La alerta a 25 % salta a mitad de ronda (PC 4), el robot propone regresar al 15 % (PC 7) y el operador confirma.
 - **Consecuencias.** El robot estima el regreso con el consumo nominal; con la celda degradada llega a la base con ~2 %, por debajo de la reserva de 15 %. Se deja así porque ilustra el riesgo que la reserva cubre. En las demás ejecuciones el consumo es el realista y la batería casi no se mueve en una demo corta; el factor de aceleración solo se aplica en este escenario y se declara en la presentación.
 
+## D9. Foto adjunta al incidente
+
+- **Contexto.** Ante un obstáculo, una persona en zona restringida o una falla, el operador decide mejor si ve la escena. El robot tiene cámara frontal.
+- **Decisión.** `incident` y `alert` suman un `snapshot` opcional (`id`, `mediaType`, `capturedAt`, `data` en base64 o `null`). Es una sola foto por incidente, no video: pesa decenas de KB (~640x360, JPEG medio, menos de 60 KB) y tolera el enlace degradado, donde un video sostenido no llega. El campo es opcional para no romper mensajes anteriores.
+- **Simulador.** Manda `data = null` y ids fijos (`sim-obstaculo`, `sim-persona`, `sim-falla`); la app resuelve la imagen por `id`. `BATTERY_RETURN` no lleva foto.
+- **Consecuencias.** En un robot real el JPEG saldría del servicio de video de la cámara frontal del SDK, vía el gateway. Una foto es un instante: no muestra cómo evoluciona la situación ni reemplaza la inspección en sitio.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo R7)

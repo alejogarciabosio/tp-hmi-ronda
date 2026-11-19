@@ -31,7 +31,24 @@ En la app, el simulador de `:core` produce y consume estos mismos mensajes a tra
 | `respuesta-rechazada.json` | `COMMAND_ACK` con `status: REJECTED`, `reasonCode` y `reasonText` (motivo legible para mostrar tal cual). |
 | `evento-alerta.json` | `EVENT` con `event: ALERT_RAISED` y el objeto `alert`. |
 | `evento-decision-requerida.json` | `EVENT` con `event: DECISION_REQUIRED` y un `incident` de tipo `OBSTACLE` con las opciones que ofrece el robot. |
-| `evento-persona-zona-restringida.json` | `EVENT` con `DECISION_REQUIRED` y un `incident` de tipo `PERSON_IN_RESTRICTED_ZONE` (escenario 5). No lleva imágenes: solo el hecho, el punto de control y las opciones. |
+| `evento-persona-zona-restringida.json` | `EVENT` con `DECISION_REQUIRED` y un `incident` de tipo `PERSON_IN_RESTRICTED_ZONE` (escenario 5). Lleva un `snapshot` con `data: null`: la app resuelve la imagen por `id`. |
+
+## Foto adjunta al incidente (`snapshot`)
+
+`incident` (`DECISION_REQUIRED`) y `alert` (`ALERT_RAISED`) pueden llevar un objeto opcional `snapshot` con una foto de la cámara frontal tomada al detectar el hecho, para que el operador decida viendo qué pasa. Si falta, el mensaje es válido: los JSON anteriores siguen parseando y `BATTERY_RETURN` no lleva foto.
+
+| Campo | Contenido |
+|---|---|
+| `id` | Identificador de la imagen. |
+| `mediaType` | `image/jpeg`. |
+| `capturedAt` | Epoch ms del disparo. |
+| `data` | JPEG en base64, o `null`. Con `null`, la app resuelve la imagen por `id`. |
+
+- **Tamaño recomendado:** ~640x360, JPEG de calidad media, menos de 60 KB (unos 80 KB en base64 dentro del JSON).
+- **Por qué foto y no video:** una imagen única pesa decenas de KB y un video continuo exige ancho de banda sostenido. Con el enlace degradado la foto todavía llega o se reintenta; un video se cortaría justo cuando el operador más lo necesita. Además, el operador solo necesita ver el hecho puntual para decidir.
+- **Origen en un robot real:** el JPEG saldría del servicio de video de la cámara frontal del SDK; el gateway lo recortaría al tamaño recomendado y lo adjuntaría al mensaje.
+- **Simulador:** manda `data: null` y ids fijos: `sim-obstaculo` (obstáculo), `sim-persona` (persona en zona restringida) y `sim-falla` (falla del robot, solo en la alerta `ROBOT_FAULT`).
+- `evento-decision-requerida.json` trae un `data` real (JPEG mínimo de 1x1 px, solo para validar el formato); `evento-persona-zona-restringida.json` usa `null`.
 
 ## Estados de comando
 
