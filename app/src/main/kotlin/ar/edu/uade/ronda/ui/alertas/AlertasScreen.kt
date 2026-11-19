@@ -32,7 +32,7 @@ import ar.edu.uade.ronda.core.model.Severity
 import ar.edu.uade.ronda.core.policy.CommandAvailability
 import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.components.StateSymbol
@@ -93,7 +93,7 @@ fun AlertasScreen(
                 }
             }
         }
-        RondaNavBar(Route.ALERTAS, onNavigate)
+        OperationalBottomBar(Route.ALERTAS, onNavigate)
     }
 }
 

@@ -31,7 +31,7 @@ import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.RouteId
 import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.components.StateSymbol
@@ -81,7 +81,7 @@ fun MisionesScreen(
                 CommandButton(state.start, onStart)
             }
         }
-        RondaNavBar(Route.MISIONES, onNavigate)
+        OperationalBottomBar(Route.MISIONES, onNavigate)
     }
 }
 

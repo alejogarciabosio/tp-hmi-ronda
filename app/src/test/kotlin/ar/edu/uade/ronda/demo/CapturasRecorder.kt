@@ -38,6 +38,9 @@ import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionRoute
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.data.LinkMonitor
+import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
+import ar.edu.uade.ronda.ui.operacion.ProvideOperationalBar
+import androidx.compose.runtime.remember
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.simulacion.SimulacionRoute
 import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
@@ -248,7 +251,9 @@ class CapturasRecorder {
     private fun show(content: @Composable () -> Unit) {
         rule.mainClock.autoAdvance = false
         rule.setContent {
-            RondaTheme { Box(Modifier.fillMaxSize().background(RondaColors.ink950)) { content() } }
+            // Como en el NavHost: la barra fija de detención operativa la provee un ViewModel compartido.
+            val bar = remember { OperationalBarViewModel(repo, clock) }
+            RondaTheme { ProvideOperationalBar(bar) { Box(Modifier.fillMaxSize().background(RondaColors.ink950)) { content() } } }
         }
         settle()
     }

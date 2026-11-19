@@ -41,6 +41,7 @@ import ar.edu.uade.ronda.ui.navigation.RondaNavHost
 import ar.edu.uade.ronda.ui.navigation.Route
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.data.LinkMonitor
+import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
@@ -127,6 +128,7 @@ class VideoDemoRecorder {
             initializer { HistorialViewModel(repo, history, clock) }
             initializer { DesconexionViewModel(repo, clock, linkMonitor.log) }
             initializer { SimulacionViewModel(control, repo) }
+            initializer { OperationalBarViewModel(repo, clock) }
         }
         advance(3_000)
         rule.mainClock.autoAdvance = false

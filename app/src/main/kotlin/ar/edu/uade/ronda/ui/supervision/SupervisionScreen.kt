@@ -35,9 +35,8 @@ import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.CommandChip
 import ar.edu.uade.ronda.ui.components.FloorPlanCanvas
 import ar.edu.uade.ronda.ui.components.HoldToConfirm
-import ar.edu.uade.ronda.ui.components.OperationalStopTexts
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.StaleDataBanner
 import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.components.StateSymbol
@@ -171,15 +170,10 @@ fun SupervisionScreen(
                         state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
                     }
                 }
-                HoldToConfirm(
-                    OperationalStopTexts.LABEL, onOperationalStop,
-                    enabled = state.stop.enabled, disabledReason = state.stop.reason,
-                )
-                Text(OperationalStopTexts.NOTE, style = RondaType.textoNota, color = RondaColors.bone400)
                 CommandButton(CommandButtonUi("Más controles", CommandKind.SECONDARY), { onNavigate(Route.CONTROL) })
             }
         }
-        RondaNavBar(Route.SUPERVISION, onNavigate)
+        OperationalBottomBar(Route.SUPERVISION, onNavigate)
     }
 
     val decision = state.decision

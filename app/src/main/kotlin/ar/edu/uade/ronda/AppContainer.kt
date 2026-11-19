@@ -22,6 +22,7 @@ import ar.edu.uade.ronda.ui.control.ControlViewModel
 import ar.edu.uade.ronda.ui.desconexion.DesconexionViewModel
 import ar.edu.uade.ronda.ui.historial.HistorialViewModel
 import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
+import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
@@ -90,6 +91,7 @@ class AppContainer(
         initializer { HistorialViewModel(robotRepository, historyRepository, clock) }
         initializer { DesconexionViewModel(robotRepository, clock, linkMonitor.log) }
         initializer { SimulacionViewModel(simulationControl, robotRepository) }
+        initializer { OperationalBarViewModel(robotRepository, clock) }
     }
 
     init {

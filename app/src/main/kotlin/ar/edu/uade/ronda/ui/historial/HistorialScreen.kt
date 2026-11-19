@@ -32,7 +32,7 @@ import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.data.local.EventRecord
 import ar.edu.uade.ronda.data.local.MissionRecord
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.components.StateSymbol
@@ -88,7 +88,7 @@ fun HistorialScreen(
                 Text(state.retentionNote, style = RondaType.textoNota, color = RondaColors.bone400)
             }
         }
-        RondaNavBar(Route.HISTORIAL, onNavigate)
+        OperationalBottomBar(Route.HISTORIAL, onNavigate)
     }
 }
 

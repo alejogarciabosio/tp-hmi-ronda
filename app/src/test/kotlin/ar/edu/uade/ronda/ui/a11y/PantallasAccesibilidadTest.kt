@@ -39,6 +39,9 @@ import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import ar.edu.uade.ronda.ui.theme.RondaTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule
+import androidx.compose.runtime.remember
+import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
+import ar.edu.uade.ronda.ui.operacion.ProvideOperationalBar
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -69,7 +72,10 @@ class PantallasAccesibilidadTest {
     }
 
     private fun check(screen: String, content: @Composable () -> Unit) {
-        rule.setContent { RondaTheme { content() } }
+        rule.setContent {
+            val bar = remember { OperationalBarViewModel(repo(), clock) }
+            RondaTheme { ProvideOperationalBar(bar) { content() } }
+        }
         rule.waitForIdle()
         val density = rule.density.density
         val problems = rule.onAllNodes(hasClickAction()).fetchSemanticsNodes().mapNotNull { node ->

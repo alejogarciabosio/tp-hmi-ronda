@@ -28,9 +28,8 @@ import ar.edu.uade.ronda.ui.components.ActionCallout
 import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.CommandChip
 import ar.edu.uade.ronda.ui.components.HoldToConfirm
-import ar.edu.uade.ronda.ui.components.OperationalStopTexts
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
@@ -86,13 +85,6 @@ fun ControlScreen(
             }
             state.guardNotice?.let { ActionCallout(it, StatusLevel.WARNING, Modifier.padding(horizontal = 16.dp)) }
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SectionTitle("DETENCIÓN")
-                HoldToConfirm(
-                    OperationalStopTexts.LABEL, onOperationalStop,
-                    enabled = state.stop.enabled, disabledReason = state.stop.reason,
-                )
-                Text(OperationalStopTexts.NOTE, style = RondaType.textoNota, color = RondaColors.stateError)
-
                 SectionTitle("ÓRDENES")
                 CommandButton(state.pause, onPause)
                 CommandButton(state.resume, onResume)
@@ -130,7 +122,7 @@ fun ControlScreen(
                 )
             }
         }
-        RondaNavBar(Route.SUPERVISION, onNavigate)
+        OperationalBottomBar(Route.SUPERVISION, onNavigate)
     }
 }
 

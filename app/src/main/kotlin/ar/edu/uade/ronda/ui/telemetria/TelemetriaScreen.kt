@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StaleDataBanner
 import ar.edu.uade.ronda.ui.components.StateStrip
@@ -54,7 +54,7 @@ fun TelemetriaScreen(state: TelemetriaUiState, onNavigate: (Route) -> Unit, onBa
                 ReadoutSection("SERVICIO DE RONDA", state.service)
             }
         }
-        RondaNavBar(Route.SUPERVISION, onNavigate)
+        OperationalBottomBar(Route.SUPERVISION, onNavigate)
     }
 }
 

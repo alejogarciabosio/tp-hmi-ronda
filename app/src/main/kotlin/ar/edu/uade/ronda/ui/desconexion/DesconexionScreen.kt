@@ -20,10 +20,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.policy.CommandAvailability
-import ar.edu.uade.ronda.ui.components.HoldToConfirm
-import ar.edu.uade.ronda.ui.components.OperationalStopTexts
 import ar.edu.uade.ronda.ui.components.PreviewSurface
-import ar.edu.uade.ronda.ui.components.RondaNavBar
+import ar.edu.uade.ronda.ui.operacion.OperationalBottomBar
 import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StaleDataBanner
 import ar.edu.uade.ronda.ui.components.StateStrip
@@ -93,7 +91,7 @@ fun DesconexionScreen(state: DesconexionUiState, onNavigate: (Route) -> Unit, on
                 }
             }
         }
-        RondaNavBar(Route.SUPERVISION, onNavigate)
+        OperationalBottomBar(Route.SUPERVISION, onNavigate)
     }
 }
 

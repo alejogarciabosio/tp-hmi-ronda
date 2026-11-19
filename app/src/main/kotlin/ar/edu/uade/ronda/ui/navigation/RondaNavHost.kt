@@ -20,6 +20,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import ar.edu.uade.ronda.ui.components.NavBarRoutes
+import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
+import ar.edu.uade.ronda.ui.operacion.ProvideOperationalBar
 import ar.edu.uade.ronda.ui.components.PreviewSurface
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
@@ -53,6 +55,19 @@ fun RondaNavHost(
     startDestination: Route = Route.SUPERVISION,
 ) {
     val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL, Route.DESCONEXION, Route.SIMULACION)
+    // La barra fija (detención operativa e insignia de alertas) es una sola para todas las pantallas.
+    val bar: OperationalBarViewModel = viewModel(factory = viewModelFactory)
+    ProvideOperationalBar(bar) { RondaNavGraph(viewModelFactory, navController, modifier, startDestination, implemented) }
+}
+
+@Composable
+private fun RondaNavGraph(
+    viewModelFactory: ViewModelProvider.Factory,
+    navController: NavHostController,
+    modifier: Modifier,
+    startDestination: Route,
+    implemented: Set<Route>,
+) {
     NavHost(navController, startDestination.path, modifier) {
         val go: (Route) -> Unit = { navController.navigateTo(it) }
         val back: () -> Unit = { navController.popBackStack() }
