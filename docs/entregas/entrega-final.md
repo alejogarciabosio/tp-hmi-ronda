@@ -5,9 +5,9 @@ subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 
 # RONDA: HMI de supervisión de un Unitree Go2 en rondas nocturnas
 
-Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN> **[link final pendiente]** (ver §15).
+Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
 
-Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado figura con el marcador **[PENDIENTE — Iñaki]** o **[link final pendiente]** y no se describen resultados que no existan.
+Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado figura con el marcador **[PENDIENTE — Iñaki]** y no se describen resultados que no existan.
 
 Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §18 y detalladas en `docs/fuentes.md`.
 
@@ -212,15 +212,25 @@ Limitaciones que importan para evaluar el trabajo:
 
 ## 15. Prototipo en Figma
 
-Archivo actual: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN>. **[link final pendiente]**: el prototipo definitivo se está terminando en otra cuenta y este link se reemplaza cuando esté publicado.
+Archivo: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> ("RONDA — HMI Go2", cuenta de UADE). El detalle de páginas, componentes y node IDs está en [`design/FIGMA.md`](../../design/FIGMA.md).
 
-Hecho al 2026-11-19 en el archivo actual (página `01 Sistema`, detalle en `design/FIGMA.md`): variables de color (tema noche y una muestra del tema día), espaciado y radios; estilos de texto (Archivo, IBM Plex Mono e IBM Plex Sans); símbolos de estado con redundancia (círculo lleno, triángulo con franjas, rombo, círculo punteado, contorno tachado); íconos lineales; y 14 componentes reutilizables con variantes de estado (normal, deshabilitado, advertencia, error), ligados a las variables. La dirección visual parte del plano de evacuación y de la planilla de ronda en papel: líneas finas, filas con reglas, estado siempre con color, forma y texto.
+Estructura del archivo:
 
-![Sistema: componentes](../../design/exports/01-sistema-componentes.png)
+- **00 Portada:** caso, materia, integrantes, índice con links a las páginas y aviso de que el contrato JSON es una propuesta del grupo, no un protocolo de Unitree.
+- **01 Fundamentos:** variables de color con dos modos (noche, principal, y día), espaciado y radios; estilos de texto (Archivo, IBM Plex Mono e IBM Plex Sans); grilla de 412 × 917 con 4 columnas; símbolos de estado con redundancia (círculo lleno, triángulo con franjas, rombo, círculo punteado, contorno tachado); íconos lineales e ilustraciones simuladas de la cámara frontal.
+- **02 Componentes:** los 14 componentes de la especificación con variantes de estado (normal, deshabilitado, advertencia, error, sin datos) y los auxiliares que usa la app (barra superior, pestañas de piso, alerta compacta, interruptor). Todo ligado a variables.
+- **03 Pantallas:** 23 pantallas: selección de robot, nueve estados de Supervisión (en ronda, batería baja, incidente, sin datos, en base, PC 8/8, ronda completada, comando rechazado, enlace restaurado y detenido recibiendo imagen), telemetría, misiones y preflight con un control fallido, control, alertas, historial, desconexión, reconexión, decisión requerida, foto ampliada y panel de simulación. Las de Supervisión coinciden con la app (§12).
+- **04 Flujo normal** (escenario 1) y **05 Flujo con falla** (escenarios 3 y 4): secuencias conectadas como prototipo, con punto de inicio propio.
+- **06 Mapa de navegación:** todas las pantallas con las transiciones y sus condiciones (por ejemplo, sin datos por más de 10 s pasa a Desconexión).
+- **07 Recorrido:** plano de los dos pisos con base, puntos de control, salidas y escaleras, igual a `docs/arquitectura/recorrido.svg`.
 
-![Franja de estado](../../design/exports/01-componente-statestrip.png)
+Foto del incidente: cuando el robot pide una decisión (obstáculo, persona en zona restringida, falla) la hoja de decisión muestra arriba una imagen de la cámara frontal con su antigüedad ("Cámara frontal · hace 4 s"); sin imagen dice "Sin imagen disponible" y con el enlace caído se rotula "Imagen del momento del incidente" para que no se lea como en vivo. Las imágenes del prototipo y de la app son ilustraciones esquemáticas rotuladas "IMAGEN SIMULADA". En el flujo con falla se marca la secuencia detecta → se detiene → llega la foto → la persona mira y decide: la máquina propone y la persona decide, porque la detección puede equivocarse.
 
-Pendiente de confirmar en el Figma final: portada y mapa de navegación, selección de robot, supervisión, telemetría, misiones, control, alertas con decisión requerida, historial, desconexión y panel de simulación, con el flujo normal (escenario 1) y el flujo con falla (escenarios 3 o 4) navegables. **[link final pendiente]**
+![Pantallas](../../design/exports/03-pantallas.png)
+
+![Flujo con falla](../../design/exports/05-flujo-con-falla.png)
+
+![Mapa de navegación](../../design/exports/06-mapa-navegacion.png)
 
 ## 16. Aplicación Android
 
