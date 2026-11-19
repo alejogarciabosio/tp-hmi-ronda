@@ -1,6 +1,6 @@
 # Supuestos de la simulación: batería y capacidades del Go2
 
-Qué se sabe del Unitree Go2 EDU, qué se calcula a partir de eso y qué queda como supuesto del grupo. Las fuentes (ID entre paréntesis) están en `docs/fuentes.md`, ampliación del 2026-11-20. Los coeficientes de este documento son del **simulador**; no son mediciones del Go2 ni valores publicados por Unitree.
+Qué se sabe del Unitree Go2 EDU, qué se calcula a partir de eso y qué queda como supuesto del grupo. Las fuentes (ID entre paréntesis) están en `docs/fuentes.md`, ampliación del 2026-11-19. Los coeficientes de este documento son del **simulador**; no son mediciones del Go2 ni valores publicados por Unitree.
 
 ## 1. Capacidades del Go2 relevantes para el caso
 

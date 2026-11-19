@@ -49,7 +49,7 @@ Limitación sobre GO2-5: el Document Center es una aplicación que se renderiza 
 | Voz / parlante | "Funciones de voz"; parlante de 3 W | GO2-1 (voz), GO2-6 (3 W) | GO2-8 no describe parlante. El SDK incluye control de volumen y luz (`vui_client`, GO2-3). La potencia del parlante la da un solo distribuidor. |
 | Evasión de obstáculos | Evasión inteligente, **solo hacia adelante** | GO2-6, GO2-8 | GO2-3 incluye un ejemplo con interruptor del servicio de evasión. |
 | Mapeo | "Mapeo 3D con LiDAR" como función de software | GO2-1 | Mapa persistente por puntos de control y navegación entre pisos: no documentado en las fuentes leídas. |
-| Base de carga | "Compatible con pila de carga": X y EDU | GO2-1 | El manual (GO2-8) agrega que la EDU soporta carga en pila y puede planificar la ruta de carga; ver la ampliación del 2026-11-20. Acople autónomo mediante API del SDK: no confirmado. |
+| Base de carga | "Compatible con pila de carga": X y EDU | GO2-1 | El manual (GO2-8) agrega que la EDU soporta carga en pila y puede planificar la ruta de carga; ver la ampliación del 2026-11-19. Acople autónomo mediante API del SDK: no confirmado. |
 | Temperatura de operación | 5 a 35 °C | GO2-7, GO2-8 | GO2-1 no la lista. |
 | Agua / polvo | No es resistente al agua ni al polvo; sin grado IP | GO2-7, GO2-8 | GO2-1 no lista IP. |
 | Restricciones de uso | Mantener 2 m de obstáculos y multitudes; velocidad reducida en suelos de baja fricción (hielo, baldosa lisa); no enviar comandos de alto nivel y de control remoto a la vez | GO2-8 | |
@@ -70,24 +70,24 @@ Limitación sobre GO2-5: el Document Center es una aplicación que se renderiza 
 | Desarrollo secundario | Solo EDU | G1-1 | G1-2: la versión base no menciona SDK. |
 | Precio | G1 base USD 13,5 mil (oficial, sin impuestos ni flete); USD 17.900 en RobotShop | G1-1, G1-2 | Difieren: el distribuidor vende por pedido especial e incluye su margen. |
 
-## Ampliación del 2026-11-20 (capacidades, batería y antecedentes)
+## Ampliación del 2026-11-19 (capacidades, batería y antecedentes)
 
-Consulta de todas las páginas: **2026-11-20**. GO2-1 y GO2-8 se volvieron a leer con otras preguntas; lo nuevo se anota abajo.
+Consulta de todas las páginas: **2026-11-19**. GO2-1 y GO2-8 se volvieron a leer con otras preguntas; lo nuevo se anota abajo.
 
 ### Fuentes nuevas
 
 | ID | Tipo | Fuente | URL | Consulta |
 |---|---|---|---|---|
-| GO2-9 | Ficha de distribuidor | OpenElab, batería Go2 BT2-06 de larga duración (15000 mAh / 432 Wh, 28,8 V nominal, 33,6 V de carga, 3,5-9 A) | https://openelab.io/pl/products/unitree-go2-battery-long-batterylife | 2026-11-20 |
-| GO2-10 | Ficha de distribuidor | Robostore, batería Go2 ("8000 mAh, 236,8 Wh (estándar), 15000 mAh 432 Wh (extendida)"; tope de carga 33,6 V) | https://robostore.com/products/unitree-go2-ai-robot-dog-battery | 2026-11-20 |
-| GO2-11 | Ficha de distribuidor | QuakeLogic, datasheet Go2 EDU+ (rango de tensión 28-33,6 V, potencia máxima 3000 W, autonomía 2-4 h, escalón 16 cm, pendiente 40 °) | https://quakelogic.net/datasheets/QL-Unitree-Go2-EDU+.pdf | 2026-11-20 |
-| GO2-12 | Proyecto comunitario | `Kodo-Robotics/go2-autonomous-patrol` (ROS 2, Nav2, YOLO, acople por AprilTag sobre un Go2 EDU) | https://github.com/Kodo-Robotics/go2-autonomous-patrol | 2026-11-20 |
-| GO2-13 | Prensa | Shanghai Daily / City News Service, 28-09-2025: patrullaje urbano con tres Unitree B1 y tres Go2 | https://www.citynewsservice.cn/articles/shanghaidaily/news/shanghai-deploys-robot-dogs-drones-for-city-patrols-dmjb0gen | 2026-11-20 |
-| GO2-14 | Guía de distribuidor | GlobalDroneHQ, guía de cuadrúpedos para patrullaje de seguridad | https://globaldronehq.com/blogs/guides/quadruped-robots-security-patrol | 2026-11-20 |
-| SPOT-1 | Oficial | Boston Dynamics, página de producto Spot (564 Wh, ~90 min, reposo ~180 min, carga ~60 min, 1,6 m/s, escalón 300 mm, -20 a 55 °C, "autonomously charging") | https://bostondynamics.com/products/spot/ | 2026-11-20 |
-| ANY-1 | Oficial | ANYbotics, página de ANYmal (90 min, docking station, 2 km por carga, 0,75 m/s, IP67) | https://www.anybotics.com/anymal | 2026-11-20 |
-| AMR-1 | Configuración de referencia | Open-RMF `rmf_demos`, `tinyRobot_config.yaml` (`recharge_threshold: 0.10`) | https://raw.githubusercontent.com/open-rmf/rmf_demos/main/rmf_demos/config/office/tinyRobot_config.yaml | 2026-11-20 |
-| AMR-2 | Artículo técnico | Automated Warehouse, "Power Management for Autonomous Mobile Robots" (no da porcentajes; solo dice que el robot vigila la carga y decide cuándo ir al cargador) | https://www.automatedwarehouseonline.com/power-management-for-autonomous-mobile-robots/ | 2026-11-20 |
+| GO2-9 | Ficha de distribuidor | OpenElab, batería Go2 BT2-06 de larga duración (15000 mAh / 432 Wh, 28,8 V nominal, 33,6 V de carga, 3,5-9 A) | https://openelab.io/pl/products/unitree-go2-battery-long-batterylife | 2026-11-19 |
+| GO2-10 | Ficha de distribuidor | Robostore, batería Go2 ("8000 mAh, 236,8 Wh (estándar), 15000 mAh 432 Wh (extendida)"; tope de carga 33,6 V) | https://robostore.com/products/unitree-go2-ai-robot-dog-battery | 2026-11-19 |
+| GO2-11 | Ficha de distribuidor | QuakeLogic, datasheet Go2 EDU+ (rango de tensión 28-33,6 V, potencia máxima 3000 W, autonomía 2-4 h, escalón 16 cm, pendiente 40 °) | https://quakelogic.net/datasheets/QL-Unitree-Go2-EDU+.pdf | 2026-11-19 |
+| GO2-12 | Proyecto comunitario | `Kodo-Robotics/go2-autonomous-patrol` (ROS 2, Nav2, YOLO, acople por AprilTag sobre un Go2 EDU) | https://github.com/Kodo-Robotics/go2-autonomous-patrol | 2026-11-19 |
+| GO2-13 | Prensa | Shanghai Daily / City News Service, 28-09-2025: patrullaje urbano con tres Unitree B1 y tres Go2 | https://www.citynewsservice.cn/articles/shanghaidaily/news/shanghai-deploys-robot-dogs-drones-for-city-patrols-dmjb0gen | 2026-11-19 |
+| GO2-14 | Guía de distribuidor | GlobalDroneHQ, guía de cuadrúpedos para patrullaje de seguridad | https://globaldronehq.com/blogs/guides/quadruped-robots-security-patrol | 2026-11-19 |
+| SPOT-1 | Oficial | Boston Dynamics, página de producto Spot (564 Wh, ~90 min, reposo ~180 min, carga ~60 min, 1,6 m/s, escalón 300 mm, -20 a 55 °C, "autonomously charging") | https://bostondynamics.com/products/spot/ | 2026-11-19 |
+| ANY-1 | Oficial | ANYbotics, página de ANYmal (90 min, docking station, 2 km por carga, 0,75 m/s, IP67) | https://www.anybotics.com/anymal | 2026-11-19 |
+| AMR-1 | Configuración de referencia | Open-RMF `rmf_demos`, `tinyRobot_config.yaml` (`recharge_threshold: 0.10`) | https://raw.githubusercontent.com/open-rmf/rmf_demos/main/rmf_demos/config/office/tinyRobot_config.yaml | 2026-11-19 |
+| AMR-2 | Artículo técnico | Automated Warehouse, "Power Management for Autonomous Mobile Robots" (no da porcentajes; solo dice que el robot vigila la carga y decide cuándo ir al cargador) | https://www.automatedwarehouseonline.com/power-management-for-autonomous-mobile-robots/ | 2026-11-19 |
 
 ### Datos nuevos del Go2
 
