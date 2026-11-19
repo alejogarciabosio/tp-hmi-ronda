@@ -55,9 +55,14 @@ enum class OutputKind { TELEMETRY, ACK, EVENT }
 data class SimOutput(val kind: OutputKind, val json: String)
 
 /**
- * Robot simulado. No usa corrutinas ni reloj propio: el transporte llama a [tick] y a [onMessage]
- * con la hora actual, así los escenarios son deterministas con tiempo virtual. Habla JSON
- * a través de [ContractCodec]. No es thread-safe: el transporte serializa los accesos.
+ * Robot simulado. No usa corrutinas: el transporte llama a [tick] y a [onMessage] con la hora real,
+ * así los escenarios son deterministas con tiempo virtual. Habla JSON a través de [ContractCodec].
+ * No es thread-safe: el transporte serializa los accesos.
+ *
+ * Lleva dos relojes. La hora real (`nowMs` de cada llamada) estampa los mensajes y decide si una
+ * orden llegó vencida. El reloj de simulación ([simNowMs]) avanza la hora real multiplicada por
+ * [timeScale] y gobierna todo lo físico: desplazamiento, fases (preparación, verificación, espera
+ * de 30 s, regreso a los 60 s sin enlace), batería y temperatura.
  */
 class RobotSimulator(
     private val random: Random = Random(1),
@@ -76,11 +81,17 @@ class RobotSimulator(
     // Estado del robot
     private var state = EN_BASE
     private var batteryPct = 100.0
-    private var lastTickMs: Long? = null
+    // Relojes: la hora real de la última llamada y el reloj de simulación (ver la doc de la clase).
+    private var lastRealMs: Long? = null
+    private var simNowMs = 0L
+    private var lastTickSimMs: Long? = null
+    private var timeScaleValue = 1.0
     private var phase = Phase.NONE
     private var phaseUntil = 0L
     private var holdStartMs = 0L
     private var stoppedFrom: OperationalState? = null
+    // Con una detención operativa durante una decisión: de dónde venía el robot antes de la decisión.
+    private var stoppedBeforeDecision: OperationalState? = null
     private var linkHold = false
     private var linkDownSince: Long? = null
 
@@ -135,11 +146,31 @@ class RobotSimulator(
 
     val currentState: OperationalState get() = state
     val batteryPercent: Double get() = batteryPct
+    val timeScale: Double get() = timeScaleValue
+
+    /** Reloj de simulación en ms. Arranca igual a la hora real del primer llamado. */
+    val simNow: Long get() = simNowMs
+
+    /** Lleva el reloj de simulación hasta la hora real `nowMs`, a la escala vigente. */
+    private fun syncClock(nowMs: Long) {
+        val last = lastRealMs
+        if (last == null) simNowMs = nowMs
+        else simNowMs += ((nowMs - last).coerceAtLeast(0) * timeScaleValue).toLong()
+        lastRealMs = nowMs
+    }
+
+    /** Cambia la escala de tiempo (×1, ×4 u ×8). Lo transcurrido hasta `nowMs` se cuenta con la escala anterior. */
+    fun setTimeScale(nowMs: Long, scale: Double) {
+        require(scale in ALLOWED_TIME_SCALES) { "Escala de tiempo no permitida: $scale (válidas: $ALLOWED_TIME_SCALES)" }
+        syncClock(nowMs)
+        timeScaleValue = scale
+    }
 
     // ---- Control ----
 
     fun reset() {
-        state = EN_BASE; batteryPct = 100.0; phase = Phase.NONE; phaseUntil = 0; stoppedFrom = null
+        // La escala de tiempo y los relojes se conservan: reiniciar el robot no cambia la velocidad de la demo.
+        state = EN_BASE; batteryPct = 100.0; phase = Phase.NONE; phaseUntil = 0; stoppedFrom = null; stoppedBeforeDecision = null
         linkHold = false; linkDownSince = null
         routeActive = false; stops = emptyList(); nextStop = 0; missionId = null; missionName = ""
         verified = 0; issues = 0; issueOnNextVerify = false
@@ -177,43 +208,63 @@ class RobotSimulator(
         plannedIncidents[checkpointId] = type
     }
 
+    /** Por qué ahora no se puede inyectar un obstáculo o una persona, o `null` si se puede. */
+    fun incidentInjectionBlockedReason(): String? =
+        if (state == EN_RONDA && routeActive) null
+        else "El robot tiene que estar en ronda para inyectar un obstáculo o una persona."
+
     fun injectObstacle(nowMs: Long): List<SimOutput> {
-        if (state == EN_RONDA && routeActive) raiseObstacle(nowMs)
+        syncClock(nowMs)
+        if (incidentInjectionBlockedReason() == null) raiseObstacle(nowMs)
         return drain()
     }
 
     fun injectPerson(nowMs: Long): List<SimOutput> {
-        if (state == EN_RONDA && routeActive) raisePerson(nowMs)
+        syncClock(nowMs)
+        if (incidentInjectionBlockedReason() == null) raisePerson(nowMs)
         return drain()
     }
 
     fun injectFault(nowMs: Long): List<SimOutput> {
+        syncClock(nowMs)
         if (state != FALLA) {
             stopMoving()
             state = FALLA
             incident = null
+            stoppedFrom = null; stoppedBeforeDecision = null
+            linkHold = false
+            phase = Phase.NONE
             raiseAlert(nowMs, AlertType.ROBOT_FAULT, Severity.CRITICAL, "Falla del robot. Requiere técnico.", snapshot("sim-falla", nowMs))
         }
         return drain()
     }
 
-    /** El transporte avisa cuando el enlace se corta o vuelve; el robot no "sabe" que la app no lo ve. */
-    fun setLinkUp(nowMs: Long, up: Boolean) {
+    /**
+     * El transporte avisa cuando el enlace se corta o vuelve. Al cortarse, el robot se detiene y
+     * levanta una alerta `LINK_DEGRADED`; el transporte la retiene y la entrega al volver el enlace.
+     */
+    fun setLinkUp(nowMs: Long, up: Boolean): List<SimOutput> {
+        syncClock(nowMs)
         if (!up) {
-            if (linkDownSince == null) linkDownSince = nowMs
+            if (linkDownSince == null) linkDownSince = simNowMs
             // Supuesto declarado: ante pérdida de enlace el robot se detiene y espera.
-            if (state.inMotion && state != REQUIERE_DECISION) {
-                enterHold(DETENIDO, nowMs)
-                linkHold = true
+            if (state.inMotion) {
+                if (state != REQUIERE_DECISION) {
+                    enterHold(DETENIDO)
+                    linkHold = true
+                }
+                raiseAlert(nowMs, AlertType.LINK_DEGRADED, Severity.WARNING, "Enlace perdido: me detuve en ${currentZone()}")
             }
         } else {
             linkDownSince = null
         }
+        return drain()
     }
 
     // ---- Entrada de mensajes ----
 
     fun onMessage(nowMs: Long, text: String): List<SimOutput> {
+        syncClock(nowMs)
         val msg = try {
             ContractCodec.decode(text)
         } catch (e: ContractException) {
@@ -244,9 +295,7 @@ class RobotSimulator(
     private fun invalid(text: String) = Rejection(RejectReason.INVALID_STATE, text)
 
     private fun execute(cmd: Command, now: Long): Rejection? {
-        if (state == FALLA && cmd.type != CommandType.ACKNOWLEDGE_ALERT) {
-            return invalid("El robot tiene una falla y no acepta órdenes de misión.")
-        }
+        if (state == FALLA) faultRejection(cmd)?.let { return it }
         val p = cmd.params
         // Las órdenes sobre una misión tienen que apuntar a la misión actual.
         if (cmd.type in MISSION_TARGETED && p.missionId != null && p.missionId != missionId) {
@@ -256,23 +305,30 @@ class RobotSimulator(
             CommandType.START_MISSION -> start(p.routeId, now)
             CommandType.PAUSE_MISSION -> {
                 if (state != EN_RONDA) return invalid("La misión no está en curso; no hay nada que pausar.")
-                enterHold(PAUSADA, now); null
+                enterHold(PAUSADA); null
             }
             CommandType.RESUME_MISSION -> resume(p.decision, now)
             CommandType.CANCEL_MISSION -> {
                 if (state !in CANCELABLE) return invalid("No hay una misión para cancelar.")
                 stopMoving(); routeActive = false; phase = Phase.NONE; incident = null
-                state = CANCELADA; stoppedFrom = null; null
+                state = CANCELADA; stoppedFrom = null; stoppedBeforeDecision = null; linkHold = false
+                // Igual que al completar: a los 2 s el robot emprende solo el regreso a la base.
+                phaseUntil = simNowMs + COMPLETED_HOLD_MS
+                null
             }
             CommandType.RETURN_TO_SAFE_POINT -> {
                 if (state == EN_BASE) return invalid("El robot ya está en la base.")
                 if (state == REGRESANDO) return invalid("El robot ya está regresando.")
                 val target = if (p.safePointId == SafePointId.DESCANSO_ESCALERA_E) SimMap.restPoint else SimMap.base
+                if (state == FALLA) {
+                    // Salida de la falla: regreso a la base para que lo atienda el técnico. La misión se da por terminada.
+                    routeActive = false
+                }
                 startReturn(target); null
             }
             CommandType.OPERATIONAL_STOP -> {
                 if (!state.inMotion) return invalid("El robot no está en movimiento.")
-                enterHold(DETENIDO, now); null
+                enterHold(DETENIDO); null
             }
             CommandType.ACKNOWLEDGE_ALERT -> acknowledge(p.alertId, p.resolution, now)
         }
@@ -296,7 +352,7 @@ class RobotSimulator(
         missionId = nextId("m"); missionName = routeId.displayName
         lowBatteryAlerted = false; batteryReturnProposed = false
         state = PREPARANDO
-        phaseUntil = now + PREPARING_MS
+        phaseUntil = simNowMs + PREPARING_MS
         return null
     }
 
@@ -311,7 +367,7 @@ class RobotSimulator(
                     null -> invalid("Hay una decisión pendiente: elegí una de las opciones.")
                     IncidentDecision.WAIT_30S -> {
                         resolveIncident(AlertType.OBSTACLE)
-                        state = EN_RONDA; phase = Phase.WAITING_OBSTACLE; phaseUntil = now + OBSTACLE_WAIT_MS
+                        state = EN_RONDA; phase = Phase.WAITING_OBSTACLE; phaseUntil = simNowMs + OBSTACLE_WAIT_MS
                         null
                     }
                     IncidentDecision.SKIP_CHECKPOINT -> {
@@ -324,6 +380,11 @@ class RobotSimulator(
                 }
             }
             PAUSADA, DETENIDO -> {
+                if (state == DETENIDO && stoppedFrom == REQUIERE_DECISION && incident != null) {
+                    // Detenido durante una decisión: reanudar vuelve a pedir la decisión pendiente.
+                    exitHold(now)
+                    return null
+                }
                 if (alerts.any { !it.acknowledged && it.severity == Severity.CRITICAL }) {
                     return Rejection(RejectReason.UNACKNOWLEDGED_ALERT, "Reconocé la alerta antes de reanudar.")
                 }
@@ -340,6 +401,9 @@ class RobotSimulator(
         val alert = alerts.firstOrNull { it.id == alertId }
             ?: return Rejection(RejectReason.UNKNOWN_TARGET, "La alerta $alertId no existe.")
         if (alert.acknowledged) return invalid("La alerta ya estaba reconocida.")
+        if (alert.type == AlertType.PERSON_DETECTED && state == DETENIDO && stoppedFrom == REQUIERE_DECISION && incident != null) {
+            return invalid("El robot está detenido: reanudá para volver a la decisión pendiente y resolverla.")
+        }
         if (alert.type == AlertType.PERSON_DETECTED && state == REQUIERE_DECISION) {
             if (resolution == null) return invalid("Indicá cómo se resuelve la detección de persona.")
             // Cualquier decisión del operador cierra el incidente: no se vuelve a ofrecer la hoja.
@@ -367,8 +431,10 @@ class RobotSimulator(
     // ---- Avance del tiempo ----
 
     fun tick(nowMs: Long): List<SimOutput> {
-        val dt = lastTickMs?.let { ((nowMs - it) / 1000.0).coerceAtLeast(0.0) } ?: 0.0
-        lastTickMs = nowMs
+        syncClock(nowMs)
+        // dt en segundos de simulación: la hora real transcurrida por la escala de tiempo.
+        val dt = lastTickSimMs?.let { ((simNowMs - it) / 1000.0).coerceAtLeast(0.0) } ?: 0.0
+        lastTickSimMs = simNowMs
 
         speedMps = 0.0
         mode = MotionMode.DETENIDO
@@ -380,22 +446,24 @@ class RobotSimulator(
         return drain()
     }
 
+    /** `now` es la hora real (para estampar alertas); las fases se comparan con el reloj de simulación. */
     private fun advance(now: Long, dt: Double) {
+        val sim = simNowMs
         when (state) {
-            PREPARANDO -> if (now >= phaseUntil) {
+            PREPARANDO -> if (sim >= phaseUntil) {
                 state = EN_RONDA; phase = Phase.NONE
                 startLeg(stops[nextStop])
             }
             EN_RONDA -> when (phase) {
-                Phase.VERIFYING -> if (now >= phaseUntil) verifyCheckpoint(now)
-                Phase.WAITING_OBSTACLE -> if (now >= phaseUntil) phase = Phase.NONE
+                Phase.VERIFYING -> if (sim >= phaseUntil) verifyCheckpoint(now)
+                Phase.WAITING_OBSTACLE -> if (sim >= phaseUntil) phase = Phase.NONE
                 Phase.NONE -> travel(now, dt)
             }
             REGRESANDO -> travel(now, dt)
-            COMPLETADA -> if (now >= phaseUntil) startReturn(SimMap.base)
+            COMPLETADA, CANCELADA -> if (sim >= phaseUntil) startReturn(SimMap.base)
             DETENIDO -> {
                 val down = linkDownSince
-                if (linkHold && down != null && now - down >= LINK_LOSS_RETURN_MS) {
+                if (linkHold && down != null && sim - down >= LINK_LOSS_RETURN_MS) {
                     linkHold = false
                     startReturn(SimMap.base)
                 }
@@ -404,15 +472,24 @@ class RobotSimulator(
         }
     }
 
-    private fun travel(now: Long, dt: Double) {
-        val stairs = legTarget.floor != legStartFloor
-        val speed = if (stairs) STAIRS_SPEED_MPS else WALK_SPEED_MPS
-        var step = speed * dt
+    /**
+     * Tramo de escalera dentro del tramo actual, en metros recorridos desde el inicio:
+     * va en el medio del recorrido plano y mide [BuildingLayout.STAIRS_EXTRA_M]. `null` si no cambia de piso.
+     */
+    private fun stairsSpan(): ClosedFloatingPointRange<Double>? {
+        if (legTarget.floor == legStartFloor) return null
+        val flat = legLength - STAIRS_EXTRA_M
+        val from = flat / 2
+        return from..(from + STAIRS_EXTRA_M)
+    }
 
+    private fun travel(now: Long, dt: Double) {
         // Los incidentes programados frenan al robot a 2 m del punto de control.
+        var maxDistance = legRemaining
         val planned = if (state == EN_RONDA) plannedIncidents[legTarget.id] else null
         if (planned != null) {
-            if (legRemaining <= INCIDENT_DISTANCE_M) {
+            // Con tolerancia: la suma de pasos en coma flotante puede dejar el robot a 2 m + epsilon.
+            if (legRemaining <= INCIDENT_DISTANCE_M + 1e-6) {
                 plannedIncidents.remove(legTarget.id)
                 when (planned) {
                     IncidentType.PERSON_IN_RESTRICTED_ZONE -> raisePerson(now)
@@ -420,17 +497,39 @@ class RobotSimulator(
                 }
                 return
             }
-            step = min(step, legRemaining - INCIDENT_DISTANCE_M)
+            maxDistance = legRemaining - INCIDENT_DISTANCE_M
         }
 
-        step = min(step, legRemaining)
-        legRemaining -= step
+        // La velocidad de escalera rige solo en el tramo de escalera; el resto del tramo se camina.
+        val span = stairsSpan()
+        var timeLeft = dt
+        var moved = 0.0
+        var onStairs = false
+        while (timeLeft > 1e-9 && moved < maxDistance - 1e-9) {
+            val traveled = legLength - legRemaining + moved
+            val inStairs = span != null && traveled >= span.start - 1e-9 && traveled < span.endInclusive - 1e-9
+            val speed = if (inStairs) STAIRS_SPEED_MPS else WALK_SPEED_MPS
+            val boundary = when {
+                span == null -> Double.MAX_VALUE
+                traveled < span.start - 1e-9 -> span.start - traveled
+                inStairs -> span.endInclusive - traveled
+                else -> Double.MAX_VALUE
+            }
+            val d = min(min(speed * timeLeft, boundary), maxDistance - moved)
+            moved += d
+            timeLeft -= d / speed
+            if (inStairs && d > 0) onStairs = true
+        }
+        legRemaining -= moved
         if (dt > 0) {
-            speedMps = step / dt
-            mode = if (stairs) MotionMode.ESCALERA else MotionMode.CAMINANDO
+            speedMps = moved / dt
+            mode = if (onStairs) MotionMode.ESCALERA else MotionMode.CAMINANDO
         }
         updatePose()
-        if (legRemaining <= 1e-9) arrive(now)
+        if (legRemaining <= 1e-6) {
+            legRemaining = 0.0
+            arrive(now)
+        }
     }
 
     private fun arrive(now: Long) {
@@ -438,7 +537,7 @@ class RobotSimulator(
         mode = MotionMode.DETENIDO
         if (state == EN_RONDA) {
             phase = Phase.VERIFYING
-            phaseUntil = now + VERIFY_MS
+            phaseUntil = simNowMs + VERIFY_MS
             return
         }
         // REGRESANDO
@@ -446,9 +545,15 @@ class RobotSimulator(
             state = EN_BASE
             routeActive = false; missionId = null; missionName = ""; stops = emptyList()
             alerts.clear(); incident = null
+        } else if (routeActive) {
+            state = PAUSADA
+            stoppedFrom = EN_RONDA
         } else {
-            state = if (routeActive) PAUSADA else DETENIDO
-            stoppedFrom = if (routeActive) EN_RONDA else null
+            // Llegó al punto seguro sin una ruta activa (p. ej. tras cancelar): queda detenido y sin
+            // misión, así no hay nada que reanudar. Se sale regresando a la base.
+            state = DETENIDO
+            stoppedFrom = null
+            missionId = null; missionName = ""; stops = emptyList(); nextStop = 0
         }
     }
 
@@ -477,7 +582,7 @@ class RobotSimulator(
         phase = Phase.NONE
         if (nextStop >= stops.size) {
             state = COMPLETADA
-            phaseUntil = now + COMPLETED_HOLD_MS
+            phaseUntil = simNowMs + COMPLETED_HOLD_MS
             stopMoving()
         } else {
             startLeg(stops[nextStop])
@@ -496,6 +601,7 @@ class RobotSimulator(
     private fun startReturn(target: Waypoint) {
         phase = Phase.NONE
         incident = null
+        stoppedFrom = null; stoppedBeforeDecision = null
         linkHold = false
         state = REGRESANDO
         startLeg(target)
@@ -513,17 +619,32 @@ class RobotSimulator(
         mode = MotionMode.DETENIDO
     }
 
-    private fun enterHold(newState: OperationalState, now: Long) {
+    private fun enterHold(newState: OperationalState) {
+        if (state == REQUIERE_DECISION) {
+            // Detención durante una decisión: se recuerda de dónde venía y no se reinicia el inicio de la
+            // espera, que sigue contando desde que apareció el incidente.
+            stoppedBeforeDecision = stoppedFrom
+        } else {
+            holdStartMs = simNowMs
+        }
         stoppedFrom = state
         state = newState
-        holdStartMs = now
         stopMoving()
     }
 
     private fun exitHold(now: Long) {
         val back = stoppedFrom ?: EN_RONDA
+        if (back == REQUIERE_DECISION) {
+            // Vuelve a la decisión pendiente y la reemite: la app tiene que volver a mostrar las opciones.
+            state = REQUIERE_DECISION
+            stoppedFrom = stoppedBeforeDecision
+            stoppedBeforeDecision = null
+            linkHold = false
+            incident?.let { emitDecision(now, it) }
+            return
+        }
         // El tiempo detenido no cuenta para los temporizadores (verificación, preparación, espera).
-        if (phaseUntil > 0) phaseUntil += now - holdStartMs
+        if (phaseUntil > 0) phaseUntil += simNowMs - holdStartMs
         state = if (back == PAUSADA) EN_RONDA else back
         // Si el robot quedó en un punto de descanso, retoma la ruta desde ahí.
         if (state == EN_RONDA && phase == Phase.NONE && routeActive && legTarget !== stops.getOrNull(nextStop)) {
@@ -574,7 +695,7 @@ class RobotSimulator(
             requireDecision(
                 now,
                 Incident(
-                    nextId("i"), IncidentType.BATTERY_RETURN, currentPosition(),
+                    nextId("i"), IncidentType.BATTERY_RETURN, currentCheckpointNumber(),
                     "Batería crítica. El robot propone regresar a la base.",
                     listOf(IncidentOption("RETURN_TO_SAFE_POINT", "Regresar a la base", SafePointId.BASE)),
                 ),
@@ -594,9 +715,34 @@ class RobotSimulator(
 
     private fun distanceToBaseM(): Double = SimMap.legLengthM(x, y, floor, SimMap.base)
 
+    private fun currentZone(): String = if (legLength > 0 && legRemaining / legLength > 0.5) legOriginZone else legTarget.zone
+
+    /** Rechazo de una orden con el robot en FALLA. La única salida es reconocer la falla y regresar a la base. */
+    private fun faultRejection(cmd: Command): Rejection? = when (cmd.type) {
+        CommandType.ACKNOWLEDGE_ALERT -> null
+        CommandType.RETURN_TO_SAFE_POINT -> when {
+            alerts.any { it.type == AlertType.ROBOT_FAULT && !it.acknowledged } ->
+                Rejection(RejectReason.UNACKNOWLEDGED_ALERT, "Reconocé la falla antes de ordenar el regreso a la base.")
+            cmd.params.safePointId == SafePointId.DESCANSO_ESCALERA_E ->
+                invalid("Con una falla el robot solo puede regresar a la base, donde lo atiende el técnico.")
+            else -> null
+        }
+        else -> invalid("El robot tiene una falla y no acepta órdenes de misión.")
+    }
+
     // ---- Incidentes y alertas ----
 
+    /** Posición 1-based en la ruta: es el progreso de la misión (`mission.checkpointIndex`). */
     private fun currentPosition(): Int = min(nextStop + 1, stops.size.coerceAtLeast(1))
+
+    /**
+     * Número del punto de control en el edificio (PC5 → 5), el mismo del plano. Es el que llevan los
+     * incidentes, para que el título y las opciones usen una sola numeración en cualquier ruta.
+     */
+    private fun currentCheckpointNumber(): Int {
+        val stop = stops.getOrNull(min(nextStop, stops.size - 1)) ?: return currentPosition()
+        return stop.id.removePrefix("PC").toIntOrNull() ?: currentPosition()
+    }
 
     private fun raiseObstacle(now: Long) {
         val stop = stops[nextStop]
@@ -604,7 +750,7 @@ class RobotSimulator(
         requireDecision(
             now,
             Incident(
-                nextId("i"), IncidentType.OBSTACLE, currentPosition(),
+                nextId("i"), IncidentType.OBSTACLE, currentCheckpointNumber(),
                 "Un objeto bloquea el ${stop.zone}. El robot se detuvo.",
                 listOf(
                     IncidentOption("WAIT_30S", "Esperar 30 s"),
@@ -622,7 +768,7 @@ class RobotSimulator(
         requireDecision(
             now,
             Incident(
-                nextId("i"), IncidentType.PERSON_IN_RESTRICTED_ZONE, currentPosition(),
+                nextId("i"), IncidentType.PERSON_IN_RESTRICTED_ZONE, currentCheckpointNumber(),
                 "Persona en zona restringida (${stop.zone}) fuera de horario.",
                 listOf(
                     IncidentOption("AUTHORIZED_PERSON", "Persona autorizada (registrar)"),
@@ -636,7 +782,11 @@ class RobotSimulator(
 
     private fun requireDecision(now: Long, inc: Incident) {
         incident = inc
-        enterHold(REQUIERE_DECISION, now)
+        enterHold(REQUIERE_DECISION)
+        emitDecision(now, inc)
+    }
+
+    private fun emitDecision(now: Long, inc: Incident) {
         outbox += SimOutput(
             OutputKind.EVENT,
             ContractCodec.encode(RobotEvent.DecisionRequired(idRandom.nextUuidV4(), robotId, now, Severity.CRITICAL, inc)),
@@ -646,7 +796,7 @@ class RobotSimulator(
     private fun resolveIncident(alertType: AlertType) {
         incident = null
         alerts.firstOrNull { it.type == alertType && !it.acknowledged }?.let { replaceAlert(it.copy(acknowledged = true)) }
-        stoppedFrom = null
+        stoppedFrom = null; stoppedBeforeDecision = null
         linkHold = false
     }
 
@@ -690,7 +840,7 @@ class RobotSimulator(
                 stage = stageName(),
             )
         }
-        val zone = if (legLength > 0 && legRemaining / legLength > 0.5) legOriginZone else legTarget.zone
+        val zone = currentZone()
         return RobotTelemetry(
             messageId = idRandom.nextUuidV4(),
             robotId = robotId,
@@ -760,6 +910,8 @@ class RobotSimulator(
         const val LATENCY_BASE_MS = 80
         const val LATENCY_JITTER_MS = 80
         const val MINUTES_PER_PERCENT = 1.25
+        const val STAIRS_EXTRA_M = ar.edu.uade.ronda.core.model.BuildingLayout.STAIRS_EXTRA_M
+        val ALLOWED_TIME_SCALES = ar.edu.uade.ronda.core.control.SimulationSettings.ALLOWED_TIME_SCALES
         val MISSION_TARGETED = setOf(CommandType.PAUSE_MISSION, CommandType.RESUME_MISSION, CommandType.CANCEL_MISSION)
         val CANCELABLE = setOf(EN_RONDA, PAUSADA, REQUIERE_DECISION, DETENIDO)
     }

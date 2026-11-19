@@ -332,7 +332,7 @@ class RobotSimulatorTest {
         assertEquals(AlertType.ROBOT_FAULT, t.alerts.last().type)
         assertEquals("sim-falla", t.alerts.last().snapshot?.id)
         assertEquals(RejectReason.INVALID_STATE, h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId)).reasonCode)
-        assertEquals(RejectReason.INVALID_STATE, h.send(CommandType.RETURN_TO_SAFE_POINT).reasonCode)
+        assertEquals(RejectReason.UNACKNOWLEDGED_ALERT, h.send(CommandType.RETURN_TO_SAFE_POINT).reasonCode, "primero hay que reconocer la falla")
     }
 
     @Test
@@ -426,5 +426,203 @@ class RobotSimulatorTest {
         assertEquals(OperationalState.EN_BASE, t.operationalState)
         assertEquals(100, t.battery.percent)
         assertIs<Unit>(Unit)
+    }
+
+    // ---- Correcciones del QA ----
+
+    /** Tiempo (ms) de una ronda completa desde la orden hasta volver a la base. */
+    private fun rondaCompletaMs(scale: Double): Long {
+        val h = SimHarness(); h.tick()
+        if (scale != 1.0) h.sim.setTimeScale(h.now, scale)
+        val t0 = h.now
+        h.start()
+        h.runUntil { it.operationalState == OperationalState.COMPLETADA }
+        h.runUntil { it.operationalState == OperationalState.EN_BASE }
+        assertEquals(8, h.last!!.service.checkpointsVerified)
+        return h.now - t0
+    }
+
+    @Test
+    fun `a escala x8 la ronda completa tarda un octavo del tiempo real`() {
+        val normal = rondaCompletaMs(1.0)
+        val rapida = rondaCompletaMs(8.0)
+        assertTrue(normal > 300_000, "a x1 la ronda dura minutos: $normal ms")
+        assertTrue(rapida < normal / 6, "a x8 dura $rapida ms contra $normal ms")
+    }
+
+    @Test
+    fun `solo se aceptan las escalas 1, 4 y 8 y reset no cambia la escala`() {
+        val h = SimHarness(); h.tick()
+        h.sim.setTimeScale(h.now, 4.0)
+        assertEquals(4.0, h.sim.timeScale)
+        kotlin.test.assertFailsWith<IllegalArgumentException> { h.sim.setTimeScale(h.now, 2.0) }
+        h.sim.reset()
+        assertEquals(4.0, h.sim.timeScale)
+    }
+
+    @Test
+    fun `acelerado, las fases usan el reloj de simulacion y el ttl el reloj real`() {
+        val h = SimHarness(); h.tick()
+        h.sim.setTimeScale(h.now, 8.0)
+        h.start()
+        // La preparación dura 3 s de simulación: a x8 termina en menos de 1 s real.
+        h.run(1_000)
+        assertEquals(OperationalState.EN_RONDA, h.last!!.operationalState)
+        // Una orden emitida hace 3 s reales sigue vigente (ttl 4 s), aunque pasaron 24 s de simulación.
+        val ack = h.send(CommandType.PAUSE_MISSION, CommandParams(missionId = h.missionId), issuedAt = h.now - 3_000)
+        assertEquals(AckStatus.CONFIRMED, ack.status)
+        // Y la telemetría se estampa con la hora real.
+        assertEquals(h.now + 500, h.tick().timestamp)
+    }
+
+    @Test
+    fun `la velocidad de escalera solo rige en el tramo de escalera - PC8 a la base tarda menos de 90 s`() {
+        val h = SimHarness(); h.tick(); h.start()
+        h.runUntil { it.operationalState == OperationalState.COMPLETADA }
+        h.runUntil { it.operationalState == OperationalState.REGRESANDO }
+        val t0 = h.now
+        var caminando = 0
+        var escalera = 0
+        while (h.last!!.operationalState != OperationalState.EN_BASE) {
+            val t = h.tick()
+            if (t.motion.mode == MotionMode.ESCALERA) escalera++ else if (t.motion.mode == MotionMode.CAMINANDO) caminando++
+        }
+        val ms = h.now - t0
+        // 45,3 m planos a 0,8 m/s + 12 m de escalera a 0,4 m/s ≈ 87 s (antes, 57 m a 0,4 m/s = 143 s).
+        assertTrue(ms <= 90_000, "PC8 a la base tardó $ms ms")
+        assertTrue(escalera in 55..65, "unos 30 s en escalera: $escalera ticks")
+        assertTrue(caminando > escalera, "el resto del tramo se camina")
+    }
+
+    @Test
+    fun `detenerse durante una decision y reanudar vuelve a pedir la decision`() {
+        val h = SimHarness(); h.sim.planIncident("PC4", IncidentType.OBSTACLE); h.tick(); h.start()
+        h.runUntil { it.operationalState == OperationalState.REQUIERE_DECISION }
+        val original = h.events.filterIsInstance<RobotEvent.DecisionRequired>().single().incident
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.OPERATIONAL_STOP).status)
+        assertEquals(OperationalState.DETENIDO, h.tick().operationalState)
+        h.run(5_000)
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId)).status)
+        assertEquals(OperationalState.REQUIERE_DECISION, h.tick().operationalState)
+        val reemitidas = h.events.filterIsInstance<RobotEvent.DecisionRequired>()
+        assertEquals(2, reemitidas.size, "la decisión se reemite al salir de la detención")
+        assertEquals(original.id, reemitidas.last().incident.id)
+        // La decisión sigue resolviéndose como siempre.
+        h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId, decision = IncidentDecision.SKIP_CHECKPOINT))
+        h.runUntil { it.mission?.checkpointIndex == 5 && it.operationalState == OperationalState.EN_RONDA }
+    }
+
+    @Test
+    fun `detenerse durante la decision de persona y reanudar no exige reconocer la alerta antes`() {
+        val (h, alertId) = personaEnPc5()
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.OPERATIONAL_STOP).status)
+        h.tick()
+        // Reconocer sin decidir dejaría la decisión sin salida: se rechaza con motivo.
+        assertEquals(AckStatus.REJECTED, h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alertId)).status)
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.RESUME_MISSION, CommandParams(missionId = h.missionId)).status)
+        assertEquals(OperationalState.REQUIERE_DECISION, h.tick().operationalState)
+        val ack = h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alertId, resolution = AlertResolution.AUTHORIZED_PERSON))
+        assertEquals(AckStatus.CONFIRMED, ack.status)
+        assertEquals(OperationalState.EN_RONDA, h.tick().operationalState)
+    }
+
+    @Test
+    fun `al cortarse el enlace el robot avisa en que zona se detuvo`() {
+        val h = SimHarness(); h.tick(); h.start()
+        h.runUntil { it.operationalState == OperationalState.EN_RONDA }
+        h.run(10_000)
+        val zona = h.last!!.pose.zone
+        val outs = h.sim.setLinkUp(h.now, false)
+        val alerta = outs.map { ContractCodec.decode(it.json) }.filterIsInstance<ContractMessage.Event>()
+            .map { it.value }.filterIsInstance<RobotEvent.AlertRaised>().single()
+        assertEquals(AlertType.LINK_DEGRADED, alerta.alert.type)
+        assertEquals(ar.edu.uade.ronda.core.model.Severity.WARNING, alerta.severity)
+        assertEquals("Enlace perdido: me detuve en $zona", alerta.alert.message)
+        assertEquals(h.now, alerta.timestamp)
+    }
+
+    @Test
+    fun `sin enlace o fuera de ronda no se puede inyectar obstaculo ni persona`() {
+        val h = SimHarness(); h.tick()
+        assertNotNull(h.sim.incidentInjectionBlockedReason(), "en base")
+        h.start(); h.runUntil { it.operationalState == OperationalState.EN_RONDA }
+        assertNull(h.sim.incidentInjectionBlockedReason())
+        h.sim.setLinkUp(h.now, false)
+        assertNotNull(h.sim.incidentInjectionBlockedReason(), "detenido por el corte")
+        h.events.clear()
+        h.sim.injectObstacle(h.now)
+        assertEquals(OperationalState.DETENIDO, h.tick().operationalState)
+    }
+
+    @Test
+    fun `cancelar inicia el regreso a la base solo a los 2 s`() {
+        val h = SimHarness(); h.tick(); h.start()
+        h.runUntil { it.operationalState == OperationalState.EN_RONDA }
+        h.run(10_000)
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.CANCEL_MISSION, CommandParams(missionId = h.missionId)).status)
+        assertEquals(OperationalState.CANCELADA, h.tick().operationalState)
+        h.run(1_000)
+        assertEquals(OperationalState.CANCELADA, h.last!!.operationalState)
+        h.run(1_500)
+        assertEquals(OperationalState.REGRESANDO, h.last!!.operationalState)
+        h.runUntil { it.operationalState == OperationalState.EN_BASE }
+    }
+
+    @Test
+    fun `tras cancelar, ir al punto seguro deja al robot detenido sin mision y reanudar se rechaza`() {
+        val h = SimHarness(); h.tick(); h.start()
+        h.runUntil { it.mission?.checkpointIndex == 4 && it.motion.mode == MotionMode.CAMINANDO }
+        h.send(CommandType.CANCEL_MISSION, CommandParams(missionId = h.missionId))
+        h.tick()
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.DESCANSO_ESCALERA_E)).status)
+        val t = h.runUntil { it.operationalState == OperationalState.DETENIDO }
+        assertEquals(60.0, t.pose.x, "en el descanso de la escalera E")
+        assertEquals(OperationalState.DETENIDO, t.operationalState)
+        assertNull(t.mission, "llegó sin misión")
+        assertEquals(AckStatus.REJECTED, h.send(CommandType.RESUME_MISSION).status)
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE)).status)
+        h.runUntil { it.operationalState == OperationalState.EN_BASE }
+    }
+
+    @Test
+    fun `en una ruta corta el incidente usa el numero de PC del edificio`() {
+        val h = SimHarness(); h.sim.planIncident("PC5", IncidentType.OBSTACLE); h.tick(); h.start(RouteId.SOLO_SALA_TECNICA)
+        val t = h.runUntil { it.operationalState == OperationalState.REQUIERE_DECISION }
+        assertEquals(3, t.mission?.checkpointIndex, "el progreso sigue siendo la posición en la ruta")
+        val inc = h.events.filterIsInstance<RobotEvent.DecisionRequired>().single().incident
+        assertEquals(5, inc.checkpointIndex, "PC5, como en el plano")
+        assertEquals("Saltar el PC5", inc.options.single { it.id == "SKIP_CHECKPOINT" }.label)
+    }
+
+    @Test
+    fun `la falla se despeja reconociendola y regresando a la base`() {
+        val h = SimHarness(); h.tick(); h.start()
+        h.runUntil { it.mission?.checkpointIndex == 2 }
+        h.sim.injectFault(h.now)
+        val t = h.tick()
+        assertEquals(OperationalState.FALLA, t.operationalState)
+        val falla = t.alerts.single { it.type == AlertType.ROBOT_FAULT }
+        assertEquals("sim-falla", falla.snapshot?.id)
+        assertEquals(RejectReason.UNACKNOWLEDGED_ALERT, h.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE)).reasonCode)
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = falla.id)).status)
+        assertEquals(AckStatus.REJECTED, h.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.DESCANSO_ESCALERA_E)).status)
+        assertEquals(AckStatus.CONFIRMED, h.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE)).status)
+        assertEquals(OperationalState.REGRESANDO, h.tick().operationalState)
+        val base = h.runUntil { it.operationalState == OperationalState.EN_BASE }
+        assertTrue(base.alerts.isEmpty())
+        assertNull(base.mission)
+        assertEquals(AckStatus.CONFIRMED, h.start().status, "despejada la falla, se puede volver a salir")
+    }
+
+    @Test
+    fun `reset tambien despeja la falla`() {
+        val h = SimHarness(); h.tick(); h.start()
+        h.runUntil { it.operationalState == OperationalState.EN_RONDA }
+        h.sim.injectFault(h.now)
+        assertEquals(OperationalState.FALLA, h.tick().operationalState)
+        h.sim.reset()
+        val t = h.tick()
+        assertEquals(OperationalState.EN_BASE, t.operationalState)
+        assertTrue(t.alerts.isEmpty())
     }
 }
