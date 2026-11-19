@@ -49,7 +49,11 @@ fun RondaNavBar(selected: Route, onSelect: (Route) -> Unit, modifier: Modifier =
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(Modifier.fillMaxWidth().height(3.dp).background(if (active) RondaColors.signalAmber else RondaColors.ink900))
-                Box(Modifier.weight(1f).padding(horizontal = 4.dp), contentAlignment = Alignment.Center) {
+                // Alto mínimo fijo en vez de weight: la barra va en bottomBar y no tiene alto máximo acotado.
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = 53.dp).padding(horizontal = 4.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text(
                         route.tabLabel(),
                         style = if (active) RondaType.botonEtiqueta else RondaType.rotuloSeccion,
