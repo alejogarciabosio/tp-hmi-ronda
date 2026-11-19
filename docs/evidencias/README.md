@@ -44,8 +44,7 @@ La tarea corre solo `SupervisionDemoRecorder` (Robolectric con gráficos nativos
 
 ## Capturas de la app completa
 
-`capturas/app-*.png` (una por pantalla) y `capturas/escenario-*.png` (el momento clave de cada escenario) salen de la app real: ViewModels reales contra el simulador, con tiempo virtual y semilla fija (42), renderizadas con Robolectric (gráficos nativos, 411x891 dp a xxhdpi) sin emulador. Cada pantalla se captura en su primer viewport: las que scrollean (Misiones, Control, Desconexión, Panel de simulación) quedan cortadas abajo, como en el teléfono. Además de la tabla, `app-02-supervision.png` muestra Supervisión en ronda.
-
+`capturas/app-*.png` (una por pantalla) y `capturas/escenario-*.png` (el momento clave de cada escenario) salen de la app real: ViewModels reales contra el simulador, con tiempo virtual y semilla fija (42), renderizadas con Robolectric (gráficos nativos, 411x891 dp a xxhdpi) sin emulador. Cada pantalla se captura en su primer viewport: las que scrollean (Misiones, Control, Desconexión, Panel de simulación) quedan cortadas abajo, como en el teléfono. 
 ### Cómo regenerarlas
 
 ```bash
@@ -57,6 +56,7 @@ La tarea corre solo `CapturasRecorder` y reescribe los PNG en `capturas/`. Ese t
 | Archivo | Cómo llegar |
 |---|---|
 | `app-01-seleccion.png` | Al abrir la app |
+| `app-02-supervision.png` | Supervisión con el robot en ronda |
 | `app-03-telemetria.png` | Supervisión en ronda, tocar una lectura |
 | `app-04-misiones.png` | Pestaña Misiones con el robot en base |
 | `app-04b-misiones-preflight-fallido.png` | Panel: "Batería −10 %" hasta 30 %, volver a Misiones |
