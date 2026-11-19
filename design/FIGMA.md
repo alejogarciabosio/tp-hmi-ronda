@@ -1,47 +1,48 @@
 # Figma — RONDA
 
-Archivo: https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN
-fileKey: `sHIJRf9HU7ci8PdgY7hmIN`
-Plan de la cuenta: **Starter** → estructura de 3 páginas con secciones (`docs/plan/FIGMA_SPEC.md` §1-B) y 1 solo modo por colección de variables.
+Archivo: https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI
+fileKey: `13dj5SYTN8of0MSQdIshDI` · plan **Education** (estructura de 8 páginas, `docs/plan/FIGMA_SPEC.md` §1-A).
 
-## Estado (2026-11-19)
+El archivo anterior (`sHIJRf9HU7ci8PdgY7hmIN`, plan Starter) quedó **obsoleto**: no se usa ni se actualiza.
 
-| Página | Sección | Estado |
-|---|---|---|
-| `00 Portada y mapa` (id `0:1`) | Portada · Mapa de navegación · Recorrido | **Pendiente.** La página está vacía (se borró el frame de prueba). |
-| `01 Sistema` (id `1:4`) | Fundamentos (`5:2`) | **Hecho.** Hoja de colores, tipos, espaciado, radios, símbolos, grilla + primitivos. |
-| | Componentes (`5:3`) | **Hecho.** 14 component sets con variantes, todo ligado a variables. |
-| `02 Pantallas y flujos` (id `1:5`) | Pantallas · Flujo normal · Flujo con falla | **Pendiente.** |
+## Estado por página (2026-11-19)
 
-Bloqueo: después de ~20 llamadas de escritura (`use_figma`) el MCP de Figma devolvió *"You've reached the Figma MCP tool call limit on the Starter plan"*. En Starter el cupo cuenta también las escrituras, no solo `get_screenshot`/`get_metadata`. Reintento único el 2026-11-19 03:38 UTC (listar páginas con `use_figma`): mismo error de límite. Hay que esperar a que se renueve el cupo o pasar el archivo a un plan Education/Professional para seguir (ver "Cómo retomar").
-
-Detalle pendiente chico en Fundamentos: las 4 columnas de la muestra de grilla (`Grilla 412×917` dentro de `11:262`) quedaron en ámbar opaco; hay que bajarles la opacidad de capa a 14 %. El export `01-sistema-fundamentos.png` las muestra así.
+| Página | ID | Contenido | Nodo principal |
+|---|---|---|---|
+| `00 Portada` | `0:1` | RONDA · Cuaderno de ronda, materia, integrantes, caso, fecha, índice con links a las páginas y aviso de que el contrato JSON es propuesta propia | frame `Portada` `29:112` |
+| `01 Fundamentos` | `1:2` | Hoja de colores (Noche y Día), tipos, medidas, símbolos, íconos y grilla + primitivos | `Doc/Fundamentos` `4:2`, sección `Primitivos` |
+| `02 Componentes` | `1:3` | 18 component sets + `SimTag` + `Foto/*` | sección `Componentes` `12:297` |
+| `03 Pantallas` | `1:4` | 23 pantallas en 4 filas (Supervisión · Inicio y misiones · Control, alertas e historial · Conexión, decisión y simulación) | sección `Pantallas` `21:2868` |
+| `04 Flujo normal` | `1:5` | N1–N8 conectados, inicio de flujo "Flujo normal" | sección `25:2` |
+| `05 Flujo con falla` | `1:6` | F1–F8 + F3b, banda "la máquina propone, la persona decide", inicio "Flujo con falla" | sección `26:2` |
+| `06 Mapa de navegación` | `1:7` | Todas las pantallas con flechas y condiciones | sección `29:2` |
+| `07 Recorrido` | `1:8` | Plano de `docs/arquitectura/recorrido.svg` en tema noche con leyenda + FloorPlan PB y 1° al 200 % | sección `27:2` |
 
 ## Tokens (copiar al tema Compose)
 
-Colección `Color`, modo `Noche` (tema principal). Code syntax ANDROID: `RondaColors.<nombre>`.
+Colección `Color` (`VariableCollectionId:2:2`), modos `Noche` (principal, `2:0`) y `Día` (`2:1`). Code syntax ANDROID: `RondaColors.<nombre>`.
 
-| Variable Figma | Hex | Compose | Uso |
-|---|---|---|---|
-| `fondo` | `#14130F` | `ink950` | fondo de pantalla (grafito cálido) |
-| `superficie` | `#1C1B17` | `ink900` | franjas, hojas inferiores, fila "¿Tenés que actuar? No" |
-| `superficie-alta` | `#25241F` | `ink850` | renglón actual, alerta sin reconocer, banner de datos viejos |
-| `regla` | `#3A382F` | `ink700` | reglas de 1 px, tabiques del plano |
-| `texto/primario` | `#ECE6D8` | `bone100` | texto y datos (hueso) |
-| `texto/secundario` | `#A39D8C` | `bone400` | rótulos, unidades, muros del plano |
-| `texto/sobre-senal` | `#14130F` | `onSignal` | texto sobre ámbar |
-| `senal/ambar` | `#F2A900` | `signalAmber` | único color de acción/atención |
-| `estado/ok` | `#5FA77A` | `stateOk` | + círculo lleno |
-| `estado/advertencia` | `#F2A900` | `stateWarn` | + triángulo + franjas diagonales |
-| `estado/error` | `#E5482D` | `stateError` | + rombo |
-| `estado/sin-datos` | `#6E6A5E` | `stateStale` | + círculo punteado + "vigente" tachado |
-| `velo` | `#0B0A08` | `scrim` | velo detrás de la hoja de decisión, opacidad 70 % |
+| Variable Figma | Noche | Día | Compose | Uso |
+|---|---|---|---|---|
+| `fondo` | `#14130F` | `#F4F0E6` | `ink950` | fondo de pantalla (grafito cálido / papel) |
+| `superficie` | `#1C1B17` | `#EAE4D6` | `ink900` | franjas, hojas inferiores, fila "¿Tenés que actuar? No" |
+| `superficie-alta` | `#25241F` | `#DFD8C6`* | `ink850` | renglón actual, alerta sin reconocer, banner de datos viejos |
+| `regla` | `#3A382F` | `#C4BBA6` | `ink700` | reglas de 1 px, tabiques del plano |
+| `texto/primario` | `#ECE6D8` | `#1C1B17` | `bone100` | texto y datos |
+| `texto/secundario` | `#A39D8C` | `#5E594C` | `bone400` | rótulos, unidades, muros del plano |
+| `texto/sobre-senal` | `#14130F` | `#14130F` | `onSignal` | texto sobre ámbar |
+| `senal/ambar` | `#F2A900` | `#A87500`* | `signalAmber` | único color de acción/atención |
+| `estado/ok` | `#5FA77A` | `#2F7A4C` | `stateOk` | + círculo lleno |
+| `estado/advertencia` | `#F2A900` | `#A87500` | `stateWarn` | + triángulo + franjas diagonales |
+| `estado/error` | `#E5482D` | `#C2361E` | `stateError` | + rombo |
+| `estado/sin-datos` | `#6E6A5E` | `#7C7767`* | `stateStale` | + círculo punteado + valor tachado |
+| `velo` | `#0B0A08` | `#1C1B17`* | `scrim` | velo detrás de la hoja de decisión, opacidad 70 % |
 
-Tema día (muestra; grupo `dia/` en la misma colección porque Starter no permite 2 modos): `dia/papel #F4F0E6`, `dia/superficie #EAE4D6`, `dia/regla #C4BBA6`, `dia/tinta #1C1B17`, `dia/tinta-secundaria #5E594C`, `dia/ok #2F7A4C`, `dia/advertencia #A87500`, `dia/error #C2361E`.
+\* Valores de Día sin equivalente en la paleta original; son decisión de diseño. `senal/ambar` en Día baja a `#A87500` porque `#F2A900` no se lee sobre papel (contra `texto/sobre-senal` da 4,5:1).
 
-Colección `Medidas` (modo `Valor`):
+Colección `Medidas` (`VariableCollectionId:2:16`, modo `Valor`):
 - Espaciado `esp/0,2,4,8,12,16,24,32` → `RondaSpacing.s0…s32` (dp).
-- Radios `radio/0 = 0`, `radio/2 = 2`, `radio/4 = 4` → `RondaShapes.r0/r2/r4`. Radio por defecto de todo: **2 dp**.
+- Radios `radio/0 = 0`, `radio/2 = 2`, `radio/4 = 4` → `RondaShapes.r0/r2/r4`. Radio por defecto: **2 dp**; la foto usa 4.
 - Bordes y reglas: 1 dp. Íconos: trazo 1,5 dp, caja 24 dp. Objetivos táctiles ≥ 48 dp.
 
 Estilos de texto (Google Fonts, OFL):
@@ -61,89 +62,101 @@ Estilos de texto (Google Fonts, OFL):
 | `texto/nota` | IBM Plex Sans Regular | 12 / 16 | 0 | — |
 | `portada/display` | Archivo Black | 96 / 92 | −1 % | mayúsculas |
 
-Grilla de pantalla: frame 412 × 917 (Android compacto), 4 columnas, márgenes 16, medianil 8.
+Grilla de pantalla: frame 412 × 917 (Android compacto), 4 columnas de 89, márgenes 16, medianil 8 (muestra `4:342`, columnas al 14 %).
 
-Redundancia de estado: OK = círculo lleno verde · advertencia = triángulo ámbar + franjas · error = rombo bermellón · sin datos = círculo punteado gris · deshabilitado = contorno tachado + motivo escrito. Franjas de señalización: diagonales a 45°, 8 px de trazo cada 16 px, ámbar sobre `fondo`.
+Redundancia de estado: OK = círculo lleno verde · advertencia = triángulo ámbar + franjas · error = rombo bermellón · sin datos = círculo punteado gris · deshabilitado = contorno tachado + motivo escrito. Franjas: diagonales a 45°, 8 px cada 16 px, ámbar sobre `fondo`.
 
-## Nodos clave — página `01 Sistema`
+## Primitivos (`01 Fundamentos` y `02 Componentes`)
 
-Primitivos (sección Fundamentos `5:2`):
-- `Patron/Franjas` `5:4` (480×120, recorta; se usa como instancia dentro de un marco que recorta).
-- `Simbolo` (set) `5:23`: `estado=ok 5:7`, `advertencia 5:10`, `error 5:13`, `sin-datos 5:16`, `deshabilitado 5:19`.
-- `Icono/*` 24 px: supervision `5:25`, misiones `5:29`, alertas `5:34`, historial `5:38`, telemetria `5:42`, control `5:45`, llave `5:49`, tilde `5:52`, atras `5:55`, reloj `5:58`, senal `5:62`, bateria `5:65`, persona `5:69`, salida `5:73`, termometro `5:76`.
-- `RobotPose` `5:80` (chevron ámbar; rotar según `pose.headingDeg`).
-- Hoja de documentación `Doc/Fundamentos` `11:262`.
+- `Patron/Franjas` `3:35` (480×120, recorta; usar como instancia dentro de un marco).
+- `Simbolo` (set) `3:52`: `ok 3:38`, `advertencia 3:41`, `error 3:44`, `sin-datos 3:47`, `deshabilitado 3:51`.
+- `Icono/*` 24 px: supervision `3:59`, misiones `3:62`, alertas `3:66`, historial `3:71`, telemetria `3:74`, control `3:77`, llave `3:81`, tilde `3:84`, atras `3:87`, reloj `3:91`, senal `3:94`, bateria `3:97`, persona `3:101`, salida `3:104`, termometro `3:107`.
+- `RobotPose` `3:55` (chevron ámbar; rumbo 0 = arriba).
+- `Foto/obstaculo` `22:201`, `Foto/persona` `22:212`, `Foto/falla` `22:225`: 380×214 (16:9), mismo dibujo que los drawables `snap_sim_*` de la app, con el rótulo IMAGEN SIMULADA dibujado.
 
-Component sets (sección Componentes `5:3`):
+## Component sets (`02 Componentes`)
 
 | Set | ID | Variantes |
 |---|---|---|
-| `StateStrip` | `8:427` | estado = EN BASE / EN RONDA / PAUSADA / REQUIERE DECISIÓN / DETENIDO / REGRESANDO / FALLA × needsAction = no / sí |
-| `FloorPlan` | `10:326` | floor = PB (`10:262`) / 1° (`10:292`); RobotPose anidado (`robot`) |
-| `CheckpointRow` | `6:127` | state = pendiente / actual / verificado / con observación / salteado |
-| `TelemetryReadout` | `7:139` | state = normal / warning / error / stale × withTrend = sí / no |
-| `CommandButton` | `7:270` | kind = primary / secondary / destructive × state = enabled / disabled / pending / confirmed / rejected / noResponse |
-| `HoldToConfirm` | `7:291` | progress = 0 / 50 / 100 |
-| `CommandChip` | `6:77` | status = PENDIENTE / CONFIRMADA / VERIFICADA / RECHAZADA / SIN RESPUESTA |
-| `StatusBadge` | `6:50` | state = ok / warning / error / stale / disabled × size = sm / lg |
-| `SimTag` | `6:51` | (único) borde rayado + "SIMULACIÓN" |
-| `AlertRow` | `7:352` | severity = info / warning / critical × acknowledged = sí / no |
-| `StaleDataBanner` | `7:380` | seconds = 4 (SIN DATOS) / 12 (DESCONECTADO) / 30 (+ política declarada) |
-| `DecisionSheet` | `8:651` | opciones = 2 (propuesta de regreso por batería) / 3 (obstáculo en PC4) |
-| `RobotCard` | `8:589` | availability = disponible / ocupado / no compatible |
-| `NavBar` | `8:540` | tab = supervision / misiones / alertas / historial |
+| `StatusBadge` | `5:44` | state = ok / warning / error / stale / disabled × size = sm / lg |
+| `CommandChip` | `5:67` | status = PENDIENTE / CONFIRMADA / VERIFICADA / RECHAZADA / SIN RESPUESTA |
+| `SimTag` | `5:70` | componente único: borde rayado + "SIMULACIÓN" |
+| `CommandButton` | `6:147` | kind = primary / secondary / destructive × state = enabled / disabled / pending / confirmed / rejected / noResponse |
+| `HoldToConfirm` | `6:171` | progress = 0 / 50 / 100 × enabled = sí; progress = 0 × enabled = no |
+| `StateStrip` | `7:272` | estado = EN BASE / EN RONDA / PAUSADA / REQUIERE DECISIÓN / DETENIDO / REGRESANDO / FALLA × needsAction = no / sí |
+| `TelemetryReadout` | `7:373` | state = normal / warning / error / stale × withTrend = sí / no |
+| `CheckpointRow` | `10:144` | state = pendiente / actual / verificado / con observación / salteado |
+| `AlertRow` | `10:234` | severity = info / warning / critical × acknowledged = sí / no × conFoto = no; conFoto = sí en warning y critical (miniatura tocable) |
+| `StaleDataBanner` | `10:268` | seconds = 4 (SIN DATOS) / 12 (DESCONECTADO) / 30 (+ política declarada) |
+| `DecisionSheet` | `11:157` | opciones = 3 × foto = con foto / sin foto / datos viejos / recibiendo; opciones = 2 × foto = no aplica (propuesta de regreso por batería) |
+| `RobotCard` | `11:200` | availability = disponible / ocupado / no compatible |
+| `NavBar` | `11:319` | tab = supervision / misiones / alertas / historial |
+| `FloorPlan` | `12:264` | floor = PB × escena = muestra / ronda-PC3 / base / completa; floor = 1° × escena = muestra / PC4 / PC5 / PC8 / regreso. `robot` anidado (RobotPose) |
+| `TopBar` | `14:214` | tipo = principal (título + "Simulación") / secundaria (atrás + título + dato) |
+| `FloorTab` | `14:221` | selected = sí / no (selector de piso; también filtros del Historial) |
+| `AlertLine` | `14:242` | level = warning / critical / info (alerta compacta de Supervisión, como la app) |
+| `Toggle` | `14:259` | estado = on / off (Panel de simulación) |
 
-Capas de texto que se sobrescriben en instancias (por nombre): `etiqueta`, `motivo`, `estado`, `detalle`, `respuesta`, `conexion`, `valor`, `edad`, `tendencia`, `titulo`, `hora`, `codigo`, `nombre`.
+Capas de texto que se sobrescriben en instancias (por nombre): `etiqueta`, `motivo`, `estado`, `detalle`, `respuesta`, `conexion`, `valor`, `unidad`, `edad`, `tendencia`, `titulo`, `hora`, `codigo`, `nombre`, `pie`. En DecisionSheet la ilustración `imagen` se intercambia por `Foto/persona` o `Foto/falla`.
 
-Decisiones visibles en los componentes (para que Compose las copie):
-- Botón destructivo = contorno bermellón + "mantener 1 s"; la Detención operativa (software) siempre va con la nota "No reemplaza la parada física del robot."
-- Conexión en la franja: "CONECTADO · 0,4 s" siempre con antigüedad; con datos viejos el estado pasa a SIN DATOS / DESCONECTADO (nunca "Conectado" con telemetría vieja).
-- Progreso por puntos de control ("PC 3 de 8 · Escalera E"), nunca porcentaje.
+Decisiones visibles en los componentes:
+- Detención operativa (software) siempre con "No reemplaza la parada física del robot."; se confirma manteniendo 1 s.
+- Conexión siempre con antigüedad; con datos viejos el estado pasa a SIN DATOS / DESCONECTADO, nunca "Conectado".
+- Progreso por puntos de control ("PC 3/8"), nunca porcentaje.
+- Deshabilitado = contorno gris, etiqueta tachada y motivo escrito.
+
+## Pantallas (`03 Pantallas`)
+
+| Pantalla | ID | Nota |
+|---|---|---|
+| P02 Supervisión — en ronda PC 3/8 | `15:2` | `SupervisionPreviewData.enRonda` |
+| P02b Supervisión — batería baja | `15:224` | Pausar pendiente |
+| P02c Supervisión — incidente persona en PC5 | `15:447` | "Decidir cómo seguir" |
+| P02d Supervisión — sin datos | `16:559` | captura 03 |
+| P02e Supervisión — en base | `16:803` | |
+| P02f Supervisión — PC 8/8 | `16:978` | |
+| P02g Supervisión — ronda completada | `16:1191` | resumen + "Ver en historial" |
+| P02h Supervisión — comando rechazado | `17:1227` | captura 05 |
+| P02i Supervisión — enlace restaurado | `17:1454` | captura 04 |
+| P02j Supervisión — detenido, recibiendo imagen | `23:2724` | hoja con foto = recibiendo |
+| P01 Selección de robot | `18:1784` | |
+| P04 Misiones — rutas y preflight | `18:1861` | |
+| P04b Misiones — preflight con check fallido | `18:1972` | Iniciar ronda deshabilitado con motivo |
+| P03 Telemetría | `18:2081` | |
+| P05 Control | `19:2130` | deshabilitado con motivo, pendiente, rechazado, sin respuesta + registro |
+| P06 Alertas | `19:2285` | alerta crítica con miniatura |
+| P07 Historial | `19:2418` | |
+| P08 Desconexión | `21:2434` | StaleDataBanner 30 + política declarada |
+| P11 Reconexión y resincronización | `21:2570` | |
+| P10 Decisión requerida — obstáculo PC4 | `17:1678` | captura 02: velo 70 % + DecisionSheet con foto |
+| P12a Foto ampliada — obstáculo PC4 | `23:3001` | overlay, como el diálogo de la app |
+| P12b Foto ampliada — persona PC5 | `23:3024` | overlay |
+| P09 Panel de simulación | `21:2692` | borde rayado + SimTag |
+
+Las pantallas de Supervisión siguen el orden de `SupervisionScreen.kt`. Las que pasan de 917 dp muestran el scroll completo, con la barra inferior al pie.
+
+## Flujos
+
+Flujo normal (`04`, sección `25:2`): N1 Selección `25:3` → N2 Supervisión en base `25:19` → N3 Misiones `25:53` → N4 Preflight `25:103` → N5 Supervisión PC 3/8 `25:153` → N6 PC 8/8 `25:195` → N7 Ronda completada `25:232` → N8 Historial `25:278`.
+
+Flujo con falla (`05`, sección `26:2`): F1 Supervisión en ronda `26:3` → F2 detecta y se detiene, recibiendo imagen `26:45` → F3 llega la foto, decisión requerida `26:83` → F3b foto ampliada (overlay) `26:121` → F4 regresando a base `26:128` → F5 desconexión con imagen del incidente `26:170` → F6 reconexión `26:198` → F7 en base `26:238` → F8 historial `26:272`.
+
+## Prototipo (reacciones cargadas en el archivo)
+
+- Flujo normal: Tomar control → N2; pestaña Misiones → N3; ruta "Ronda completa" → N4; Iniciar ronda → N5; N5 y N6 avanzan solos a los 3 s; Ver en historial → N8.
+- Flujo con falla: F1 avanza a los 3 s; F2 a los 2 s; foto de F3 → F3b como overlay y Cerrar vuelve; "Regresar a la base" en F3 → F4 con mantener presionado 1 s (`MOUSE_DOWN`, delay 1); F4 avanza a los 2 s; Reintentar conexión → F6; Confirmar comandos pendientes → F7; pestaña Historial → F8.
+- `03 Pantallas` (inicio "Navegación general" en P01): pestañas de la NavBar, "Simulación" → P09, lecturas de telemetría → P03, Más controles → P05, AlertLine → P06, atrás → volver, Decidir / Ver opciones → P10, foto de P10 → P12a y miniatura de P06 → P12b (overlay), Reintentar → P11, Confirmar → P02e, banner de P02d → P08.
+- Las esperas automáticas están cargadas como 3 y 2 (unidad de la Plugin API); conviene confirmar en Figma que el panel muestre 3 s / 2 s.
 
 ## Exports (`design/exports/`)
 
-- `01-sistema-fundamentos.png` — sección Fundamentos (la muestra de grilla todavía sin opacidad).
-- `01-sistema-componentes.png` — sección Componentes completa.
-- `01-componente-statestrip.png`, `01-componente-floorplan.png`, `01-componente-decisionsheet.png`, `01-componente-commandbutton.png` — detalle.
+- `00-portada.png`, `01-fundamentos.png`, `02-componentes.png`, `03-pantallas.png`, `04-flujo-normal.png`, `05-flujo-con-falla.png`, `06-mapa-navegacion.png`, `07-recorrido.png`.
+- Detalles: `02-componente-statestrip.png`, `02-componente-commandbutton.png`, `02-componente-decisionsheet.png`, `02-componente-floorplan.png`.
+- Una por pantalla en `pantallas/` (23 archivos, 412 px de ancho).
 
-## Lo que falta (en orden)
+## Diferencias con la app
 
-1. **`00 Portada y mapa`**: Portada (RONDA · Cuaderno de ronda, integrantes, Desarrollo de Aplicaciones I · UADE, caso "Ronda nocturna con Unitree Go2 EDU", fecha, índice); Mapa de navegación; Recorrido (instancias de `FloorPlan` PB y 1° ampliadas al 200 % con leyenda: BASE garita, PC1–PC8, salidas, escaleras E/O, punto seguro alternativo "Descanso escalera E").
-2. **`02 Pantallas y flujos` → sección Pantallas** (frames 412×917, fondo `fondo`, `StateStrip` arriba, `NavBar` abajo, todo con instancias):
-   - P01 Selección de robot (3 × `RobotCard`).
-   - P02 Supervisión — en ronda PC 3/8 (StateStrip EN RONDA/no, FloorPlan PB, 4 TelemetryReadout: batería "62 % · alcanza para volver: sí", conexión, temp. sala técnica, salidas libres 2/2; CheckpointRow ×4; botones Pausar / Regresar a base).
-   - P02b Supervisión — batería baja (EN RONDA/sí, readout batería warning 24 %, AlertRow warning).
-   - P02c Supervisión — incidente (REQUIERE DECISIÓN/sí, AlertRow critical "Persona en zona restringida · PC5").
-   - P02d Supervisión — sin datos (StaleDataBanner 12, readouts stale, comandos disabled con motivo salvo Detención operativa).
-   - P02e Supervisión — en base · P02f Supervisión — PC 8/8 · P02g Ronda completada.
-   - P03 Telemetría (todas las filas TelemetryReadout).
-   - P04 Misiones (3 rutas + preflight OK) · P04b Preflight con check fallido ("Batería insuficiente para la ronda completa (necesita 40 %)", Iniciar ronda disabled).
-   - P05 Control (CommandButton disabled con motivo, uno pending, uno rejected, uno noResponse + registro con CommandChip + aviso permanente de detención por software).
-   - P06 Alertas · P07 Historial · P08 Desconexión (StaleDataBanner 30) · P09 Panel de simulación (SimTag, presets 1–5, toggles) · P10 Decisión requerida (P02 + velo 70 % + DecisionSheet 3) · P11 Reconexión y resincronización.
-3. **Flujo normal** y **Flujo con falla**: clones de las pantallas en fila, numerados, con las conexiones de abajo.
-
-## Prototipo — conexiones para hacer a mano (ON_CLICK → NAVIGATE)
-
-Flujo normal (inicio de flujo: "Flujo normal", en N1):
-1. N1 Selección · `RobotCard/disponible` → botón "Tomar control" → N2 Supervisión en base
-2. N2 · NavBar tab "Misiones" → N3 Misiones
-3. N3 · fila "Ronda completa" → N4 Preflight
-4. N4 · "Iniciar ronda" → N5 Supervisión en ronda PC 3/8
-5. N5 · (After delay 3000 ms) → N6 Supervisión PC 8/8
-6. N6 · (After delay 3000 ms) → N7 Ronda completada
-7. N7 · "Ver en historial" → N8 Historial
-
-Flujo con falla (inicio de flujo: "Flujo con falla", en F1):
-1. F1 Supervisión en ronda · AlertRow critical / franja "Sí: decidí cómo seguir en PC4" → F2 Alerta obstáculo (Alertas)
-2. F2 · "Reconocer" → F3 Decisión requerida
-3. F3 · opción 3 "Regresar a base" (HoldToConfirm) → F4 Supervisión REGRESANDO
-4. F4 · (After delay 2000 ms) → F5 Desconexión (datos antiguos, comando Regresar SIN RESPUESTA)
-5. F5 · "Reintentar conexión" → F6 Reconexión y resincronización
-6. F6 · "Confirmar comandos pendientes" → F7 Supervisión EN BASE
-7. F7 · NavBar "Historial" → F8 Historial con el incidente
-
-Navegación común (en todas las pantallas con NavBar): Supervisión / Misiones / Alertas / Historial → pantalla correspondiente; desde Supervisión, fila de telemetría → Telemetría y barra de comandos → Control; "llave" (long-press) → Panel de simulación; flecha atrás → pantalla anterior (Back).
-
-## Cómo retomar
-
-Con cupo disponible: `create_session` con el fileKey, cargar `figma-use` + `figma-generate-design`, y construir en este orden: Pantallas (una llamada por 2–3 pantallas, con instancias de los sets de arriba por ID) → flujos (clonar frames) → prototipo con `setReactionsAsync` → página 00. Verificar con `node.screenshot()` dentro de `use_figma`, nunca `get_screenshot`.
+- **BASE:** `recorrido.svg` y `FloorPlanCanvas` dibujan la base en la garita, abajo a la izquierda de PB. `BuildingLayout.base` (0, 0) con `BuildingPlan.normX/normY` da arriba a la izquierda, así que la app pone el robot en base arriba a la izquierda. El Figma sigue a `recorrido.svg`.
+- **NavBar:** el Figma lleva un ícono de 20 dp sobre cada pestaña; la app solo texto.
+- **HoldToConfirm:** en el Figma el texto va sobre una placa `fondo` para leerse encima de las franjas; la app lo dibuja directo sobre las franjas.
+- **DecisionSheet:** el estado `foto = recibiendo` ("Recibiendo imagen…") existe solo en el Figma.
