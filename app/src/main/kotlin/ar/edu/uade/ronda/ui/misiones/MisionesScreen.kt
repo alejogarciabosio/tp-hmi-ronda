@@ -134,7 +134,7 @@ private fun PreflightRow(item: PreflightItemUi) {
 private fun MisionesPreview() = PreviewSurface {
     val enBase = TelemetriaPreviewData.enRonda.copy(operationalState = OperationalState.EN_BASE, mission = null)
     MisionesScreen(
-        MisionesMapper.map(MisionesInputs(enBase, ConnectionState.CONNECTED, 1_000, emptyList(), RouteId.RONDA_COMPLETA, 1_400)),
+        MisionesMapper.map(MisionesInputs(enBase, ConnectionState.CONNECTED, 1_000, emptyList(), RouteId.RONDA_COMPLETA, 1_400, "RONDA-01")),
         {}, {}, {},
     )
 }
@@ -147,7 +147,7 @@ private fun MisionesBateriaBajaPreview() = PreviewSurface {
         battery = TelemetriaPreviewData.enRonda.battery.copy(percent = 32),
     )
     MisionesScreen(
-        MisionesMapper.map(MisionesInputs(enBase, ConnectionState.CONNECTED, 1_000, emptyList(), RouteId.RONDA_COMPLETA, 1_400)),
+        MisionesMapper.map(MisionesInputs(enBase, ConnectionState.CONNECTED, 1_000, emptyList(), RouteId.RONDA_COMPLETA, 1_400, "RONDA-01")),
         {}, {}, {},
     )
 }

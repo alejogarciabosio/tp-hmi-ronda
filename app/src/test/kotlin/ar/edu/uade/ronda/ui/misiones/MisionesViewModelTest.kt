@@ -7,6 +7,7 @@ import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.RouteId
 import ar.edu.uade.ronda.ui.model.CommandUiState
 import ar.edu.uade.ronda.ui.model.StatusLevel
+import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.supervision.FakeRobotRepository
 import ar.edu.uade.ronda.ui.supervision.tele
 import kotlinx.coroutines.Dispatchers
@@ -25,11 +26,15 @@ class MisionesViewModelTest {
     @Before fun setUp() { Dispatchers.setMain(StandardTestDispatcher()) }
     @After fun tearDown() { Dispatchers.resetMain() }
 
-    private fun inputs(batteryPct: Int, connection: ConnectionState = ConnectionState.CONNECTED, route: RouteId = RouteId.RONDA_COMPLETA) =
-        MisionesInputs(
-            tele(1_000, state = OperationalState.EN_BASE, batteryPct = batteryPct, missionId = null),
-            connection, 1_000, emptyList(), route, 1_400,
-        )
+    private fun inputs(
+        batteryPct: Int,
+        connection: ConnectionState = ConnectionState.CONNECTED,
+        route: RouteId = RouteId.RONDA_COMPLETA,
+        controlledId: String? = "RONDA-01",
+    ) = MisionesInputs(
+        tele(1_000, state = OperationalState.EN_BASE, batteryPct = batteryPct, missionId = null),
+        connection, 1_000, emptyList(), route, 1_400, controlledId,
+    )
 
     @Test fun conBateriaYEnlaceSePuedeIniciar() {
         val s = MisionesMapper.map(inputs(96))
@@ -59,7 +64,7 @@ class MisionesViewModelTest {
     @Test fun iniciarEnviaLaRutaElegida() {
         val repo = FakeRobotRepository()
         repo.publish(tele(1_000, state = OperationalState.EN_BASE, batteryPct = 96, missionId = null))
-        val vm = MisionesViewModel(repo, Clock { 1_200L })
+        val vm = MisionesViewModel(repo, Clock { 1_200L }, ControlSession("RONDA-01"))
         vm.onSelectRoute(RouteId.SALIDAS_EMERGENCIA.name)
         vm.onStart()
         assertEquals(CommandType.START_MISSION, repo.sent.single().first)
@@ -69,8 +74,29 @@ class MisionesViewModelTest {
     @Test fun conBateriaInsuficienteIniciarNoEnviaNada() {
         val repo = FakeRobotRepository()
         repo.publish(tele(1_000, state = OperationalState.EN_BASE, batteryPct = 20, missionId = null))
-        val vm = MisionesViewModel(repo, Clock { 1_200L })
+        val vm = MisionesViewModel(repo, Clock { 1_200L }, ControlSession("RONDA-01"))
         vm.onStart()
         assertTrue(repo.sent.isEmpty())
+    }
+
+    @Test fun sinElControlNoSeIniciaYElPreflightLoMarca() {
+        val s = MisionesMapper.map(inputs(96, controlledId = null))
+        assertEquals(CommandUiState.DISABLED, s.start.state)
+        assertEquals(ControlSession.NO_CONTROL_REASON, s.start.reason)
+        val control = s.preflight.last()
+        assertEquals(StatusLevel.ERROR, control.level)
+        assertEquals("Tomá el control en Selección.", control.detail)
+    }
+
+    @Test fun sinElControlIniciarNoEnviaNada() {
+        val repo = FakeRobotRepository()
+        repo.publish(tele(1_000, state = OperationalState.EN_BASE, batteryPct = 96, missionId = null))
+        val session = ControlSession()
+        val vm = MisionesViewModel(repo, Clock { 1_200L }, session)
+        vm.onStart()
+        assertTrue(repo.sent.isEmpty())
+        session.take("RONDA-01")
+        vm.onStart()
+        assertEquals(CommandType.START_MISSION, repo.sent.single().first)
     }
 }

@@ -59,7 +59,7 @@ class AppContainer(
      */
     val checkpointHistory = CheckpointHistory(robotRepository.telemetry, appScope)
 
-    /** Control exclusivo del robot: lo comparten Selección, Supervisión y Control. */
+    /** Control exclusivo del robot: lo comparten Selección, Supervisión, Misiones y Control. */
     val controlSession = ControlSession()
 
     val eventRecorder = EventRecorder(historyRepository, appScope)
@@ -68,7 +68,7 @@ class AppContainer(
         initializer { SupervisionViewModel(robotRepository, clock, controlSession, checkpointHistory.log) }
         initializer { SeleccionViewModel(robotRepository, controlSession) }
         initializer { TelemetriaViewModel(robotRepository, clock) }
-        initializer { MisionesViewModel(robotRepository, clock) }
+        initializer { MisionesViewModel(robotRepository, clock, controlSession) }
         initializer { ControlViewModel(robotRepository, clock, controlSession) }
         initializer { AlertasViewModel(robotRepository, clock) }
         initializer { HistorialViewModel(robotRepository, historyRepository, clock) }

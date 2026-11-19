@@ -119,7 +119,7 @@ class VideoDemoRecorder {
             initializer { SupervisionViewModel(repo, clock, session, checkpointHistory.log) }
             initializer { SeleccionViewModel(repo, session) }
             initializer { TelemetriaViewModel(repo, clock) }
-            initializer { MisionesViewModel(repo, clock) }
+            initializer { MisionesViewModel(repo, clock, session) }
             initializer { ControlViewModel(repo, clock, session) }
             initializer { AlertasViewModel(repo, clock) }
             initializer { HistorialViewModel(repo, history, clock) }

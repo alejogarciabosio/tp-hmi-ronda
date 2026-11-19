@@ -101,7 +101,7 @@ class PantallasAccesibilidadTest {
 
     @Test fun telemetria() = check("Telemetría") { TelemetriaRoute(TelemetriaViewModel(repo(), clock), { nav(it) }, {}) }
 
-    @Test fun misiones() = check("Misiones") { MisionesRoute(MisionesViewModel(repo(), clock)) { nav(it) } }
+    @Test fun misiones() = check("Misiones") { MisionesRoute(MisionesViewModel(repo(), clock, ControlSession("RONDA-01"))) { nav(it) } }
 
     @Test fun control() = check("Control") { ControlRoute(ControlViewModel(repo(), clock, ControlSession("RONDA-01")), { nav(it) }, {}) }
 

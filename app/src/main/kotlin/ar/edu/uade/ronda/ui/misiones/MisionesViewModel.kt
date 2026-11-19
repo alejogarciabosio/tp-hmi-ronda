@@ -8,6 +8,7 @@ import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.RouteId
 import ar.edu.uade.ronda.core.repository.RobotRepository
 import ar.edu.uade.ronda.ui.model.CommandUiState
+import ar.edu.uade.ronda.ui.session.ControlSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 class MisionesViewModel(
     private val repository: RobotRepository,
     private val clock: Clock,
+    private val session: ControlSession,
     tickMs: Long = 500,
 ) : ViewModel() {
 
@@ -33,15 +35,15 @@ class MisionesViewModel(
 
     val uiState: StateFlow<MisionesUiState> = combine(
         repository.telemetry, repository.connection, repository.lastTelemetryAt, repository.commands,
-        combine(selectedRoute, ticker) { r, _ -> r },
+        combine(selectedRoute, session.controlledId, ticker) { r, _, _ -> r },
     ) { t, c, at, cmds, route ->
-        MisionesMapper.map(MisionesInputs(t, c, at, cmds, route, clock.nowMs()))
+        MisionesMapper.map(MisionesInputs(t, c, at, cmds, route, clock.nowMs(), session.controlledId.value))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), current())
 
     private fun current() = MisionesMapper.map(
         MisionesInputs(
             repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
-            repository.commands.value, selectedRoute.value, clock.nowMs(),
+            repository.commands.value, selectedRoute.value, clock.nowMs(), session.controlledId.value,
         ),
     )
 

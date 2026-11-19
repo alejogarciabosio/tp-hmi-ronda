@@ -23,6 +23,7 @@ import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.ui.supervision.LastCommandUi
 import ar.edu.uade.ronda.ui.supervision.SupervisionInputs
 import ar.edu.uade.ronda.ui.supervision.SupervisionMapper
+import ar.edu.uade.ronda.ui.session.ControlSession
 
 internal data class MisionesInputs(
     val telemetry: RobotTelemetry?,
@@ -31,6 +32,8 @@ internal data class MisionesInputs(
     val commands: List<TrackedCommand>,
     val selectedRoute: RouteId,
     val nowMs: Long,
+    /** Robot que controla este operador (ver `ControlSession`); null si no tomó el control. */
+    val controlledId: String? = null,
 )
 
 /**
@@ -69,6 +72,8 @@ internal object MisionesMapper {
         )
         val lastStart = i.commands.lastOrNull { it.command.type == CommandType.START_MISSION }
         val start = when {
+            i.controlledId == null ->
+                CommandButtonUi("Iniciar ronda", CommandKind.PRIMARY, CommandUiState.DISABLED, ControlSession.NO_CONTROL_REASON)
             lastStart?.status == CommandStatus.PENDING ->
                 CommandButtonUi("Iniciar ronda", CommandKind.PRIMARY, CommandUiState.PENDING, "Esperando respuesta del robot")
             !policyResult.enabled -> CommandButtonUi("Iniciar ronda", CommandKind.PRIMARY, CommandUiState.DISABLED, policyResult.reason)
@@ -141,8 +146,12 @@ internal object MisionesMapper {
             critical == 0 -> PreflightItemUi("Sin alertas críticas activas", "0", StatusLevel.OK)
             else -> PreflightItemUi("Hay alertas críticas sin reconocer", critical.toString(), StatusLevel.ERROR, "Revisalas en Alertas.")
         }
-        // Con un solo operador en la demo el control siempre es propio (ver Selección de robot).
-        val controlItem = PreflightItemUi("Sin otro operador con el control", "vos", StatusLevel.OK)
+        // Control exclusivo: sin tomarlo en Selección no se puede iniciar (mismo gate que Supervisión y Control).
+        val controlItem = if (i.controlledId != null) {
+            PreflightItemUi("Tenés el control del robot", "vos", StatusLevel.OK)
+        } else {
+            PreflightItemUi("No tenés el control del robot", "—", StatusLevel.ERROR, "Tomá el control en Selección.")
+        }
         return listOf(batteryItem, connItem, alertsItem, controlItem)
     }
 

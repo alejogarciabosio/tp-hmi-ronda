@@ -118,7 +118,7 @@ class CapturasRecorder {
 
     @Test fun misiones() {
         advance(3_000)
-        show { MisionesRoute(MisionesViewModel(repo, clock), {}) }
+        show { MisionesRoute(MisionesViewModel(repo, clock, session), {}) }
         shot("app-04-misiones")
     }
 
@@ -126,7 +126,7 @@ class CapturasRecorder {
         advance(3_000)
         control.setBatteryPercent(30)
         advance(2_000)
-        show { MisionesRoute(MisionesViewModel(repo, clock), {}) }
+        show { MisionesRoute(MisionesViewModel(repo, clock, session), {}) }
         shot("app-04b-misiones-preflight-fallido")
     }
 
