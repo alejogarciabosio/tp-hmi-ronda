@@ -45,6 +45,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.min
 import kotlin.math.roundToInt
+import ar.edu.uade.ronda.core.contract.nextUuidV4
 import kotlin.random.Random
 
 enum class OutputKind { TELEMETRY, ACK, EVENT }
@@ -59,6 +60,8 @@ data class SimOutput(val kind: OutputKind, val json: String)
  */
 class RobotSimulator(
     private val random: Random = Random(1),
+    // Aparte de `random` para que cambiar los ids no altere la latencia simulada de los escenarios.
+    private val idRandom: Random = Random(2),
     private val batteryPolicy: BatteryPolicy = BatteryPolicy(),
     val robotId: String = "RONDA-01",
 ) {
@@ -226,7 +229,7 @@ class RobotSimulator(
             else -> forcedRejection?.also { forcedRejection = null } ?: execute(cmd, now)
         }
         val ack = CommandAck(
-            messageId = nextId("r"),
+            messageId = idRandom.nextUuidV4(),
             correlationId = cmd.messageId,
             robotId = robotId,
             receivedAt = now,
@@ -626,7 +629,7 @@ class RobotSimulator(
         enterHold(REQUIERE_DECISION, now)
         outbox += SimOutput(
             OutputKind.EVENT,
-            ContractCodec.encode(RobotEvent.DecisionRequired(nextId("e"), robotId, now, Severity.CRITICAL, inc)),
+            ContractCodec.encode(RobotEvent.DecisionRequired(idRandom.nextUuidV4(), robotId, now, Severity.CRITICAL, inc)),
         )
     }
 
@@ -642,7 +645,7 @@ class RobotSimulator(
         alerts += alert
         outbox += SimOutput(
             OutputKind.EVENT,
-            ContractCodec.encode(RobotEvent.AlertRaised(nextId("e"), robotId, now, severity, alert)),
+            ContractCodec.encode(RobotEvent.AlertRaised(idRandom.nextUuidV4(), robotId, now, severity, alert)),
         )
     }
 
@@ -676,7 +679,7 @@ class RobotSimulator(
         }
         val zone = if (legLength > 0 && legRemaining / legLength > 0.5) legOriginZone else legTarget.zone
         return RobotTelemetry(
-            messageId = nextId("t"),
+            messageId = idRandom.nextUuidV4(),
             robotId = robotId,
             timestamp = now,
             latencyMs = latencyOverrideMs ?: (LATENCY_BASE_MS + random.nextInt(LATENCY_JITTER_MS)),
@@ -708,7 +711,7 @@ class RobotSimulator(
     private fun nextId(prefix: String): String {
         val n = (counters[prefix] ?: 0) + 1
         counters[prefix] = n
-        return "$prefix-" + n.toString().padStart(if (prefix == "t") 6 else 4, '0')
+        return "$prefix-" + n.toString().padStart(4, '0')
     }
 
     private fun drain(): List<SimOutput> = outbox.toList().also { outbox.clear() }

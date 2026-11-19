@@ -19,7 +19,7 @@ class SimulatedRobotRepository private constructor(
     companion object {
         fun create(scope: CoroutineScope, clock: Clock, seed: Long = 42L): SimulatedRobotRepository {
             val transport = FakeTransport(RobotSimulator(Random(seed)), clock, scope)
-            return SimulatedRobotRepository(TransportRobotRepository(transport, clock, scope), transport)
+            return SimulatedRobotRepository(TransportRobotRepository(transport, clock, scope, idRandom = Random(seed + 1)), transport)
         }
     }
 }

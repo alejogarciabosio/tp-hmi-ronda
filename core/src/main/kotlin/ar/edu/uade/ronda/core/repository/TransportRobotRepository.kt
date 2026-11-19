@@ -1,5 +1,7 @@
 package ar.edu.uade.ronda.core.repository
 
+import ar.edu.uade.ronda.core.contract.nextUuidV4
+import kotlin.random.Random
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.contract.ContractCodec
 import ar.edu.uade.ronda.core.contract.ContractException
@@ -32,7 +34,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicInteger
 
 /** Repositorio sobre cualquier [Transport]: parsea el contrato, deriva la conexión y sigue los comandos. */
 class TransportRobotRepository(
@@ -44,10 +45,10 @@ class TransportRobotRepository(
     private val evaluator: ConnectionEvaluator = ConnectionEvaluator(),
     private val policy: CommandPolicy = CommandPolicy(),
     private val housekeepingMs: Long = 250,
+    private val idRandom: Random = Random.Default,
 ) : RobotRepository {
 
     private val tracker = CommandTracker()
-    private val seq = AtomicInteger()
 
     private val _telemetry = MutableStateFlow<RobotTelemetry?>(null)
     override val telemetry: StateFlow<RobotTelemetry?> = _telemetry.asStateFlow()
@@ -96,7 +97,7 @@ class TransportRobotRepository(
     override fun send(type: CommandType, params: CommandParams): String {
         val now = clock.nowMs()
         val command = Command(
-            messageId = "c-" + seq.incrementAndGet().toString().padStart(4, '0'),
+            messageId = idRandom.nextUuidV4(),
             robotId = robotId,
             issuedAt = now,
             operatorId = operatorId,

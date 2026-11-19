@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "type": "COMMAND_ACK",
-  "messageId": "r-0002",
-  "correlationId": "c-0002",
+  "messageId": "8e81973e-0bec-47b0-b898-d190f9ebdacc",
+  "correlationId": "36f675cc-81e7-4ef5-a8e2-5d940ed90475",
   "robotId": "RONDA-01",
   "receivedAt": 1763500000180,
   "receivedAtIso": "2025-11-18T21:06:40.180Z",

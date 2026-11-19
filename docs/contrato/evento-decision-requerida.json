@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "type": "EVENT",
-  "messageId": "e-0012",
+  "messageId": "0fd630f1-f29d-4da9-953f-48f1a09f76b5",
   "robotId": "RONDA-01",
   "timestamp": 1763500020000,
   "timestampIso": "2025-11-18T21:07:00.000Z",

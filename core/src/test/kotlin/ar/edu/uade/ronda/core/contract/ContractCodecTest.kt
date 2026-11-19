@@ -124,7 +124,7 @@ class ContractCodecTest {
     fun `respuestas confirmada y rechazada`() {
         val ok = (ContractCodec.decode(load("respuesta-confirmada.json")) as ContractMessage.Ack).value
         assertEquals(AckStatus.CONFIRMED, ok.status)
-        assertEquals("c-0002", ok.correlationId)
+        assertEquals("36f675cc-81e7-4ef5-a8e2-5d940ed90475", ok.correlationId)
         assertNull(ok.reasonCode)
 
         val no = (ContractCodec.decode(load("respuesta-rechazada.json")) as ContractMessage.Ack).value
