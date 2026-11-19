@@ -20,6 +20,7 @@ import ar.edu.uade.ronda.ui.desconexion.DesconexionViewModel
 import ar.edu.uade.ronda.ui.historial.HistorialViewModel
 import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
+import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -61,6 +62,7 @@ class AppContainer(
         initializer { AlertasViewModel(robotRepository, clock) }
         initializer { HistorialViewModel(robotRepository, historyRepository, clock) }
         initializer { DesconexionViewModel(robotRepository, clock) }
+        initializer { SimulacionViewModel(simulationControl, robotRepository) }
     }
 
     init {

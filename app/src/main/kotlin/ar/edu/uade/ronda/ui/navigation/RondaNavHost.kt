@@ -37,6 +37,8 @@ import ar.edu.uade.ronda.ui.seleccion.SeleccionRoute
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionRoute
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
+import ar.edu.uade.ronda.ui.simulacion.SimulacionRoute
+import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaRoute
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import ar.edu.uade.ronda.ui.theme.RondaColors
@@ -49,7 +51,7 @@ fun RondaNavHost(
     modifier: Modifier = Modifier,
     startDestination: Route = Route.SUPERVISION,
 ) {
-    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL, Route.DESCONEXION)
+    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL, Route.DESCONEXION, Route.SIMULACION)
     NavHost(navController, startDestination.path, modifier) {
         val go: (Route) -> Unit = { navController.navigate(it.path) { launchSingleTop = true } }
         val back: () -> Unit = { navController.popBackStack() }
@@ -84,6 +86,10 @@ fun RondaNavHost(
         composable(Route.DESCONEXION.path) {
             val vm: DesconexionViewModel = viewModel(factory = viewModelFactory)
             DesconexionRoute(vm, go, back)
+        }
+        composable(Route.SIMULACION.path) {
+            val vm: SimulacionViewModel = viewModel(factory = viewModelFactory)
+            SimulacionRoute(vm, back)
         }
         Route.entries.filter { it !in implemented }.forEach { route ->
             composable(route.path) { PlaceholderScreen(route, go) }
