@@ -137,7 +137,7 @@ Reglas de diseño:
 2. **Batería baja:** arranca con 34 %; al cruzar 25 % aparece la advertencia y la acción "Regresar a base"; a 15 % el robot propone el regreso.
 3. **Desconexión:** corte forzado de 15 s; datos marcados como antiguos, comandos sin confirmar, y recuperación con resincronización.
 4. **Incidente (obstáculo):** en PC4 un objeto bloquea el pasillo; el robot se detiene y ofrece esperar 30 s, saltar el PC4 o regresar a base.
-5. **Escenario propio (persona en zona restringida):** en PC5 el robot detecta a una persona, mantiene 2 m y se identifica por voz; el operador decide entre registrar como autorizada, enviar a un vigilante o continuar. No se guarda imagen.
+5. **Escenario propio (persona en zona restringida):** en PC5 el robot detecta a una persona, mantiene 2 m y se identifica por voz; el operador decide entre registrar como autorizada (`AUTHORIZED_PERSON`), enviar a un vigilante (`SEND_GUARD`) o continuar la ronda (`CONTINUE_ROUND`). No se guarda imagen.
 
 ## 10. Riesgos
 
@@ -155,9 +155,15 @@ Detalle completo (causa, consecuencia, medida y verificación) en `docs/riesgos.
 
 ## 11. Prototipo en Figma
 
-Archivo: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN>
+Archivo: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN>. Estado al 2026-11-19, detallado en `design/FIGMA.md`.
 
-Estructura prevista del prototipo (el estado de avance está en `design/FIGMA.md`). Pantallas: selección de robot, supervisión, telemetría, misiones (con resumen previo), control, alertas con decisión requerida, historial, desconexión y panel de simulación. Incluye mapa de navegación, componentes con estados (normal, deshabilitado, advertencia, error), un **flujo normal** (ronda completa) y un **flujo con falla** (obstáculo en PC4 y pérdida de conexión). La dirección visual toma del plano de evacuación y de la planilla de ronda en papel: líneas finas, filas con reglas, estado siempre con color, forma y texto.
+**Hecho (página `01 Sistema`).** Variables de color (tema noche y una muestra del tema día), espaciado y radios; estilos de texto (Archivo, IBM Plex Mono e IBM Plex Sans); símbolos de estado con redundancia (círculo lleno, triángulo con franjas, rombo, círculo punteado, contorno tachado); íconos lineales; y 14 componentes reutilizables con variantes de estado (normal, deshabilitado, advertencia, error), ligados a las variables. La dirección visual parte del plano de evacuación y de la planilla de ronda en papel: líneas finas, filas con reglas, estado siempre con color, forma y texto.
+
+![Sistema: componentes](../../design/exports/01-sistema-componentes.png)
+
+![Franja de estado](../../design/exports/01-componente-statestrip.png)
+
+**Falta para la entrega.** Las páginas `00 Portada y mapa` (portada, mapa de navegación, recorrido) y `02 Pantallas y flujos` (selección de robot, supervisión, telemetría, misiones, control, alertas con decisión requerida, historial, desconexión y panel de simulación; flujo normal y flujo con falla; prototipo navegable) **todavía no están construidas**. El plan Starter de Figma cortó el uso de la herramienta de escritura a las ~20 llamadas, y hay que esperar a que se renueve el cupo o pasar el archivo a un plan con más margen. En esta preentrega, por lo tanto, el prototipo navegable con flujo normal y flujo con falla está **pendiente**; lo que sí está documentado es el sistema de diseño, la lista de pantallas (arriba) y los escenarios de §9, que definen los dos flujos.
 
 ## 12. Fuentes
 
