@@ -128,6 +128,7 @@ data class AlertDto(
     val message: String,
     val raisedAt: Long,
     val acknowledged: Boolean = false,
+    val snapshot: SnapshotDto? = null,
 )
 
 @Serializable
@@ -152,4 +153,8 @@ data class IncidentDto(
     val checkpointIndex: Int,
     val message: String,
     val options: List<IncidentOptionDto>,
+    val snapshot: SnapshotDto? = null,
 )
+
+@Serializable
+data class SnapshotDto(val id: String, val mediaType: String, val capturedAt: Long, val data: String? = null)

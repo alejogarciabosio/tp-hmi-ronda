@@ -15,6 +15,7 @@ import ar.edu.uade.ronda.core.model.RobotEvent
 import ar.edu.uade.ronda.core.model.RouteId
 import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.model.Severity
+import ar.edu.uade.ronda.core.model.Snapshot
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -118,6 +119,40 @@ class ContractCodecTest {
         val encoded = ContractCodec.encode(command("comando-reanudar.json"))
         assertFalse("decision" in encoded)
         assertFalse("resolution" in encoded)
+    }
+
+    @Test
+    fun `el incidente trae su snapshot con y sin data`() {
+        val obst = (ContractCodec.decode(load("evento-decision-requerida.json")) as ContractMessage.Event).value
+        val snap = (obst as RobotEvent.DecisionRequired).incident.snapshot!!
+        assertEquals("image/jpeg", snap.mediaType)
+        assertEquals(1763500019800, snap.capturedAt)
+        assertTrue(snap.data!!.startsWith("/9j/"))
+
+        val persona = (ContractCodec.decode(load("evento-persona-zona-restringida.json")) as ContractMessage.Event).value
+        val s2 = (persona as RobotEvent.DecisionRequired).incident.snapshot
+        assertEquals(Snapshot("sim-persona", "image/jpeg", 1763500149800, null), s2)
+    }
+
+    @Test
+    fun `los JSON sin snapshot siguen parseando y no lo emiten`() {
+        val viejo = load("evento-decision-requerida.json").replace(Regex(",\\s*\"snapshot\"\\s*:\\s*\\{[^}]*\\}"), "")
+        assertFalse("snapshot" in viejo)
+        val ev = (ContractCodec.decode(viejo) as ContractMessage.Event).value as RobotEvent.DecisionRequired
+        assertNull(ev.incident.snapshot)
+        assertFalse("snapshot" in ContractCodec.encode(ev))
+
+        val alerta = (ContractCodec.decode(load("evento-alerta.json")) as ContractMessage.Event).value as RobotEvent.AlertRaised
+        assertNull(alerta.alert.snapshot)
+    }
+
+    @Test
+    fun `la alerta con snapshot sobrevive a ida y vuelta`() {
+        val base = (ContractCodec.decode(load("evento-alerta.json")) as ContractMessage.Event).value as RobotEvent.AlertRaised
+        val conFoto = base.copy(alert = base.alert.copy(snapshot = Snapshot("sim-falla", "image/jpeg", 5L)))
+        val encoded = ContractCodec.encode(conFoto)
+        assertTrue("\"sim-falla\"" in encoded)
+        assertEquals(conFoto, (ContractCodec.decode(encoded) as ContractMessage.Event).value)
     }
 
     @Test
