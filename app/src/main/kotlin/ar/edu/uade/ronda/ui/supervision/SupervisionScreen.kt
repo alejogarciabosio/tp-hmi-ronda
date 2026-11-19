@@ -238,7 +238,7 @@ internal fun AlertRow(ui: AlertRowUi, onClick: () -> Unit) {
 }
 
 @Composable
-private fun LastCommandRow(ui: LastCommandUi) {
+internal fun LastCommandRow(ui: LastCommandUi) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Última orden:", style = RondaType.rotuloSeccion, color = RondaColors.bone400)
         Text(ui.label, style = RondaType.textoEnfasis, color = RondaColors.bone100)

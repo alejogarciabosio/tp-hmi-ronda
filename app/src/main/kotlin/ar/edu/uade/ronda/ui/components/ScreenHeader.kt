@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -22,7 +23,13 @@ import ar.edu.uade.ronda.ui.theme.RondaType
 
 /** Encabezado de las pantallas secundarias: volver, título y un dato a la derecha (antigüedad, modo). */
 @Composable
-fun ScreenHeader(title: String, onBack: (() -> Unit)?, trailing: String? = null, modifier: Modifier = Modifier) {
+fun ScreenHeader(
+    title: String,
+    onBack: (() -> Unit)?,
+    trailing: String? = null,
+    modifier: Modifier = Modifier,
+    onTrailingClick: (() -> Unit)? = null,
+) {
     Row(
         modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -44,7 +51,14 @@ fun ScreenHeader(title: String, onBack: (() -> Unit)?, trailing: String? = null,
             title, style = RondaType.pantallaTitulo, color = RondaColors.bone100,
             modifier = Modifier.weight(1f).semantics { heading() },
         )
-        trailing?.let { Text(it, style = RondaType.rotuloChico, color = RondaColors.bone400) }
+        trailing?.let {
+            val clickable = if (onTrailingClick != null) {
+                Modifier.heightIn(min = MinTouchTarget).clickable(role = Role.Button, onClick = onTrailingClick).padding(horizontal = 8.dp)
+            } else Modifier
+            Box(clickable, contentAlignment = Alignment.Center) {
+                Text(it, style = RondaType.rotuloChico, color = RondaColors.bone400)
+            }
+        }
     }
 }
 

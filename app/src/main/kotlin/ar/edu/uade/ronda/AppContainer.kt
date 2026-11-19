@@ -14,6 +14,7 @@ import ar.edu.uade.ronda.data.local.HistoryRepository
 import ar.edu.uade.ronda.data.local.RondaDatabase
 import ar.edu.uade.ronda.data.local.RoomHistoryRepository
 import ar.edu.uade.ronda.data.local.toOutcomes
+import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
@@ -51,6 +52,7 @@ class AppContainer(
         initializer { SupervisionViewModel(robotRepository, clock) }
         initializer { SeleccionViewModel(robotRepository) }
         initializer { TelemetriaViewModel(robotRepository, clock) }
+        initializer { MisionesViewModel(robotRepository, clock) }
     }
 
     init {
