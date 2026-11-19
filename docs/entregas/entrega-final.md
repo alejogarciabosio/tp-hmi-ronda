@@ -7,7 +7,7 @@ subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 
 Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
 
-Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado (video final con voz) figura con el marcador **[PENDIENTE]** y no se describen resultados que no existan.
+Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. No se describen resultados que no existan.
 
 Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §18 y detalladas en `docs/fuentes.md`.
 
@@ -170,7 +170,7 @@ El simulador actualiza batería y telemetría, ejecuta misiones coherentes con s
 
 El consumo de batería sigue un modelo de dos términos: un consumo base por segundo (robot encendido) más un consumo proporcional a la distancia. Los coeficientes son **supuestos del simulador, no mediciones del Go2**; se derivan de 432 Wh y de la autonomía declarada de 2 a 4 h en `docs/supuestos-simulacion.md`, que además justifica la reserva y el mínimo de 40 % para salir a la ronda completa. La ronda completa mide 293 m según el plano del simulador. Con coeficientes realistas una ronda completa gasta alrededor de 7 %, así que el escenario de batería baja simula una celda degradada (consumo multiplicado por 6) en lugar de forzar una carga inicial irreal (decisión D8 en `docs/decisiones.md`).
 
-Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a la base; si el enlace vuelve antes, espera la orden del operador. Es un supuesto del caso, no una función verificada del Go2.
+Supuesto de pérdida de enlace: el robot se detiene y a los 60 s (reales, también en el modo acelerado) regresa solo a la base; si el enlace vuelve antes, espera la orden del operador. Es un supuesto del caso, no una función verificada del Go2.
 
 ## 12. Escenarios y evidencias
 
@@ -281,12 +281,22 @@ Decisiones y límites del panel en D10 y L3 de `docs/decisiones.md`.
   - `PantallasAccesibilidadTest`: todo lo que se puede tocar mide al menos 48 dp y tiene texto para el lector de pantalla, en nueve estados de pantalla.
   - `ContrasteTest`: contraste WCAG de la paleta.
 
-  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` al cierre de la integración (19/11/2026): `:core` 198 tests y `:app` 174 tests, sin fallas. `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
+  Tests de punta a punta (`app/src/test/.../e2e/`, corren dentro de `testDebugUnitTest`): montan `MainActivity` con la `RondaApp` real (`AppContainer`, simulador con semilla 42, Room en memoria) y tiempo virtual, eligen ×8 en el panel y recorren cada escenario como en la demo, tocando botones y pestañas por su texto y afirmando lo que se ve:
+  - `Escenario1MisionNormalE2eTest`: preflight en verde, la orden pasa por pendiente, confirmada y verificada, el progreso por PC, COMPLETADA, el regreso a la base y la ronda "Completada" en Historial.
+  - `Escenario2BateriaBajaE2eTest`: aviso destacado "volvé a la base" a 25 %, decisión a 15 % y regreso manteniendo presionado (un toque corto no alcanza).
+  - `Escenario3DesconexionE2eTest`: corte de enlace con "Sin datos" y "Desconectado" con la antigüedad, nunca "Conectado" durante el corte, órdenes deshabilitadas con su motivo, detención disponible, pantalla Desconexión, la alerta "Enlace perdido" con su hora original y reanudar.
+  - `Escenario4ObstaculoE2eTest`: hoja con foto y tres opciones, "Saltar el PC4" (la hoja no vuelve, el PC4 queda salteado) y la variante con detención operativa durante la decisión.
+  - `Escenario5PersonaE2eTest`: "Enviar vigilante" con doble toque manda una sola orden, la hoja no vuelve, "Vigilante en camino" y la decisión en Historial sin foto.
+  - `TransversalesE2eTest`: sin control las órdenes se deshabilitan pero la detención no, en todas las pantallas operativas; Atrás desde una pestaña vuelve a Supervisión; rotar con la decisión abierta no pierde estado; ninguna pantalla muestra nombres crudos de enums.
+
+  Estos tests encontraron dos errores que se corrigieron: a ×8 el robot regresaba solo a los 7,5 s sin enlace en vez de 60 s (D13), y detenido durante una decisión no se podía reanudar desde Supervisión (D15).
+
+  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:assembleDebug :app:testDebugUnitTest` al cierre (19/11/2026): `:core` 199 tests y `:app` 185 tests, sin fallas (la suite completa se corrió tres veces seguidas sin intermitencias). `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
 - **Prueba manual en emulador (Pixel, API 35):** se recorrieron Selección, Supervisión, Misiones, Control, Alertas, Historial y Telemetría sin cierres inesperados. La prueba encontró cuatro detalles que se corrigieron: la tendencia de batería en Telemetría, la posición de BASE en el plano, el margen inferior de Supervisión y un test de Room intermitente.
 
 ## 17. Video de demostración
 
-Guion por escenario, con tiempos y lo que se dice en cada toma, en [`docs/entregas/guion-video.md`](guion-video.md). Video final grabado sobre el APK y con voz (enlace o ruta y duración): **[PENDIENTE]**. Hoy existe solo la grabación parcial sin voz de la pantalla Supervisión mencionada en §12.
+Video principal: [`docs/evidencias/video/demo-ronda.mp4`](../evidencias/video/demo-ronda.mp4), 3 min 52 s (1920x1080, unos 5 MB). Grabado desde el código de la app con el simulador real, sin emulador; textos en pantalla en lugar de voz. Recorre la apertura (selección del robot, toma de control y la velocidad ×8 elegida en el panel de simulación) y los cinco escenarios de §12; qué muestra cada parte y cómo regenerarlo está en [`docs/evidencias/README.md`](../evidencias/README.md). El guion por escenario, con tiempos, está en [`docs/entregas/guion-video.md`](guion-video.md). Aparte queda la grabación corta de la pantalla Supervisión mencionada en §12.
 
 ## 18. Fuentes
 
