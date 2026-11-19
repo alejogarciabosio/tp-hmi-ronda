@@ -18,7 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.printToString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,9 +105,12 @@ class SupervisionDemoRecorder {
         label = "2/5 · Obstáculo: el robot pide decisión"
         control.injectObstacle()
         run(maxMs = 300_000, what = "incidente") { repo.activeIncident.value != null }
-        step(1_500, 3); key("02-obstaculo-decision"); hold(12)
+        step(1_500, 3)
+        settle()
+        key("02-obstaculo-decision"); hold(12)
         label = "2/5 · Decisión: Saltar el punto de control"
-        rule.onNodeWithText("Saltar", substring = true).performClick()
+        settle()
+        rule.onAllNodes(androidx.compose.ui.test.hasText("saltar", substring = true, ignoreCase = true) and androidx.compose.ui.test.hasClickAction()).onFirst().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
         step(500, 4); hold(4)
         run(maxMs = 300_000, what = "incidente resuelto") { repo.activeIncident.value == null }
         step(3_000, 6); hold(4)
@@ -124,15 +128,21 @@ class SupervisionDemoRecorder {
         control.setLinkUp(true)
         step(1_000, 6)
         key("04-enlace-restaurado"); hold(8)
+        label = "4/5 · Enlace de vuelta: se reanuda la ronda"
+        rule.onAllNodes(androidx.compose.ui.test.hasText("reanudar", ignoreCase = true) and androidx.compose.ui.test.hasClickAction()).onFirst().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        step(500, 3)
         run(maxMs = 120_000, what = "robot en ronda") { repo.availability.value.getValue(CommandType.PAUSE_MISSION).enabled }
 
         // Paso 5: rechazo de comando
         label = "5/5 · Pausar rechazado por el robot"
         control.rejectNextCommand(RejectReason.INVALID_STATE, "El robot está cruzando una puerta y no puede pausar ahora.")
         hold(4)
-        rule.onNodeWithText("Pausar").performClick()
+        rule.onAllNodes(androidx.compose.ui.test.hasText("pausar", ignoreCase = true) and androidx.compose.ui.test.hasClickAction()).onFirst().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
         step(500, 2)
-        step(1_000, 6)
+        step(1_000, 3)
+        rule.onAllNodes(androidx.compose.ui.test.hasScrollAction()).onFirst()
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.ScrollBy) { it(0f, 3000f) }
+        step(500, 3)
         key("05-comando-rechazado"); hold(14)
     }
 
@@ -153,6 +163,13 @@ class SupervisionDemoRecorder {
             rule.mainClock.advanceTimeBy(100)
             snapshot()?.let { write(it, scaled = true) }
         }
+    }
+
+    private fun settle() {
+        rule.mainClock.autoAdvance = true
+        try { rule.waitForIdle() } finally { rule.mainClock.autoAdvance = false }
+        repeat(8) { scheduler.runCurrent(); rule.mainClock.advanceTimeBy(250) }
+        scheduler.runCurrent(); rule.mainClock.advanceTimeBy(100)
     }
 
     private fun hold(frames: Int) {
