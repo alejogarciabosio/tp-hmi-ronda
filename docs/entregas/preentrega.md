@@ -113,12 +113,12 @@ El contrato de mensajes JSON es una **propuesta propia del grupo** para un gatew
 | Comando | Se habilita cuando | Si no, la app muestra |
 |---|---|---|
 | Iniciar misión | Robot en base, batería de al menos 40 % y suficiente para la ruta, conexión CONECTADO, sin falla ni comando pendiente | El motivo, por ejemplo "Batería insuficiente para la ronda completa (necesita 40 %)" |
-| Pausar | Robot en ronda | |
+| Pausar | Robot en ronda | "Solo se puede pausar durante la ronda" |
 | Reanudar | Misión pausada o robot detenido, sin alerta crítica sin reconocer | "Reconocé la alerta antes de reanudar" |
-| Cancelar misión | En ronda, pausada, esperando decisión o detenido | |
-| Regresar a punto seguro | Cualquier estado fuera de la base, salvo falla | |
-| Detención operativa (software) | Robot en movimiento o esperando decisión; el botón es siempre visible | |
-| Reconocer alerta | Hay una alerta activa sin reconocer | |
+| Cancelar misión | En ronda, pausada, esperando decisión o detenido | "No hay una misión en curso para cancelar" |
+| Regresar a punto seguro | Cualquier estado fuera de la base, salvo falla | "El robot ya está en la base" o "Falla del robot: requiere técnico" |
+| Detención operativa (software) | Robot en movimiento o esperando decisión; el botón es siempre visible | "El robot no está en movimiento" (el botón se mantiene visible, aclarando que no reemplaza la parada física) |
+| Reconocer alerta | Hay una alerta activa sin reconocer | "No hay alertas pendientes de reconocer" |
 
 Cada comando tiene un estado visible: **pendiente** (enviado, esperando), **confirmada** (el gateway lo aceptó), **rechazada** (con motivo legible) o **sin respuesta** (vence a los 4 s). Además, la telemetría puede marcar la **ejecución verificada** (por ejemplo, llega el estado PAUSADA después de "Pausar"). La app distingue enviada, aceptada y verificada.
 
