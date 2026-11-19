@@ -1,13 +1,15 @@
 ---
 title: "RONDA: HMI de supervisión de un Unitree Go2 en rondas nocturnas"
-subtitle: "Preentrega · Desarrollo de Aplicaciones I · UADE"
+subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 ---
 
 # RONDA: HMI de supervisión de un Unitree Go2 en rondas nocturnas
 
-Preentrega del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN>
+Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN> **[link final pendiente]** (ver §15).
 
-Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §12 y detalladas en `docs/fuentes.md`.
+Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado figura con el marcador **[PENDIENTE — Iñaki]** o **[link final pendiente]** y no se describen resultados que no existan.
+
+Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §18 y detalladas en `docs/fuentes.md`.
 
 ## 1. Problema
 
@@ -34,7 +36,7 @@ Edificio de dos pisos (planta baja y primer piso) con una garita de seguridad ju
 
 Rutas adicionales para el selector de misiones: "Solo sala técnica" (PC1, PC3, PC5 y regreso) y "Salidas de emergencia" (PC2 y PC6). El punto seguro principal es la base; el alternativo es el descanso de la escalera E, para el caso en que la base quede lejos con batería baja.
 
-La ronda usa dos escaleras. Eso condiciona la plataforma (ver §5) y plantea un riesgo concreto: el Go2 declara un escalón máximo de unos 16 cm (riesgo R7 en §10).
+La ronda usa dos escaleras. Eso condiciona la plataforma (ver §5) y plantea un riesgo concreto: el Go2 declara un escalón máximo de unos 16 cm (riesgo R7 en §13).
 
 ## 3. Actores, necesidades y situaciones de intervención
 
@@ -71,20 +73,20 @@ Se elige la versión **EDU** porque el desarrollo secundario es completo solo en
 
 ## 6. Capacidades: disponibles y adicionales
 
-Contrastado con fuentes (GO2-1 a GO2-8, ver §12). Cuando las fuentes difieren se indica.
+Contrastado con fuentes (GO2-1 a GO2-14, ver §18). Cuando las fuentes difieren se indica.
 
 | Capacidad | Disponible en el Go2 EDU | Requiere equipamiento o desarrollo adicional |
 |---|---|---|
-| Locomoción en pasillos y escaleras | Sí: 12 motores articulares; escalón máx. ~16 cm; pendiente máx. 40°; hasta 3,7 m/s (GO2-1) | Relevar las escaleras del edificio: el manual no recomienda escalones de más de 16 cm (GO2-8) |
+| Locomoción en pasillos y escaleras | Sí: 12 motores articulares; escalón máx. ~16 cm; pendiente máx. 40°; hasta 3,7 m/s (GO2-1). El ángulo de escalera no figura en ninguna fuente. En la ronda simulada se supone 0,8 m/s | Relevar las escaleras del edificio: el manual no recomienda escaleras de más de 16 cm (GO2-8) |
 | Percepción del entorno | LiDAR 4D L2 de 360 x 96°, distancia mínima 0,05 m; cámara HD frontal (GO2-1). Hay fichas que citan el L1; se adopta la oficial. | Mapa persistente del edificio y rutas por PC: desarrollo propio. La ficha oficial menciona mapeo 3D con LiDAR, pero las fuentes leídas no documentan navegación entre pisos |
 | Evasión de obstáculos | Sí, **solo hacia adelante** (GO2-6, GO2-8). El SDK expone un interruptor del servicio (GO2-3) | Lógica de decisión ante obstáculos laterales o traseros: no cubierta |
-| Autonomía | 2 a 4 h con la batería de 15000 mAh; baja con velocidad, carga y terreno irregular (GO2-1, GO2-8) | Base de carga: el EDU es compatible con la "pila de carga" (GO2-1); el acople autónomo por API no se confirmó |
+| Autonomía y carga | 2 a 4 h con la batería de 15000 mAh (432 Wh según distribuidores, GO2-9 y GO2-10), medidas sin carga y alternando reposo y marcha; baja con velocidad, carga y terreno irregular (GO2-1, GO2-8). No hay medición independiente | Base de carga: el EDU es compatible con la "pila de carga" (GO2-1) y el manual dice que soporta carga autónoma (GO2-8); no se confirmó una llamada equivalente en el SDK. Los proyectos de patrullaje con Go2 resuelven el acople por fuera del firmware (GO2-12) |
 | Comunicaciones | Wi-Fi 6 y 4G con GPS (GO2-1) | Gateway propio entre la app y el robot (DDS o ROS 2 hacia HTTPS o WebSocket) |
 | SDK | `unitree_sdk2` (C++), `unitree_sdk2_python`, `unitree_ros2`, sobre DDS (GO2-2 a GO2-4). Desarrollo secundario completo solo en EDU (GO2-1) | Contenido del Document Center no legible con las herramientas usadas (ver `docs/fuentes.md`) |
 | Cómputo | CPU de 8 núcleos; módulos externos tipo Orin como opción (GO2-1) | Solo si se agrega visión propia en el robot |
 | Temperatura de la sala técnica | No | Sensor externo montado en el robot o fijo, con su integración |
 | Detección de salida obstruida | Parcial: hay LiDAR y cámara | Clasificación propia sobre nube de puntos o imagen |
-| Detección de persona | No consta en las fuentes | Modelo de visión propio y política de privacidad |
+| Detección de persona | No es una función nativa en las fuentes leídas. El "seguimiento ISS 2.0" parece apoyarse en el control remoto, no en visión (interpretación del grupo) | Modelo de visión propio (un proyecto comunitario usa YOLO sobre la cámara frontal, GO2-12) y política de privacidad |
 | Voz y parlante | Funciones de voz (GO2-1); parlante de 3 W según un distribuidor (GO2-6); control de volumen y luz en el SDK (GO2-3) | Mensajes propios de la ronda; potencia y modelo de parlante a confirmar |
 | Condiciones de uso | 5 a 35 °C; sin protección contra agua ni polvo (GO2-7, GO2-8) | Uso solo interior |
 
@@ -130,6 +132,8 @@ Reglas de diseño:
 - Los comandos llevan un tiempo de vida (`ttlMs`): si llegan vencidos, el robot los descarta.
 
 > **Detención operativa (software).** Es una orden simulada enviada al robot. **No reemplaza la parada de emergencia física.** Además, una orden enviada no equivale a una orden ejecutada.
+
+Los coeficientes de consumo de batería del simulador se derivan de estos datos en `docs/supuestos-simulacion.md` (ver §11). Antecedentes de cuadrúpedos en patrullaje (Spot, ANYmal, Go2 en proyectos comunitarios y en Shanghai) están en `docs/fuentes.md`; no se halló un Go2 documentado en una ronda nocturna de edificio.
 
 ## 9. Escenarios que demostrará el APK
 
