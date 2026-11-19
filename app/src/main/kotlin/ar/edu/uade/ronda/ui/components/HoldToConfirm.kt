@@ -40,6 +40,11 @@ object OperationalStopTexts {
     const val NOTE = "No reemplaza la parada física del robot."
 }
 
+private fun holdSeconds(ms: Int): String {
+    val s = ms / 1000.0
+    return if (ms % 1000 == 0) "${ms / 1000} s" else "${"%.1f".format(java.util.Locale.forLanguageTag("es-AR"), s)} s"
+}
+
 /** Aspecto sin estado: la barra se llena con franjas de señalización según [progress] (0..1). */
 @Composable
 fun HoldToConfirmContent(
@@ -47,6 +52,8 @@ fun HoldToConfirmContent(
     progress: Float,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    holdMillis: Int = 1000,
+    disabledReason: String? = null,
 ) {
     val accent = if (enabled) RondaColors.stateError else RondaColors.ink700
     Box(
@@ -66,7 +73,11 @@ fun HoldToConfirmContent(
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(label.uppercase(), style = RondaType.botonEtiqueta, color = if (enabled) RondaColors.bone100 else RondaColors.stateStale, textAlign = TextAlign.Center)
             Text(
-                if (progress > 0f) "Seguí manteniendo…" else "Mantené presionado 1 s",
+                when {
+                    !enabled -> disabledReason ?: "No disponible"
+                    progress > 0f -> "Seguí manteniendo…"
+                    else -> "Mantené presionado ${holdSeconds(holdMillis)}"
+                },
                 style = RondaType.textoNota, color = RondaColors.bone400,
             )
         }
@@ -81,6 +92,7 @@ fun HoldToConfirm(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     holdMillis: Int = 1000,
+    disabledReason: String? = null,
 ) {
     var progress by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
@@ -88,7 +100,8 @@ fun HoldToConfirm(
         label, progress,
         modifier
             .semantics {
-                contentDescription = "$label. Mantené presionado un segundo para confirmar."
+                contentDescription = if (enabled) "$label. Mantené presionado ${holdSeconds(holdMillis)} para confirmar."
+                else "$label. No disponible. ${disabledReason.orEmpty()}"
                 if (enabled) onLongClick(label = "Confirmar $label") { onConfirmed(); true }
             }
             .pointerInput(enabled, holdMillis) {
@@ -106,6 +119,8 @@ fun HoldToConfirm(
                 })
             },
         enabled,
+        holdMillis,
+        disabledReason,
     )
 }
 
@@ -125,7 +140,7 @@ private fun HoldToConfirmPreview() = PreviewSurface {
         HoldToConfirmContent("Cancelar misión", 0f)
         HoldToConfirmContent("Cancelar misión", 0.5f)
         HoldToConfirmContent("Cancelar misión", 1f)
-        HoldToConfirmContent("Cancelar misión", 0f, enabled = false)
+        HoldToConfirmContent("Cancelar misión", 0f, enabled = false, disabledReason = "No hay misión en curso")
         OperationalStopButton({})
     }
 }
