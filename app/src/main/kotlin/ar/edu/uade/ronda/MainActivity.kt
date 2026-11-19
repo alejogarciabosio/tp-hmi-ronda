@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import ar.edu.uade.ronda.ui.navigation.RondaNavHost
+import ar.edu.uade.ronda.ui.navigation.Route
 import ar.edu.uade.ronda.ui.theme.RondaTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
                 Surface(Modifier.fillMaxSize()) {
                     RondaNavHost(
                         viewModelFactory = container.viewModelFactory,
+                        startDestination = Route.SELECCION,
                         modifier = Modifier.safeDrawingPadding(),
                     )
                 }

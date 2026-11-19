@@ -23,6 +23,8 @@ import ar.edu.uade.ronda.ui.components.PreviewSurface
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.components.CommandButton
+import ar.edu.uade.ronda.ui.seleccion.SeleccionRoute
+import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionRoute
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
 import ar.edu.uade.ronda.ui.theme.RondaColors
@@ -41,7 +43,11 @@ fun RondaNavHost(
             val vm: SupervisionViewModel = viewModel(factory = viewModelFactory)
             SupervisionRoute(vm, go)
         }
-        Route.entries.filter { it != Route.SUPERVISION }.forEach { route ->
+        composable(Route.SELECCION.path) {
+            val vm: SeleccionViewModel = viewModel(factory = viewModelFactory)
+            SeleccionRoute(vm, go)
+        }
+        Route.entries.filter { it != Route.SUPERVISION && it != Route.SELECCION }.forEach { route ->
             composable(route.path) { PlaceholderScreen(route, go) }
         }
     }
