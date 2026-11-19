@@ -2,7 +2,7 @@
 
 Duración objetivo: 7 a 8 minutos. Se graba la app instalada en el emulador (Pixel, API 35) con la grabación de pantalla de Android Studio o `adb shell screenrecord`. La voz en off va en castellano. Al empezar se dice una vez que todo corre sobre el simulador local, sin robot, servidor ni internet, y que el contrato JSON es una propuesta del grupo y no el protocolo de Unitree.
 
-El simulador corre a velocidad real (una ronda completa dura unos 8 minutos y medio, ver L3). Para no esperar, cada escenario arranca la ronda y usa el panel de simulación para llegar a la situación. Eso se dice en voz alta la primera vez.
+A velocidad real una ronda completa dura unos 8 minutos y medio. El panel de simulación tiene un selector ×1/×4/×8 (D13): con ×8 la ronda completa dura alrededor de 1 minuto, y Supervisión muestra "SIMULACIÓN ×8" en la franja de estado. Para no esperar, cada escenario usa la velocidad acelerada y, si hace falta, el panel de simulación para llegar a la situación. Eso se dice en voz alta la primera vez.
 
 ## 0. Apertura (0:00–0:40)
 

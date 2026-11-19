@@ -33,9 +33,9 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 - **Medidas.**
   - Procedimiento: ronda posterior a las 23:30, con aviso previo al personal de limpieza; sin ronda con el robot si hay un evento en el edificio.
   - Lógica: velocidad reducida en pasillos comunes; ante una persona detectada, el robot se detiene a 2 m y no avanza hasta recibir decisión (escenario 5).
-  - Interfaz: indicador "personas cerca" en la franja de estado; "Detención operativa (software)" siempre visible; la HMI aclara que no reemplaza la parada física.
+  - Interfaz: "Detención operativa (software)" en una barra fija, fuera del scroll, en todas las pantallas operativas (Supervisión, Telemetría, Misiones, Control, Alertas, Historial y Desconexión), sin depender del control exclusivo; la HMI aclara que no reemplaza la parada física. En esa misma barra aparece "Persona cerca del robot" mientras hay una alerta de persona activa (con el enlace caído, como último dato no vigente).
   - HRI: mensaje de voz identificatorio del robot ("Soy el robot de ronda de seguridad. Estoy avisando a vigilancia."). La capacidad de voz está declarada por el fabricante (GO2-1); los mensajes propios requieren desarrollo.
-- **Verificación.** Escenario E5 (persona en sala técnica): el estado pasa a REQUIERE_DECISION y el simulador no avanza de PC5 hasta que el operador decide. Test de `core` que comprueba que con persona detectada el robot queda detenido. Revisión del Figma: botón de detención visible en todas las pantallas de supervisión.
+- **Verificación.** Escenario E5 (persona en sala técnica): el estado pasa a REQUIERE_DECISION y el simulador no avanza de PC5 hasta que el operador decide. Test de `core` que comprueba que con persona detectada el robot queda detenido. Revisión del Figma: botón de detención visible en todas las pantallas de supervisión. En la app, `OperationalBarTest` comprueba una sola detención fija por pantalla operativa y el indicador de persona cerca.
 
 ## RG2. Orden accidental
 
@@ -46,8 +46,10 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
   - Interfaz: Cancelar, Regresar a la base y Detención operativa requieren **mantener presionado 1 s** (`HoldToConfirm`, con barra de progreso), sin diálogos de confirmación repetitivos. Iniciar misión muestra un resumen previo (checklist de condiciones).
   - Interfaz: los botones destructivos están separados físicamente de los de uso habitual y con otro tratamiento visual (rayado de señalización).
   - Lógica: un solo comando de misión pendiente a la vez; la matriz de habilitación (`CommandPolicy`) deshabilita lo que no corresponde con el motivo escrito.
+  - Interfaz: si el gesto de mantener se cancela o el dedo se levanta antes de completarse, la orden no sale (`HoldToConfirm` cancela el llenado en un `finally`).
+  - Lógica: antes de enviar, Supervisión, Control, Misiones y la barra de detención vuelven a evaluar la orden con el estado del momento y el control exclusivo; una opción de decisión ya enviada queda pendiente o deshabilitada, así un doble toque no manda dos respuestas.
   - Recuperación: tras una detención operativa, "Reanudar" queda disponible si no hay alerta crítica sin reconocer.
-- **Verificación.** Tests de `CommandPolicy` por tabla de casos (habilitado/deshabilitado y motivo por cada comando y estado). Prueba manual en el APK: un toque corto sobre un botón destructivo no envía nada. Estado PENDIENTE visible en E1 y E3.
+- **Verificación.** Tests de `CommandPolicy` por tabla de casos (habilitado/deshabilitado y motivo por cada comando y estado). `HoldToConfirmUiTest` (gesto cancelado no confirma) y `SupervisionViewModelTest` (revalidación y doble toque en la decisión de la persona). Prueba manual en el APK: un toque corto sobre un botón destructivo no envía nada. Estado PENDIENTE visible en E1 y E3.
 
 ## RG3. Pérdida de conexión
 

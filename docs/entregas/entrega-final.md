@@ -97,13 +97,13 @@ La antigüedad del dato se muestra siempre. El progreso se expresa por **puntos 
 
 | Grupo | Campos | Cómo se muestra |
 |---|---|---|
-| Conectividad | `connection` (CONECTADO, DEGRADADO, SIN_DATOS, DESCONECTADO), `latencyMs` | Derivada de la antigüedad del último mensaje: más de 1,5 s degradado, más de 3 s sin datos, más de 10 s desconectado |
+| Conectividad | `connection` (CONECTADO, DEGRADADO, SIN_DATOS, DESCONECTADO), `latencyMs` | Derivada de la antigüedad del último mensaje: más de 1,5 s degradado, más de 3 s sin datos, más de 10 s desconectado. La pantalla la recalcula con la misma hora que la antigüedad que muestra: nunca dice "Conectado" con un dato de más de 1,5 s |
 | Batería | `percent`, `minutesLeft`, `charging` | Porcentaje y "Alcanza para volver a base: Sí/No", calculado con la distancia restante |
 | Estado operativo | EN_BASE, PREPARANDO, EN_RONDA, PAUSADA, REQUIERE_DECISION, DETENIDO, REGRESANDO, COMPLETADA, CANCELADA, FALLA | Texto, ícono y forma; nunca solo color |
 | Misión y progreso | id, nombre, `checkpointIndex` de `checkpointsTotal`, etapa | "PC 4 de 8 · Pasillo 1°A" y lista de puntos con hora de verificación |
 | Ubicación | piso, x, y, rumbo, zona | Plano del piso actual y texto "1° piso · Pasillo A" |
 | Movimiento | velocidad en m/s, modo (CAMINANDO, DETENIDO, ESCALERA, GIRANDO) | Texto |
-| Alertas | lista de alertas activas | Insignia con la cantidad sin reconocer |
+| Alertas | lista de alertas activas | Insignia en la pestaña Alertas con la cantidad sin reconocer (TalkBack lee "Alertas, 2 sin reconocer"); "Persona cerca del robot" en la barra de detención mientras hay una alerta de persona activa |
 | Última actualización | `timestamp` | "Actualizado hace 0,4 s"; al envejecer pasa a advertencia |
 | **Servicio 1**: puntos verificados | `checkpointsVerified`, `checkpointsWithIssues` | "6/8 verificados · 1 con observación" |
 | **Servicio 2**: temperatura de sala técnica | `techRoomTempC` y tendencia | Rótulo "sensor externo"; más de 27 °C advertencia, más de 32 °C alerta (umbrales propuestos por el grupo, a validar con el responsable de la sala) |
@@ -119,21 +119,23 @@ El contrato de mensajes JSON es una **propuesta propia del grupo** para un gatew
 | Pausar | Robot en ronda | "Solo se puede pausar durante la ronda" |
 | Reanudar | Misión pausada, robot detenido o esperando una decisión (REQUIERE_DECISIÓN: reanudar lleva la elección del operador), sin alerta crítica sin reconocer | "No hay una misión pausada o detenida para reanudar" o "Reconocé la alerta antes de reanudar" |
 | Cancelar misión | En ronda, pausada, esperando decisión o detenido | "No hay una misión para cancelar" |
-| Regresar a punto seguro | Cualquier estado fuera de la base y que no esté ya regresando, salvo falla | "El robot ya está en la base", "El robot ya está regresando" o "El robot tiene una falla: requiere técnico" |
-| Detención operativa (software) | Robot en movimiento (preparando, en ronda, regresando o esperando decisión) o con el enlace caído; el botón es siempre visible | "El robot no está en movimiento" (el botón se mantiene visible, aclarando que no reemplaza la parada física) |
+| Regresar a punto seguro | Cualquier estado fuera de la base y que no esté ya regresando. En FALLA, solo regresar a la base y después de reconocer la alerta de falla | "El robot ya está en la base", "El robot ya está regresando" o "Reconocé la falla para habilitar el regreso a la base" |
+| Detención operativa (software) | Robot en movimiento (preparando, en ronda, regresando o esperando decisión) o con el enlace caído; el botón está en una barra fija, fuera del scroll, en todas las pantallas operativas | "El robot no está en movimiento" (el botón se mantiene visible, aclarando que no reemplaza la parada física) |
 | Reconocer alerta | Hay una alerta activa sin reconocer | "No hay alertas sin reconocer" |
 
-Además de la matriz de estado, la política rechaza todo comando de misión con "Sin conexión con el robot: no se pueden enviar órdenes" si el enlace está en SIN_DATOS o peor, y con "Hay una orden pendiente de respuesta" si ya hay una sin resolver. Con el robot en FALLA solo se puede reconocer la alerta ("El robot tiene una falla: requiere técnico").
+Además de la matriz de estado, la política rechaza todo comando de misión con "Sin conexión con el robot: no se pueden enviar órdenes" si el enlace está en SIN_DATOS o peor, y con "Hay una orden pendiente de respuesta" si ya hay una sin resolver. Con el robot en FALLA solo se puede reconocer la alerta y, una vez reconocida, ordenar el regreso a la base; la franja de estado guía esos dos pasos.
 
-Cada comando tiene un estado visible: **pendiente** (enviado, esperando), **confirmada** (el gateway lo aceptó), **rechazada** (con motivo legible) o **sin respuesta** (vence a los 4 s). Además, la telemetría puede marcar la **ejecución verificada** (por ejemplo, llega el estado PAUSADA después de "Pausar"). La app distingue enviada, aceptada y verificada.
+Cada comando tiene un estado visible: **pendiente** (enviado, esperando), **confirmada** (el gateway lo aceptó), **rechazada** (con motivo legible) o **sin respuesta** (vence a los 4 s). Además, la telemetría puede marcar la **ejecución verificada** (por ejemplo, llega el estado PAUSADA después de "Pausar"). La app distingue enviada, aceptada y verificada. Si el efecto se ve en la telemetría aunque la confirmación no llegó, la orden figura "Verificada por telemetría (sin confirmación)" en el chip y en la última orden.
 
 Reglas de diseño:
 
 - Un solo comando de misión pendiente a la vez. La detención operativa no queda bloqueada por una orden pendiente.
 - Con conexión SIN_DATOS o peor, todos los comandos se deshabilitan con motivo, salvo la detención operativa, que se envía igual y probablemente termine sin respuesta.
-- **Control exclusivo.** Un solo operador da órdenes a cada robot: se toma el control en Selección (`ControlSession`, compartida por Selección, Supervisión y Control). Sin control propio, las órdenes quedan deshabilitadas con el motivo "Tomá el control del robot en Selección". Quedan fuera de esa regla la detención operativa y reconocer una alerta.
+- **Control exclusivo.** Un solo operador da órdenes a cada robot: se toma el control en Selección (`ControlSession`, compartida por Selección, Supervisión, Misiones y Control). En Misiones, sin control propio, el preflight marca el ítem de control en error con "Tomá el control en Selección". Sin control propio, las órdenes quedan deshabilitadas con el motivo "Tomá el control del robot en Selección". Quedan fuera de esa regla la detención operativa y reconocer una alerta.
 - **Detener siempre gana.** La detención operativa (software) no depende del control exclusivo: cualquier operador conectado puede enviarla, tenga o no el control, porque frenar al robot nunca debe quedar bloqueado por una regla de permisos.
-- Cancelar, regresar a la base y la detención usan **mantener presionado 1 s** (`HoldToConfirm`); iniciar misión muestra un resumen previo de condiciones.
+- Cancelar, regresar a la base y la detención usan **mantener presionado 1 s** (`HoldToConfirm`); si el gesto se cancela o el dedo se levanta antes, no se confirma. Iniciar misión muestra un resumen previo de condiciones.
+- Antes de enviar, cada ViewModel vuelve a evaluar la orden con el estado del momento (disponibilidad y control exclusivo): un botón que se veía habilitado medio segundo antes no alcanza.
+- Una opción de decisión ya enviada (por ejemplo, "Enviar vigilante") queda pendiente o deshabilitada: un doble toque no manda dos respuestas.
 - Los comandos llevan un tiempo de vida (`ttlMs`): si llegan vencidos, el robot los descarta.
 
 > **Detención operativa (software).** Es una orden simulada enviada al robot. **No reemplaza la parada física.** Además, una orden enviada no equivale a una orden ejecutada.
@@ -214,7 +216,7 @@ Limitaciones que importan para evaluar el trabajo:
 - El acople autónomo a la base se simula; la llamada equivalente en el SDK no se pudo confirmar.
 - Los umbrales de temperatura (27 y 32 °C), la retención de 30 días y el mínimo de 40 % de batería son propuestas del grupo.
 - El Document Center de Unitree no se pudo leer; lo que se afirma del SDK sale de los README de GitHub.
-- El simulador corre a velocidad real: no hay selector ×4 y una ronda completa dura unos 8 minutos y medio. En la demo se usan las inyecciones del panel para llegar a cada situación (L3).
+- A velocidad real una ronda completa dura unos 8 minutos y medio. El panel de simulación ofrece ×1, ×4 y ×8 (D13): con ×8 la ronda completa dura alrededor de 1 minuto. Fuera de ×1, Supervisión muestra el rótulo "SIMULACIÓN ×N" en la franja de estado para que nadie lo confunda con tiempo real.
 - La app difiere del Figma en tres puntos menores: batería mínima de las rutas cortas (35 % y 34 % en la app, 20 % y 15 % en el Figma), posición del cuadro BASE en el plano y botones del panel de simulación (L4).
 
 ## 15. Prototipo en Figma
@@ -248,32 +250,38 @@ La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mis
 | Pantalla | Qué resuelve | Referencia en el Figma |
 |---|---|---|
 | Selección de robot | Elegir el robot y tomar el control exclusivo (`ControlSession`, riesgo RG6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
-| Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto. Arriba destaca lo que hay que hacer ahora: regresar a la base con batería baja o reanudar cuando el vigilante resolvió | `02-supervision-*.png` |
+| Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales y hoja de decisión con foto. Con la simulación acelerada, la franja muestra "SIMULACIÓN ×N". Arriba destaca lo que hay que hacer ahora: regresar a la base con batería baja o reanudar cuando el vigilante resolvió | `02-supervision-*.png` |
 | Telemetría | Todas las lecturas del robot y del servicio, con su antigüedad. Con el enlace caído quedan como último dato conocido | `03-telemetria.png` |
-| Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio. "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
+| Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio (sin control, "Tomá el control en Selección"). "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
 | Control | Pausar, reanudar, regresar a base o a un punto seguro, saltar un punto ante un obstáculo, cancelar y regresar a la base (ambos con mantener presionado) y registro de órdenes con su estado | `05-control.png` |
-| Alertas | Alertas activas por severidad, reconocimiento y miniatura de la foto, que se muestra solo mientras la alerta no está reconocida y el incidente sigue activo. La alerta de persona abre la decisión en vez de reconocerse sola | `06-alertas.png` |
+| Alertas | Alertas activas por severidad, reconocimiento y miniatura de la foto, que se muestra solo mientras la alerta no está reconocida y el incidente sigue activo (la falla del robot, que no abre incidente, la muestra mientras no se reconozca). La foto no se guarda. La alerta de persona abre la decisión en vez de reconocerse sola | `06-alertas.png` |
 | Historial | Misiones y eventos guardados en Room, con filtros por tipo, severidad y período; cada orden dice qué decidió el operador ("Reanudar · Saltar el PC4"). Retención de 30 días | `07-historial.png` |
-| Desconexión | Último dato conocido marcado como viejo, política declarada del robot sin enlace, órdenes sin respuesta y eventos que llegaron tarde con su hora original | `08-desconexion.png` |
+| Desconexión | Último dato conocido marcado como viejo, política declarada del robot sin enlace, órdenes sin respuesta enviadas desde el último corte (con otro texto cuando el enlace ya volvió) y eventos que llegaron tarde con su hora original. Los cortes y los eventos los sigue `LinkMonitor` desde que arranca la app, aunque la pantalla se abra después | `08-desconexion.png` |
 | Panel de simulación | Herramienta de la demo, separada de la operación (ver abajo) | `09-panel-simulacion.png` |
+
+**Barra fija de detención.** Supervisión, Telemetría, Misiones, Control, Alertas, Historial y Desconexión tienen, encima de la barra inferior y fuera del scroll, la "Detención operativa (software)" con mantener presionado y la aclaración "No reemplaza la parada física del robot". No depende del control exclusivo. Encima aparece "Persona cerca del robot" mientras hay una alerta de persona activa. No está en Selección ni en el panel de simulación. Las pestañas no se apilan: se vuelve siempre a la misma Supervisión, así una hoja de decisión cerrada no reaparece.
 
 Capturas de cada pantalla en `docs/evidencias/capturas/`: `app-01-seleccion.png` a `app-09-panel-simulacion.png` (incluye `app-04b-misiones-preflight-fallido.png`) y `escenario-1-ronda-normal.png` a `escenario-5b-vigilante-en-camino.png` (tabla en [`docs/evidencias/README.md`](../evidencias/README.md)). Se generan desde el código de la app con el simulador real y Robolectric (`./gradlew :app:recordCapturas`), sin emulador; muestran el primer tramo de cada pantalla, como se ve al abrirla en el teléfono.
 
-**Panel de simulación.** Se abre desde "Simulación", arriba a la derecha de Selección, Supervisión, Misiones, Alertas e Historial. Está marcado con franjas de señalización y el rótulo SIMULACIÓN para que no se confunda con la interfaz de operación. Tiene tres grupos de controles:
+**Panel de simulación.** Se abre desde "Simulación", arriba a la derecha de Selección, Supervisión, Misiones, Alertas e Historial. Está marcado con franjas de señalización y el rótulo SIMULACIÓN para que no se confunda con la interfaz de operación. Tiene cuatro grupos de controles:
 
-- **Escenarios:** carga uno de los cinco escenarios de §12. Reinicia el robot en la base y explica qué hacer a continuación, por ejemplo: "Iniciá la ronda: al llegar al PC4 un objeto bloquea el pasillo y el robot pide decisión".
-- **Fallas a inyectar:** cortar el enlace (interruptor o corte de 15 s que se restaura solo), rechazar la próxima orden, demorar las respuestas 5 s (la orden pasa por PENDIENTE y termina SIN RESPUESTA), inyectar un obstáculo, una persona en zona restringida o una falla del robot. Las inyecciones de incidente solo se habilitan durante una ronda y sin otra decisión abierta.
+- **Escenarios:** carga uno de los cinco escenarios de §12; el cargado se marca con borde, símbolo y el texto "· cargado" (TalkBack lo lee como opción elegida). Reinicia el robot en la base y explica qué hacer a continuación, por ejemplo: "Iniciá la ronda: al llegar al PC4 un objeto bloquea el pasillo y el robot pide decisión".
+- **Fallas a inyectar:** cortar el enlace (interruptor o corte de 15 s que se restaura solo), rechazar la próxima orden, demorar las respuestas 5 s (la orden pasa por PENDIENTE y termina SIN RESPUESTA), inyectar un obstáculo, una persona en zona restringida o una falla del robot. Las inyecciones de obstáculo y persona solo se habilitan durante una ronda, con enlace y sin otra decisión abierta, y dicen por qué no; si el simulador rechaza una, el panel muestra el motivo. La falla se puede inyectar con el enlace cortado: es lo que el escenario 3 usa para mostrar un evento que llega tarde.
 - **Batería:** sube o baja 10 puntos para llegar a los umbrales de 25 % y 15 % sin esperar la descarga.
+- **Velocidad:** ×1, ×4 u ×8 (`SimulationControl.setTimeScale`), con el valor actual marcado.
 
 Decisiones y límites del panel en D10 y L3 de `docs/decisiones.md`.
 - **APK instalable.** `docs/entregas/apk/ronda-debug.apk` (compilación de depuración, `versionName` 0.1.0, `versionCode` 1, unos 12 MB). Para instalarlo en un Android 8.0 o superior (minSdk 26): `adb install -r docs/entregas/apk/ronda-debug.apk`, o copiar el archivo al celular y permitir la instalación de orígenes desconocidos. Se genera con `./gradlew :app:assembleDebug` (`app/build/outputs/apk/debug/app-debug.apk`).
 - **Tests de `:app`.** Hay un test por pantalla sobre su mapper o ViewModel con un repositorio falso: `SupervisionViewModelTest`, `SeleccionMapperTest`, `TelemetriaMapperTest`, `MisionesViewModelTest`, `ControlViewModelTest`, `AlertasViewModelTest`, `HistorialMapperTest`, `DesconexionMapperTest` y `SimulacionViewModelTest`. Hay tests de Room (`HistoryDaoTest`) y tests de interfaz con Compose sobre Robolectric:
   - `CommandButtonUiTest`: con la orden deshabilitada se ve el motivo y el toque no hace nada. Una orden pendiente no se repite. Una orden rechazada o sin respuesta se puede reintentar.
-  - `HoldToConfirmUiTest`: un toque corto no detiene el robot y mantener presionado 1 s sí. La aclaración de que no reemplaza la parada física está siempre visible, y TalkBack confirma con la acción de mantener.
+  - `HoldToConfirmUiTest`: un toque corto no detiene el robot y mantener presionado 1 s sí; si el gesto se cancela a mitad, no confirma solo. La aclaración de que no reemplaza la parada física está siempre visible, y TalkBack confirma con la acción de mantener.
+  - `OperationalBarTest`: una sola detención operativa, fija, en cada pantalla operativa (también sin control), "Persona cerca del robot" y la insignia de alertas con la cantidad.
+  - `NavegacionTest`: las pestañas no se apilan y vuelven a la misma entrada de Supervisión.
+  - `StaleDataBannerUiTest`: la región viva de TalkBack no cambia con cada segundo, solo entre SIN DATOS y DESCONECTADO.
   - `PantallasAccesibilidadTest`: todo lo que se puede tocar mide al menos 48 dp y tiene texto para el lector de pantalla, en nueve estados de pantalla.
   - `ContrasteTest`: contraste WCAG de la paleta.
 
-  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` al cierre de la integración (19/11/2026): `:core` 165 tests y `:app` 130 tests, sin fallas. `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
+  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` al cierre de la integración (19/11/2026): `:core` 198 tests y `:app` 174 tests, sin fallas. `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
 - **Prueba manual en emulador (Pixel, API 35):** se recorrieron Selección, Supervisión, Misiones, Control, Alertas, Historial y Telemetría sin cierres inesperados. La prueba encontró cuatro detalles que se corrigieron: la tendencia de batería en Telemetría, la posición de BASE en el plano, el margen inferior de Supervisión y un test de Room intermitente.
 
 ## 17. Video de demostración
