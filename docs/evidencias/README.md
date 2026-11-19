@@ -72,3 +72,32 @@ La tarea corre solo `CapturasRecorder` y reescribe los PNG en `capturas/`. Ese t
 | `escenario-5-persona.png` | Escenario 5, hoja de decisión con la foto |
 
 El guion de cada escenario está en `docs/entregas/guion-video.md`.
+
+## Video de demostración completo
+
+`video/demo-ronda.mp4` (unos 3 min 38 s, 1920x1080, H.264 yuv420p, 30 fps, sin audio) recorre la app completa contra el simulador, con el teléfono a la izquierda y el texto de cada paso a la derecha:
+
+| Parte | Qué se ve |
+|---|---|
+| Portada | Título, materia y la aclaración: todo corre sobre el simulador local y el contrato JSON es propio del grupo |
+| Apertura | Selección de robot (RONDA-01 disponible, RONDA-03 en uso, RONDA-02 no compatible), "Tomar control" y Supervisión en base |
+| 1 · Misión normal | Misiones con la verificación previa en verde, "Iniciar ronda" (pendiente, confirmada, verificada), la ronda en cámara rápida, Telemetría y la ronda completada |
+| 2 · Batería baja | Escenario cargado desde el panel, alerta a 25 %, decisión a 15 % y confirmación manteniendo presionado |
+| 3 · Desconexión | "Pausar" queda pendiente, se corta el enlace y pasa a sin respuesta; datos como último valor conocido, órdenes deshabilitadas con su motivo, pantalla Desconexión, vuelta del enlace y la alerta atrasada con su hora original |
+| 4 · Obstáculo | Hoja de decisión con la foto marcada "IMAGEN SIMULADA", "Saltar el PC4" y el punto salteado |
+| 5 · Persona en zona restringida | Alerta y hoja con la foto, "Enviar vigilante" y el evento en Historial, sin foto |
+| Cierre | MVVM + Repository, detención operativa por software y contrato JSON propio |
+
+Es la app real (`RondaNavHost`, ViewModels reales, simulador con semilla 42 y tiempo virtual) renderizada con Robolectric, sin emulador. La ronda se muestra en cámara rápida avanzando el reloj virtual.
+
+### Cómo regenerarlo
+
+```bash
+./gradlew :app:recordVideo
+python3 docs/evidencias/video/componer_video.py
+```
+
+1. `:app:recordVideo` corre solo `VideoDemoRecorder` (excluido de `:app:testDebugUnitTest`) y escribe en `app/build/video-frames/` los cuadros PNG y `frames.json`, con la duración en pantalla, el escenario y el texto del panel de cada cuadro.
+2. `componer_video.py` compone cada cuadro a 1920x1080 con PIL usando las fuentes de `app/src/main/res/font/`, agrega portada, cierre y fundidos entre partes, y codifica con ffmpeg (necesita `libx264`). Con `--muestras DIR` guarda además un cuadro compuesto por parte para revisarlo. Al terminar imprime los tiempos de cada parte.
+
+Los textos del panel están en `VideoDemoRecorder.kt`, junto a cada paso; la portada y el cierre, en `componer_video.py`.
