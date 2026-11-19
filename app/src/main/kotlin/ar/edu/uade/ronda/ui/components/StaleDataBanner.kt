@@ -22,7 +22,14 @@ import ar.edu.uade.ronda.ui.model.StatusLevel
 import ar.edu.uade.ronda.ui.theme.RondaColors
 import ar.edu.uade.ronda.ui.theme.RondaType
 
-/** Aviso de datos viejos: menos de 10 s "SIN DATOS", desde 10 s "DESCONECTADO", desde 30 s con la política declarada. */
+/** Lo que anuncia TalkBack: cambia solo al pasar de SIN DATOS a DESCONECTADO, nunca con los segundos. */
+fun staleAnnouncement(ui: StaleBannerUi): String =
+    if (ui.secondsWithoutData >= 10) "Desconectado. Lo que ves no es vigente." else "Sin datos del robot. Lo que ves no es vigente."
+
+/**
+ * Aviso de datos viejos: menos de 10 s "SIN DATOS", desde 10 s "DESCONECTADO", desde 30 s con la política declarada.
+ * La región "Polite" es solo el título: si incluyera los segundos, TalkBack lo anunciaría cada segundo.
+ */
 @Composable
 fun StaleDataBanner(ui: StaleBannerUi, modifier: Modifier = Modifier) {
     val disconnected = ui.secondsWithoutData >= 10
@@ -31,11 +38,7 @@ fun StaleDataBanner(ui: StaleBannerUi, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .background(RondaColors.ink850)
-            .semantics(mergeDescendants = true) {
-                liveRegion = LiveRegionMode.Polite
-                contentDescription = "$title. $text ${ui.policyText.orEmpty()}"
-            },
+            .background(RondaColors.ink850),
     ) {
         HazardStripes(Modifier.fillMaxWidth().height(6.dp))
         Row(
@@ -45,9 +48,18 @@ fun StaleDataBanner(ui: StaleBannerUi, modifier: Modifier = Modifier) {
         ) {
             StateSymbol(if (disconnected) StatusLevel.ERROR else StatusLevel.STALE, size = 20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title, style = RondaType.rotuloSeccion, color = RondaColors.bone100)
-                Text(text, style = RondaType.textoCuerpo, color = RondaColors.bone100)
-                ui.policyText?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                Text(
+                    title, style = RondaType.rotuloSeccion, color = RondaColors.bone100,
+                    modifier = Modifier.semantics {
+                        liveRegion = LiveRegionMode.Polite
+                        contentDescription = staleAnnouncement(ui)
+                    },
+                )
+                // Con foco, TalkBack lee los segundos; no es región viva, así que no interrumpe cada segundo.
+                Column(Modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(text, style = RondaType.textoCuerpo, color = RondaColors.bone100)
+                    ui.policyText?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                }
             }
         }
     }
