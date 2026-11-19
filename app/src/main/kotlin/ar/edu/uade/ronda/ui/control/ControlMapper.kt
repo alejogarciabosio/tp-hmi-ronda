@@ -74,7 +74,7 @@ internal object ControlMapper {
         val canSkip = i.incident?.type == IncidentType.OBSTACLE &&
             i.incident.options.any { it.id == IncidentDecision.SKIP_CHECKPOINT.name }
         if (!canSkip) {
-            return CommandButtonUi("Saltar PC actual", CommandKind.SECONDARY, CommandUiState.DISABLED, "Solo cuando el robot pide una decisión")
+            return CommandButtonUi("Saltar PC actual", CommandKind.SECONDARY, CommandUiState.DISABLED, SKIP_ONLY_OBSTACLE)
         }
         return button("Saltar PC actual", CommandKind.SECONDARY, CommandType.RESUME_MISSION, i) {
             it.command.params.decision == IncidentDecision.SKIP_CHECKPOINT
@@ -141,4 +141,6 @@ internal object ControlMapper {
     }
 
     private fun time(ms: Long): String = timeFormat.format(Instant.ofEpochMilli(ms))
+
+    const val SKIP_ONLY_OBSTACLE = "Solo ante un obstáculo"
 }

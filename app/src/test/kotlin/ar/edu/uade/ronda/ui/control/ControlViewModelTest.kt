@@ -135,4 +135,18 @@ class ControlViewModelTest {
         assertEquals("Batería baja (24 %): volvé a la base mientras alcanza", conAlerta.lowBatteryReturn)
         assertEquals(null, ControlMapper.map(inputs()).lowBatteryReturn)
     }
+
+    @Test fun saltarSinObstaculoDiceQueSoloEsAnteUnObstaculo() {
+        val s = ControlMapper.map(inputs())
+        assertEquals(CommandUiState.DISABLED, s.skipCheckpoint.state)
+        assertEquals("Solo ante un obstáculo", s.skipCheckpoint.reason)
+    }
+
+    @Test fun reanudarSinEnlaceMuestraLaCausaRealAunqueHayaDecision() {
+        val i = inputs(incident = true).copy(
+            availability = enabledAll(CommandType.RESUME_MISSION to "Sin conexión con el robot: no se pueden enviar órdenes"),
+        )
+        assertEquals("Sin conexión con el robot: no se pueden enviar órdenes", ControlMapper.map(i).resume.reason)
+        assertEquals("Elegí una opción de la decisión pendiente", ControlMapper.map(inputs(incident = true)).resume.reason)
+    }
 }
