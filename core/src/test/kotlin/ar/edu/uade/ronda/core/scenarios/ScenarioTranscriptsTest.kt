@@ -55,10 +55,10 @@ class ScenarioTranscriptsTest {
     fun `transcripcion escenario 2 bateria baja`() = runTest {
         val (rig, tr) = rigAndTranscript(
             "Escenario 2: batería baja",
-            "La batería arranca en 45 % y se consume al doble. A mitad de ronda cruza el 25 % (alerta: alcanza para volver) y al llegar al 15 % el robot propone regresar; el operador confirma.",
+            "El robot sale con 40 % (el mínimo operativo) y una celda degradada que gasta 6 veces lo normal: la ronda, que a consumo nominal cuesta ~5 %, cruza el 25 % a mitad de camino (alerta: alcanza para volver) y llega al 15 %, donde el robot propone regresar; el operador confirma.",
             SimScenario.LOW_BATTERY,
         )
-        rig.until(what = "telemetría") { rig.repo.telemetry.value?.battery?.percent == 45 }
+        rig.until(what = "telemetría") { rig.repo.telemetry.value?.battery?.percent == 40 }
         tr.operator("inicia la ronda completa", CommandType.START_MISSION, full)
         rig.untilState(OperationalState.REQUIERE_DECISION)
         tr.note("el robot pide decisión: ${rig.repo.activeIncident.value?.message}")

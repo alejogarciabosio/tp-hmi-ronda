@@ -110,15 +110,15 @@ class RobotSimulatorTest {
     }
 
     @Test
-    fun `la bateria baja proporcional a la velocidad y la ronda gasta entre 15 y 35 por ciento`() {
+    fun `la bateria baja proporcional a la velocidad y la ronda completa gasta entre 5 y 10 por ciento`() {
         val h = SimHarness(); h.tick(); h.start()
         h.runUntil { it.operationalState == OperationalState.EN_RONDA }
         val detenido = h.sim.batteryPercent
         // detenido en verificación gasta mucho menos que caminando
         val a = h.sim.batteryPercent; h.run(10_000); val caminando = a - h.sim.batteryPercent
-        assertTrue(caminando > 0.5, "caminando 10 s gasta $caminando")
+        assertTrue(caminando > 0.1, "caminando 10 s gasta $caminando")
         h.runUntil { it.operationalState == OperationalState.EN_BASE }
-        assertTrue(h.sim.batteryPercent in 65.0..85.0, "batería final ${h.sim.batteryPercent} (partió de 100, inicio $detenido)")
+        assertTrue(h.sim.batteryPercent in 90.0..95.0, "batería final ${h.sim.batteryPercent} (partió de 100, inicio $detenido)")
     }
 
     @Test

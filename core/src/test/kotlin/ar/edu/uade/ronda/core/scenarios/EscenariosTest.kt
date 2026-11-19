@@ -59,7 +59,7 @@ class EscenariosTest {
     fun `escenario 2 bateria baja - alerta a 25, propuesta de regreso a 15 y el operador confirma`() = runTest {
         val rig = ScenarioRig(this)
         rig.control.loadScenario(SimScenario.LOW_BATTERY)
-        rig.until(what = "telemetría") { rig.repo.telemetry.value?.battery?.percent == 45 }
+        rig.until(what = "telemetría") { rig.repo.telemetry.value?.battery?.percent == 40 }
         rig.startFullRound()
         rig.untilState(OperationalState.EN_RONDA)
 

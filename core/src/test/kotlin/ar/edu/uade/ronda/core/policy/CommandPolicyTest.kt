@@ -69,7 +69,7 @@ class CommandPolicyTest {
             case("iniciar en base con 80 %", START_MISSION, t.ctx(), true),
             case("iniciar con 40 % justo", START_MISSION, t.ctx(battery = 40), true),
             case("iniciar con 39 %", START_MISSION, t.ctx(battery = 39), false, "Batería insuficiente para ronda completa (necesita 40 %)"),
-            case("iniciar ruta corta con 34 %", START_MISSION, t.ctx(battery = 34, route = RouteId.SOLO_SALA_TECNICA), true),
+            case("iniciar ruta corta con 35 %", START_MISSION, t.ctx(battery = 35, route = RouteId.SOLO_SALA_TECNICA), true),
             case("iniciar en ronda", START_MISSION, t.ctx(EN_RONDA), false, "El robot tiene que estar en la base para iniciar"),
             case("iniciar con enlace degradado", START_MISSION, t.ctx(connection = DEGRADED), false, "Conexión degradada: esperá a que se estabilice para iniciar"),
             case("iniciar con comando pendiente", START_MISSION, t.ctx(pending = true), false, "Hay una orden pendiente de respuesta"),

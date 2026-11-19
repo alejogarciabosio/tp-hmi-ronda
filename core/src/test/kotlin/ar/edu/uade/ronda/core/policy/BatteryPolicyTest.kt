@@ -13,12 +13,12 @@ class BatteryPolicyTest {
 
     @ParameterizedTest(name = "{0} % a {1} m -> {2}")
     @CsvSource(
-        "25, 100, true",   // cuesta 8 %: quedan 17, sobre la reserva
-        "18, 100, true",   // quedan 10 exactos: el borde alcanza
-        "17, 100, false",  // quedan 9: no alcanza
-        "25, 250, false",  // cuesta 20 %
+        "25, 100, true",   // cuesta 1 %: quedan 24, sobre la reserva de 15
+        "16, 100, true",   // quedan 15 exactos: el borde alcanza
+        "15, 100, false",  // quedan 14: no alcanza
+        "25, 1500, false", // cuesta 15 %: quedan 10
         "15, 0, true",     // ya en la base
-        "9, 0, false",     // por debajo de la reserva aun sin distancia
+        "14, 0, false",    // por debajo de la reserva aun sin distancia
     )
     fun `alcanza para volver segun distancia y reserva`(percent: Int, distance: Double, expected: Boolean) {
         assertEquals(expected, policy.canReturnToBase(percent, distance))
@@ -40,6 +40,7 @@ class BatteryPolicyTest {
     fun `las rutas cortas necesitan menos bateria`() {
         assertTrue(policy.percentToStart(RouteId.SOLO_SALA_TECNICA) < policy.percentToStart(RouteId.RONDA_COMPLETA))
         assertTrue(policy.percentToStart(RouteId.SALIDAS_EMERGENCIA) < policy.percentToStart(RouteId.SOLO_SALA_TECNICA))
-        assertTrue(policy.canStart(34, RouteId.SOLO_SALA_TECNICA))
+        assertTrue(policy.canStart(35, RouteId.SOLO_SALA_TECNICA))
+        assertFalse(policy.canStart(34, RouteId.SOLO_SALA_TECNICA))
     }
 }
