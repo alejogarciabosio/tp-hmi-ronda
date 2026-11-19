@@ -40,6 +40,7 @@ import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.navigation.RondaNavHost
 import ar.edu.uade.ronda.ui.navigation.Route
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
+import ar.edu.uade.ronda.data.LinkMonitor
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
@@ -92,6 +93,7 @@ class VideoDemoRecorder {
     private val checkpointHistory = CheckpointHistory(repo.telemetry, repoScope)
     private val control = repo.control
     private val session = ControlSession()
+    private val linkMonitor = LinkMonitor(repo, clock, repoScope)
     private val history = MemoryHistory()
 
     private lateinit var out: File
@@ -123,7 +125,7 @@ class VideoDemoRecorder {
             initializer { ControlViewModel(repo, clock, session) }
             initializer { AlertasViewModel(repo, clock) }
             initializer { HistorialViewModel(repo, history, clock) }
-            initializer { DesconexionViewModel(repo, clock) }
+            initializer { DesconexionViewModel(repo, clock, linkMonitor.log) }
             initializer { SimulacionViewModel(control, repo) }
         }
         advance(3_000)

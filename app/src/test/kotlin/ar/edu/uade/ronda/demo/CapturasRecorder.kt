@@ -37,6 +37,7 @@ import ar.edu.uade.ronda.ui.misiones.MisionesRoute
 import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionRoute
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
+import ar.edu.uade.ronda.data.LinkMonitor
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.simulacion.SimulacionRoute
 import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
@@ -88,6 +89,7 @@ class CapturasRecorder {
     private val history = CheckpointHistory(repo.telemetry, repoScope)
     private val control = repo.control
     private val session = ControlSession("RONDA-01")
+    private val linkMonitor = LinkMonitor(repo, clock, repoScope)
     private lateinit var out: File
 
     @Before fun setUp() {
@@ -161,7 +163,7 @@ class CapturasRecorder {
         startRound(); runUntil("2 puntos de control") { verified() >= 2 }
         control.setLinkUp(false)
         advance(12_000)
-        show { DesconexionRoute(DesconexionViewModel(repo, clock), {}, {}) }
+        show { DesconexionRoute(DesconexionViewModel(repo, clock, linkMonitor.log), {}, {}) }
         shot("app-08-desconexion")
     }
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
+import ar.edu.uade.ronda.data.LinkLog
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.AlertType
@@ -108,7 +109,7 @@ class PantallasAccesibilidadTest {
     @Test fun alertas() = check("Alertas") { AlertasRoute(AlertasViewModel(repo(), clock)) { nav(it) } }
 
     @Test fun desconexion() = check("Desconexión") {
-        DesconexionRoute(DesconexionViewModel(repo(ConnectionState.DISCONNECTED), clock), { nav(it) }, {})
+        DesconexionRoute(DesconexionViewModel(repo(ConnectionState.DISCONNECTED), clock, MutableStateFlow(LinkLog(lastCutDataAt = 0))), { nav(it) }, {})
     }
 
     @Test fun simulacion() = check("Panel de simulación") {

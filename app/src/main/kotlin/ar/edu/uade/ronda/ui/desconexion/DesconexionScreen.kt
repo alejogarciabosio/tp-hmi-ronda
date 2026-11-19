@@ -28,6 +28,7 @@ import ar.edu.uade.ronda.ui.components.ScreenHeader
 import ar.edu.uade.ronda.ui.components.StaleDataBanner
 import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.components.TelemetryReadout
+import ar.edu.uade.ronda.data.LinkLog
 import ar.edu.uade.ronda.ui.navigation.Route
 import ar.edu.uade.ronda.ui.supervision.LastCommandRow
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaPreviewData
@@ -37,11 +38,11 @@ import ar.edu.uade.ronda.ui.theme.RondaType
 @Composable
 fun DesconexionRoute(viewModel: DesconexionViewModel, onNavigate: (Route) -> Unit, onBack: () -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    DesconexionScreen(state, onNavigate, onBack, viewModel::onOperationalStop)
+    DesconexionScreen(state, onNavigate, onBack)
 }
 
 @Composable
-fun DesconexionScreen(state: DesconexionUiState, onNavigate: (Route) -> Unit, onBack: () -> Unit, onOperationalStop: () -> Unit) {
+fun DesconexionScreen(state: DesconexionUiState, onNavigate: (Route) -> Unit, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(RondaColors.ink950)) {
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()),
@@ -64,7 +65,7 @@ fun DesconexionScreen(state: DesconexionUiState, onNavigate: (Route) -> Unit, on
                     style = RondaType.textoNota, color = RondaColors.bone400)
 
                 if (state.pending.isNotEmpty()) {
-                    SectionTitle("ÓRDENES PENDIENTES")
+                    SectionTitle(state.pendingTitle)
                     state.pending.forEach { LastCommandRow(it) }
                 }
 
@@ -84,15 +85,12 @@ fun DesconexionScreen(state: DesconexionUiState, onNavigate: (Route) -> Unit, on
                 SectionTitle("ACCIONES")
                 Text("La app reintenta sola: apenas llegue telemetría nueva, el estado se actualiza.",
                     style = RondaType.textoNota, color = RondaColors.bone400)
-                HoldToConfirm(
-                    OperationalStopTexts.LABEL, onOperationalStop,
-                    enabled = state.stop.enabled, disabledReason = state.stop.reason,
-                )
-                Text(
-                    if (state.linkOk) OperationalStopTexts.NOTE
-                    else "Sin enlace la orden puede no llegar. ${OperationalStopTexts.NOTE} Si hay riesgo, usá la parada física.",
-                    style = RondaType.textoNota, color = RondaColors.stateError,
-                )
+                if (!state.linkOk) {
+                    Text(
+                        "Sin enlace la detención operativa puede no llegar al robot. Si hay riesgo, usá la parada física.",
+                        style = RondaType.textoNota, color = RondaColors.stateError,
+                    )
+                }
             }
         }
         RondaNavBar(Route.SUPERVISION, onNavigate)
@@ -111,8 +109,8 @@ private fun DesconexionPreview() = PreviewSurface {
     DesconexionScreen(
         DesconexionMapper.map(
             DesconexionInputs(TelemetriaPreviewData.enRonda, ConnectionState.DISCONNECTED, 1_000, emptyList(),
-                CommandType.entries.associateWith { CommandAvailability.Enabled }, emptyList(), 35_000),
+                CommandType.entries.associateWith { CommandAvailability.Enabled }, LinkLog(lastCutDataAt = 1_000), 35_000),
         ),
-        {}, {}, {},
+        {}, {},
     )
 }

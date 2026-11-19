@@ -4,7 +4,6 @@ import ar.edu.uade.ronda.ui.model.StaleBannerUi
 import ar.edu.uade.ronda.ui.model.StateStripUi
 import ar.edu.uade.ronda.ui.model.TelemetryReadoutUi
 import ar.edu.uade.ronda.ui.supervision.LastCommandUi
-import ar.edu.uade.ronda.ui.supervision.StopButtonUi
 
 /** Evento que el robot informó tarde: se muestra con su hora original y la de llegada. */
 data class LateEventUi(val id: String, val text: String, val occurredAt: String, val receivedAt: String)
@@ -19,7 +18,9 @@ data class DesconexionUiState(
     val lastKnownTitle: String? = null,
     val lastKnown: List<TelemetryReadoutUi> = emptyList(),
     val policy: List<String>,
+    /** "ÓRDENES PENDIENTES" durante el corte; otro título cuando el enlace ya volvió. */
+    val pendingTitle: String = "ÓRDENES PENDIENTES",
+    /** Órdenes sin respuesta enviadas desde el último corte. */
     val pending: List<LastCommandUi> = emptyList(),
     val lateEvents: List<LateEventUi> = emptyList(),
-    val stop: StopButtonUi,
 )

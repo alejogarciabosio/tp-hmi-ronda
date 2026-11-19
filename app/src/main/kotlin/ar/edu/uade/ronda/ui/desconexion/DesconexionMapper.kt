@@ -1,10 +1,12 @@
 package ar.edu.uade.ronda.ui.desconexion
 
+import ar.edu.uade.ronda.ui.model.ConnectionView
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.MotionMode
 import ar.edu.uade.ronda.core.model.RobotEvent
+import ar.edu.uade.ronda.data.LinkLog
 import ar.edu.uade.ronda.core.model.RobotTelemetry
 import ar.edu.uade.ronda.core.policy.CommandAvailability
 import ar.edu.uade.ronda.core.repository.TrackedCommand
@@ -22,15 +24,14 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /** Un evento del robot junto con la hora en que lo recibió la app. */
-internal data class ReceivedEvent(val event: RobotEvent, val receivedAt: Long)
-
 internal data class DesconexionInputs(
     val telemetry: RobotTelemetry?,
     val connection: ConnectionState,
     val lastTelemetryAt: Long?,
     val commands: List<TrackedCommand>,
     val availability: Map<CommandType, CommandAvailability>,
-    val received: List<ReceivedEvent>,
+    /** Cortes y eventos recibidos, seguidos con el alcance de la aplicación (ver `LinkMonitor`). */
+    val link: LinkLog,
     val nowMs: Long,
 )
 
@@ -47,7 +48,8 @@ internal object DesconexionMapper {
     /** Un evento que llega más de esto después de ocurrido se considera entregado tarde. */
     private const val LATE_MS = 3_000L
 
-    fun map(i: DesconexionInputs): DesconexionUiState {
+    fun map(raw: DesconexionInputs): DesconexionUiState {
+        val i = raw.copy(connection = ConnectionView.effective(raw.connection, raw.lastTelemetryAt, raw.telemetry?.latencyMs, raw.nowMs))
         val sup = SupervisionMapper.map(
             SupervisionInputs(
                 i.telemetry, i.connection, i.lastTelemetryAt, null, i.commands,
@@ -69,16 +71,21 @@ internal object DesconexionMapper {
                 "${modeText(t.motion.mode)} (puede haber cambiado)"),
         ) else emptyList()
 
-        val pending = i.commands.filter { it.status == CommandStatus.PENDING || it.status == CommandStatus.NO_RESPONSE }
+        // Solo las órdenes del último corte: lo enviado después del último dato recibido antes de cortarse.
+        val cut = i.link.lastCutDataAt
+        val pending = if (cut == null) emptyList() else i.commands
+            .filter { (it.status == CommandStatus.PENDING || it.status == CommandStatus.NO_RESPONSE) && it.sentAt >= cut }
             .map {
+                val sent = clock.format(Instant.ofEpochMilli(it.sentAt))
                 LastCommandUi(
                     SupervisionMapper.commandName(it.command.type),
                     CommandChipUi(if (it.status == CommandStatus.PENDING) CommandChipStatus.PENDING else CommandChipStatus.NO_RESPONSE),
-                    "enviada ${clock.format(Instant.ofEpochMilli(it.sentAt))} · al volver el enlace, confirmá antes de reenviarla",
+                    if (stale) "enviada $sent · al volver el enlace, confirmá antes de reenviarla"
+                    else "enviada $sent durante el corte · el enlace volvió: fijate en Supervisión si se ejecutó antes de reenviarla",
                 )
             }
 
-        val late = i.received.filter { it.receivedAt - it.event.timestamp > LATE_MS }
+        val late = i.link.received.filter { it.receivedAt - it.event.timestamp > LATE_MS }
             .sortedByDescending { it.event.timestamp }
             .map {
                 val text = when (val e = it.event) {
@@ -96,9 +103,9 @@ internal object DesconexionMapper {
             lastKnownTitle = if (lastKnown.isNotEmpty()) "ÚLTIMO DATO CONOCIDO · $lastAtText" else null,
             lastKnown = lastKnown,
             policy = POLICY,
+            pendingTitle = if (stale) "ÓRDENES PENDIENTES" else "ÓRDENES SIN RESPUESTA DEL ÚLTIMO CORTE",
             pending = pending,
             lateEvents = late,
-            stop = sup.stop,
         )
     }
 

@@ -9,6 +9,8 @@ import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.RobotEvent
 import ar.edu.uade.ronda.core.model.Severity
 import ar.edu.uade.ronda.core.repository.TrackedCommand
+import ar.edu.uade.ronda.data.LinkLog
+import ar.edu.uade.ronda.data.ReceivedEvent
 import ar.edu.uade.ronda.ui.model.CommandChipStatus
 import ar.edu.uade.ronda.ui.model.StatusLevel
 import ar.edu.uade.ronda.ui.supervision.enabledAll
@@ -23,7 +25,15 @@ class DesconexionMapperTest {
         connection: ConnectionState,
         commands: List<TrackedCommand> = emptyList(),
         received: List<ReceivedEvent> = emptyList(),
-    ) = DesconexionInputs(tele(1_000), connection, 1_000, commands, enabledAll(), received, 35_000)
+        lastCutDataAt: Long? = 1_000,
+    ): DesconexionInputs {
+        // Con enlace, el último dato es reciente; sin enlace, tiene 34 s.
+        val lastAt = if (connection.isStale) 1_000L else 34_800L
+        return DesconexionInputs(tele(lastAt), connection, lastAt, commands, enabledAll(), LinkLog(lastCutDataAt, received = received), 35_000)
+    }
+
+    private fun cmd(id: String, sentAt: Long, status: CommandStatus = CommandStatus.NO_RESPONSE) =
+        TrackedCommand(Command(id, "RONDA-01", sentAt, "op", CommandType.RETURN_TO_SAFE_POINT), status, sentAt, sentAt + 4_000)
 
     @Test fun conEnlaceNoMuestraDatosViejos() {
         val s = DesconexionMapper.map(inputs(ConnectionState.CONNECTED))
@@ -52,5 +62,26 @@ class DesconexionMapperTest {
         val onTime = ReceivedEvent(RobotEvent.AlertRaised("e2", "RONDA-01", 39_500, Severity.WARNING, alert), 40_000)
         val s = DesconexionMapper.map(inputs(ConnectionState.CONNECTED, received = listOf(late, onTime)))
         assertEquals(listOf("e1"), s.lateEvents.map { it.id })
+    }
+
+    @Test fun soloListaLasOrdenesEnviadasDesdeElUltimoCorte() {
+        val before = cmd("viejo", 500)
+        val during = cmd("corte", 2_000)
+        val s = DesconexionMapper.map(inputs(ConnectionState.DISCONNECTED, listOf(before, during)))
+        assertEquals(1, s.pending.size)
+        assertEquals("ÓRDENES PENDIENTES", s.pendingTitle)
+        assertTrue(s.pending.single().detail!!.contains("al volver el enlace"))
+    }
+
+    @Test fun sinCortesNoListaOrdenesPendientes() {
+        val s = DesconexionMapper.map(inputs(ConnectionState.CONNECTED, listOf(cmd("x", 30_000, CommandStatus.PENDING)), lastCutDataAt = null))
+        assertTrue(s.pending.isEmpty())
+    }
+
+    @Test fun conElEnlaceDeVueltaElTextoLoDice() {
+        val s = DesconexionMapper.map(inputs(ConnectionState.CONNECTED, listOf(cmd("corte", 2_000))))
+        assertTrue(s.linkOk)
+        assertEquals("ÓRDENES SIN RESPUESTA DEL ÚLTIMO CORTE", s.pendingTitle)
+        assertTrue(s.pending.single().detail!!.contains("el enlace volvió"))
     }
 }

@@ -11,6 +11,7 @@ import ar.edu.uade.ronda.core.control.SimulationControl
 import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import ar.edu.uade.ronda.core.repository.RobotRepository
 import ar.edu.uade.ronda.core.sim.SimulatedRobotRepository
+import ar.edu.uade.ronda.data.LinkMonitor
 import ar.edu.uade.ronda.data.local.EventRecorder
 import ar.edu.uade.ronda.data.local.HistoryRepository
 import ar.edu.uade.ronda.data.local.RondaDatabase
@@ -65,6 +66,9 @@ class AppContainer(
 
     val eventRecorder = EventRecorder(historyRepository, appScope)
 
+    /** Cortes de enlace y eventos atrasados, desde que arranca la app (para Desconexión). */
+    val linkMonitor = LinkMonitor(robotRepository, clock, appScope)
+
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
         initializer { SupervisionViewModel(robotRepository, clock, controlSession, checkpointHistory.log, savedState = createSavedStateHandle()) }
         initializer { SeleccionViewModel(robotRepository, controlSession) }
@@ -73,7 +77,7 @@ class AppContainer(
         initializer { ControlViewModel(robotRepository, clock, controlSession) }
         initializer { AlertasViewModel(robotRepository, clock) }
         initializer { HistorialViewModel(robotRepository, historyRepository, clock) }
-        initializer { DesconexionViewModel(robotRepository, clock) }
+        initializer { DesconexionViewModel(robotRepository, clock, linkMonitor.log) }
         initializer { SimulacionViewModel(simulationControl, robotRepository) }
     }
 
