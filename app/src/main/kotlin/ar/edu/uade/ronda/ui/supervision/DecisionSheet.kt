@@ -44,6 +44,7 @@ fun DecisionSheetContent(ui: DecisionUi, onOption: (String) -> Unit, modifier: M
         modifier.navigationBarsPadding().padding(horizontal = 16.dp).padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        ui.snapshot?.let { SnapshotImage(it) }
         Text("EL ROBOT ESPERA TU DECISIÓN", style = RondaType.rotuloSeccion, color = RondaColors.signalAmber)
         Text(ui.title, style = RondaType.pantallaTitulo, color = RondaColors.bone100, modifier = Modifier.semantics { heading() })
         Text(ui.message, style = RondaType.textoCuerpo, color = RondaColors.bone100)
@@ -72,6 +73,7 @@ private val obstacle = DecisionUi(
         DecisionOptionUi("SKIP_CHECKPOINT", "Saltar el PC4", false, true),
         DecisionOptionUi("RETURN_TO_SAFE_POINT", "Regresar a la base", true, true),
     ),
+    SnapshotUi("sim-obstaculo", null, "Cámara frontal · hace 4 s", "Foto de la cámara frontal del robot: Obstáculo en el pasillo · PC4"),
 )
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1B17, widthDp = 412)
@@ -89,6 +91,7 @@ private fun DecisionPersonPreview() = PreviewSurface {
                 DecisionOptionUi("SEND_GUARD", "Enviar vigilante", false, true),
                 DecisionOptionUi("CONTINUE_ROUND", "Continuar ronda", false, true),
             ),
+            SnapshotUi("sim-persona", null, "Cámara frontal · hace 3 s", "Foto de la cámara frontal del robot: Persona en zona restringida · PC5"),
         ),
         {},
     )
@@ -102,3 +105,16 @@ private fun DecisionDisabledPreview() = PreviewSurface {
         {},
     )
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF1C1B17, widthDp = 412)
+@Composable
+private fun DecisionStaleSnapshotPreview() = PreviewSurface {
+    DecisionSheetContent(
+        obstacle.copy(snapshot = obstacle.snapshot?.copy(caption = "Imagen del momento del incidente")),
+        {},
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1C1B17, widthDp = 412)
+@Composable
+private fun DecisionNoSnapshotPreview() = PreviewSurface { DecisionSheetContent(obstacle.copy(snapshot = null), {}) }
