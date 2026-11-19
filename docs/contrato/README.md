@@ -7,7 +7,8 @@ En la app, el simulador de `:core` produce y consume estos mismos mensajes a tra
 ## Convenciones
 
 - `schemaVersion` (entero, hoy 1) y `type` en todos los mensajes: `TELEMETRY`, `COMMAND`, `COMMAND_ACK`, `EVENT`.
-- `messageId` único por mensaje, con id corto y prefijo según el emisor (`c-` comando, `r-` respuesta, `t-` telemetría, `e-` evento); no son UUID (ver decisión D7); `correlationId` en las respuestas, igual al `messageId` del comando.
+- `messageId` único por mensaje, en formato UUID v4 (ver decisión D7); `correlationId` en las respuestas, igual al `messageId` del comando. El decodificador los trata como texto opaco.
+- Ids de dominio (`missionId`, `alertId`, `incident.id`, `routeId`, `safePointId`) legibles a propósito (`a-0007`, `i-0003`, `m-20251118-01`): no identifican mensajes sino objetos que el operador ve en pantalla y nombra al reconocer una alerta.
 - `robotId` en todos los mensajes.
 - Tiempos en epoch ms (`timestamp`, `issuedAt`, `receivedAt`, `raisedAt`). Los tres primeros, a nivel mensaje, llevan una copia legible en ISO 8601 (`timestampIso`, `issuedAtIso`, `receivedAtIso`), solo informativa: el código usa el epoch. `raisedAt`, dentro de cada alerta, no lleva copia ISO.
 - Enums en MAYÚSCULAS; las unidades van en el nombre del campo (`speedMps`, `techRoomTempC`, `latencyMs`).

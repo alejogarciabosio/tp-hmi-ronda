@@ -38,11 +38,13 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Decisión.** Estos comandos usan mantener presionado 1 s. Iniciar misión muestra un resumen previo de condiciones.
 - **Consecuencias.** Evita toques accidentales sin sumar un diálogo modal; la detención operativa sigue accesible en todo momento. Es una orden de software y no reemplaza la parada de emergencia física.
 
-## D7. `messageId` cortos en lugar de UUID
+## D7. `messageId` y `correlationId` como UUID v4
 
-- **Contexto.** El plan §6 proponía UUID en `messageId`.
-- **Decisión.** Los ejemplos y el simulador usan ids cortos con prefijo por emisor (`c-0001`, `r-0002`, `t-000412`, `e-0011`).
-- **Consecuencias.** Se leen mejor en las evidencias y en los logs. Son únicos dentro de una sesión del simulador; un gateway real, con varios emisores y reinicios, debería generar UUID. El contrato no exige un formato, solo unicidad.
+- **Contexto.** Una versión anterior usaba ids cortos con prefijo por emisor (`c-0001`, `r-0002`). Eran fáciles de leer, pero solo son únicos dentro de una sesión del simulador.
+- **Decisión.** `messageId` y `correlationId` son UUID v4. Los genera quien emite el mensaje (repositorio para comandos, simulador para telemetría, respuestas y eventos) a partir de un `Random` inyectable: con la misma semilla la secuencia se repite, así los escenarios y las transcripciones siguen siendo reproducibles. Es un `Random` aparte del que decide la latencia, para que cambiar ids no altere los tiempos.
+- **Qué sigue legible.** `missionId`, `routeId`, `safePointId`, `alertId` e `incident.id` mantienen ids cortos (`m-20251118-01`, `a-0007`, `i-0003`). No identifican mensajes sino objetos de dominio: el operador los ve en pantalla y en las evidencias, y los referencia al reconocer una alerta.
+- **Validación.** `ContractCodec` los trata como string opaco y no valida el formato: el receptor solo necesita igualdad para correlacionar, y ser estricto rompería ante un gateway que use otro formato único. El formato se verifica en tests sobre los ejemplos y el generador.
+- **Consecuencias.** Unicidad global entre emisores y reinicios, sin coordinar contadores. Las evidencias son menos cómodas de leer; se compensa con `type`, `command` y el orden temporal.
 
 ## Limitaciones
 
