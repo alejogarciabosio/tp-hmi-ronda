@@ -68,13 +68,15 @@ class TransportRobotRepository(
     override val commands: StateFlow<List<TrackedCommand>> = tracker.commands
 
     override val availability: StateFlow<Map<CommandType, CommandAvailability>> =
-        combine(_telemetry, _connection, tracker.commands) { t, conn, _ ->
+        combine(_telemetry, _connection, tracker.commands, _incident) { t, conn, _, incident ->
             val ctx = CommandContext(
                 state = t?.operationalState ?: OperationalState.EN_BASE,
                 connection = conn,
                 batteryPercent = t?.battery?.percent ?: 0,
                 hasPendingCommand = tracker.hasPendingMissionCommand(),
                 alerts = t?.alerts.orEmpty(),
+                hasMission = t?.mission != null,
+                pendingDecision = incident != null,
             )
             policy.evaluateAll(ctx)
         }.stateIn(scope, SharingStarted.Eagerly, policy.evaluateAll(CommandContext(OperationalState.EN_BASE, ConnectionState.DISCONNECTED, 0, false)))
@@ -119,9 +121,10 @@ class TransportRobotRepository(
         val now = clock.nowMs()
         when (msg) {
             is ContractMessage.Telemetry -> {
+                val previous = _telemetry.value?.operationalState
                 _telemetry.value = msg.value
                 _lastTelemetryAt.value = now
-                if (msg.value.operationalState != OperationalState.REQUIERE_DECISION) _incident.value = null
+                if (!keepsIncident(previous, msg.value.operationalState)) _incident.value = null
                 tracker.onTelemetry(msg.value, now)
                 refreshConnection(now)
             }
@@ -133,6 +136,16 @@ class TransportRobotRepository(
             }
             is ContractMessage.CommandMsg -> {} // el robot no envía comandos
         }
+    }
+
+    /**
+     * El incidente sigue activo mientras el robot pide la decisión y también mientras está DETENIDO por
+     * una detención operativa hecha durante esa decisión: al reanudar, el robot vuelve a pedirla.
+     */
+    private fun keepsIncident(previous: OperationalState?, current: OperationalState): Boolean = when (current) {
+        OperationalState.REQUIERE_DECISION -> true
+        OperationalState.DETENIDO -> previous == OperationalState.REQUIERE_DECISION || previous == OperationalState.DETENIDO
+        else -> false
     }
 
     private fun refreshConnection(now: Long) {

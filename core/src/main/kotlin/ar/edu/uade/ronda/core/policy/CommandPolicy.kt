@@ -1,6 +1,7 @@
 package ar.edu.uade.ronda.core.policy
 
 import ar.edu.uade.ronda.core.model.Alert
+import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.OperationalState
@@ -25,6 +26,10 @@ data class CommandContext(
     val alerts: List<Alert> = emptyList(),
     /** Ruta seleccionada, para validar la batería al iniciar. */
     val selectedRoute: RouteId = RouteId.RONDA_COMPLETA,
+    /** La telemetría trae una misión (`mission != null`). Sin misión no hay nada que reanudar ni cancelar. */
+    val hasMission: Boolean = true,
+    /** Hay un incidente esperando decisión (p. ej. el robot quedó DETENIDO mientras se la pedía). */
+    val pendingDecision: Boolean = false,
 )
 
 /** Matriz de habilitación del plan §3.3. Es la única fuente de verdad. */
@@ -41,17 +46,19 @@ class CommandPolicy(private val battery: BatteryPolicy = BatteryPolicy()) {
             return CommandAvailability.disabled("Hay una orden pendiente de respuesta")
         }
         if (ctx.state == OperationalState.FALLA && command != CommandType.ACKNOWLEDGE_ALERT) {
-            return CommandAvailability.disabled("El robot tiene una falla: requiere técnico")
+            return evaluateFault(command, ctx)
         }
         return when (command) {
             CommandType.START_MISSION -> evaluateStart(ctx)
             CommandType.PAUSE_MISSION -> requireState(ctx, "Solo se puede pausar durante la ronda", OperationalState.EN_RONDA)
             CommandType.RESUME_MISSION -> evaluateResume(ctx)
-            CommandType.CANCEL_MISSION -> requireState(
-                ctx, "No hay una misión para cancelar",
-                OperationalState.EN_RONDA, OperationalState.PAUSADA,
-                OperationalState.REQUIERE_DECISION, OperationalState.DETENIDO,
-            )
+            CommandType.CANCEL_MISSION ->
+                if (!ctx.hasMission) CommandAvailability.disabled("No hay una misión para cancelar")
+                else requireState(
+                    ctx, "No hay una misión para cancelar",
+                    OperationalState.EN_RONDA, OperationalState.PAUSADA,
+                    OperationalState.REQUIERE_DECISION, OperationalState.DETENIDO,
+                )
             CommandType.RETURN_TO_SAFE_POINT -> evaluateReturn(ctx)
             CommandType.ACKNOWLEDGE_ALERT ->
                 if (ctx.alerts.any { !it.acknowledged }) CommandAvailability.Enabled
@@ -83,12 +90,29 @@ class CommandPolicy(private val battery: BatteryPolicy = BatteryPolicy()) {
 
     private fun evaluateResume(ctx: CommandContext): CommandAvailability {
         // Con REQUIERE_DECISION, reanudar lleva la decisión del operador (esperar o saltar el PC).
-        if (ctx.state !in RESUMABLE) {
+        if (ctx.state !in RESUMABLE || !ctx.hasMission) {
             return CommandAvailability.disabled("No hay una misión pausada o detenida para reanudar")
         }
+        // Detenido durante una decisión: reanudar vuelve a pedir la decisión, no mueve al robot.
+        if (ctx.state == OperationalState.DETENIDO && ctx.pendingDecision) return CommandAvailability.Enabled
         val criticalPending = ctx.alerts.any { !it.acknowledged && it.severity == Severity.CRITICAL }
         return if (criticalPending) CommandAvailability.disabled("Reconocé la alerta antes de reanudar")
         else CommandAvailability.Enabled
+    }
+
+    /**
+     * Con FALLA solo queda una salida: reconocer la alerta de falla y ordenar el regreso a la base,
+     * donde lo atiende el técnico. En el simulador, "Reiniciar" también la despeja.
+     */
+    private fun evaluateFault(command: CommandType, ctx: CommandContext): CommandAvailability {
+        val faults = ctx.alerts.filter { it.type == AlertType.ROBOT_FAULT }
+        return when {
+            command != CommandType.RETURN_TO_SAFE_POINT || faults.isEmpty() ->
+                CommandAvailability.disabled("El robot tiene una falla: requiere técnico")
+            faults.any { !it.acknowledged } ->
+                CommandAvailability.disabled("Reconocé la falla para habilitar el regreso a la base")
+            else -> CommandAvailability.Enabled
+        }
     }
 
     private fun evaluateReturn(ctx: CommandContext): CommandAvailability = when (ctx.state) {

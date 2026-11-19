@@ -157,4 +157,35 @@ class CommandPolicyTest {
         assertTrue(policy.evaluate(OPERATIONAL_STOP, ctx(EN_RONDA, pending = true)).enabled)
         assertFalse(policy.evaluate(PAUSE_MISSION, ctx(EN_RONDA, pending = true)).enabled)
     }
+
+    // ---- Correcciones del QA ----
+
+    @Test
+    fun `detenido durante una decision se puede reanudar aunque la alerta critica siga sin reconocer`() {
+        val c = ctx(DETENIDO, alerts = listOf(alert(Severity.CRITICAL))).copy(pendingDecision = true)
+        assertTrue(policy.evaluate(RESUME_MISSION, c).enabled)
+        assertFalse(policy.evaluate(RESUME_MISSION, c.copy(pendingDecision = false)).enabled)
+    }
+
+    @Test
+    fun `sin mision no se puede reanudar ni cancelar`() {
+        val c = ctx(DETENIDO).copy(hasMission = false)
+        assertEquals(CommandAvailability.disabled("No hay una misión pausada o detenida para reanudar"), policy.evaluate(RESUME_MISSION, c))
+        assertEquals(CommandAvailability.disabled("No hay una misión para cancelar"), policy.evaluate(CANCEL_MISSION, c))
+        assertTrue(policy.evaluate(RETURN_TO_SAFE_POINT, c).enabled, "regresar a la base sigue disponible")
+    }
+
+    @Test
+    fun `con falla el regreso a la base se habilita al reconocer la falla`() {
+        val falla = Alert("a-9", AlertType.ROBOT_FAULT, Severity.CRITICAL, "Falla", 0L, acknowledged = false)
+        assertEquals(
+            CommandAvailability.disabled("Reconocé la falla para habilitar el regreso a la base"),
+            policy.evaluate(RETURN_TO_SAFE_POINT, ctx(FALLA, alerts = listOf(falla))),
+        )
+        assertTrue(policy.evaluate(ACKNOWLEDGE_ALERT, ctx(FALLA, alerts = listOf(falla))).enabled)
+        val reconocida = ctx(FALLA, alerts = listOf(falla.copy(acknowledged = true)))
+        assertTrue(policy.evaluate(RETURN_TO_SAFE_POINT, reconocida).enabled)
+        assertFalse(policy.evaluate(RESUME_MISSION, reconocida).enabled)
+        assertFalse(policy.evaluate(START_MISSION, reconocida).enabled)
+    }
 }
