@@ -120,4 +120,79 @@ class CommandTrackerTest {
         repeat(5) { small.register(command("c-$it", CommandType.PAUSE_MISSION), t0) }
         assertEquals(listOf("c-2", "c-3", "c-4"), small.commands.value.map { it.id })
     }
+
+    // ---- Verificación por telemetría sin respuesta ----
+
+    private fun tracked(id: String) = tracker.commands.value.single { it.id == id }
+
+    @Test
+    fun `una orden sin respuesta pasa a verificada si la telemetria muestra el efecto`() {
+        tracker.onTelemetry(telemetry(OperationalState.EN_RONDA, t0 - 200), t0 - 200)
+        tracker.register(command("c-1", CommandType.PAUSE_MISSION), t0)
+        assertEquals(OperationalState.EN_RONDA, tracked("c-1").stateAtSend)
+        tracker.expire(t0 + 4_000)
+        assertEquals(CommandStatus.NO_RESPONSE, status("c-1"))
+        tracker.onTelemetry(telemetry(OperationalState.PAUSADA, t0 + 5_000), t0 + 5_000)
+        assertEquals(CommandStatus.VERIFIED, status("c-1"))
+        assertTrue(tracked("c-1").verifiedWithoutAck)
+    }
+
+    @Test
+    fun `una orden pendiente con el efecto visible se verifica al vencer en vez de quedar sin respuesta`() {
+        tracker.onTelemetry(telemetry(OperationalState.EN_BASE, t0 - 200), t0 - 200)
+        tracker.register(command("c-1", CommandType.START_MISSION), t0)
+        tracker.onTelemetry(telemetry(OperationalState.PREPARANDO, t0 + 500), t0 + 500)
+        assertEquals(CommandStatus.PENDING, status("c-1"), "todavía puede llegar la respuesta")
+        tracker.expire(t0 + 4_000)
+        assertEquals(CommandStatus.VERIFIED, status("c-1"))
+        assertTrue(tracked("c-1").verifiedWithoutAck)
+        tracker.onAck(ack("c-1", AckStatus.CONFIRMED), t0 + 6_000)
+        assertEquals(CommandStatus.VERIFIED, status("c-1"), "la respuesta tardía no cambia nada")
+    }
+
+    @Test
+    fun `si la respuesta llega a tiempo la verificacion es la normal`() {
+        tracker.onTelemetry(telemetry(OperationalState.EN_RONDA, t0 - 200), t0 - 200)
+        tracker.register(command("c-1", CommandType.PAUSE_MISSION), t0)
+        tracker.onTelemetry(telemetry(OperationalState.PAUSADA, t0 + 100), t0 + 100)
+        tracker.onAck(ack("c-1", AckStatus.CONFIRMED), t0 + 200)
+        assertEquals(CommandStatus.VERIFIED, status("c-1"))
+        assertFalse(tracked("c-1").verifiedWithoutAck)
+    }
+
+    @Test
+    fun `sin respuesta no se verifica si el estado ya era el esperado al enviar`() {
+        tracker.onTelemetry(telemetry(OperationalState.PAUSADA, t0 - 200), t0 - 200)
+        tracker.register(command("c-1", CommandType.PAUSE_MISSION), t0)
+        tracker.expire(t0 + 4_000)
+        tracker.onTelemetry(telemetry(OperationalState.PAUSADA, t0 + 5_000), t0 + 5_000)
+        assertEquals(CommandStatus.NO_RESPONSE, status("c-1"))
+    }
+
+    @Test
+    fun `sin respuesta no se verifica con un cambio que no corresponde a la orden`() {
+        tracker.onTelemetry(telemetry(OperationalState.EN_RONDA, t0 - 200), t0 - 200)
+        tracker.register(command("c-1", CommandType.PAUSE_MISSION), t0)
+        tracker.expire(t0 + 4_000)
+        tracker.onTelemetry(telemetry(OperationalState.DETENIDO, t0 + 5_000), t0 + 5_000)
+        assertEquals(CommandStatus.NO_RESPONSE, status("c-1"))
+    }
+
+    @Test
+    fun `sin telemetria previa al envio no se verifica sin respuesta`() {
+        tracker.register(command("c-1", CommandType.OPERATIONAL_STOP), t0)
+        tracker.expire(t0 + 4_000)
+        tracker.onTelemetry(telemetry(OperationalState.DETENIDO, t0 + 5_000), t0 + 5_000)
+        assertEquals(CommandStatus.NO_RESPONSE, status("c-1"))
+    }
+
+    @Test
+    fun `reconocer alerta sin respuesta se verifica cuando la alerta figura reconocida`() {
+        tracker.onTelemetry(telemetry(OperationalState.EN_RONDA, t0 - 200), t0 - 200)
+        tracker.register(command("c-1", CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = "a-0007")), t0)
+        tracker.expire(t0 + 4_000)
+        assertEquals(CommandStatus.NO_RESPONSE, status("c-1"))
+        tracker.onTelemetry(telemetry(OperationalState.EN_RONDA, t0 + 5_000, acknowledgeAlert = true), t0 + 5_000)
+        assertEquals(CommandStatus.VERIFIED, status("c-1"))
+    }
 }
