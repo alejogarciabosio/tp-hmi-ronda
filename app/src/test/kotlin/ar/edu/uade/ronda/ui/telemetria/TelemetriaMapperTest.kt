@@ -32,4 +32,16 @@ class TelemetriaMapperTest {
         val s = TelemetriaMapper.map(tele(1_000, index = 3), ConnectionState.CONNECTED, 1_000, 1_000)
         assertEquals("PC 3/8", s.robot.first { it.label == "Misión" }.value)
     }
+
+    @Test fun lasSalidasUsanElNombreTalCual() {
+        val exits = listOf(
+            ar.edu.uade.ronda.core.model.EmergencyExit("SE-PB", "Salida de emergencia PB", ar.edu.uade.ronda.core.model.ExitStatus.LIBRE),
+            ar.edu.uade.ronda.core.model.EmergencyExit("SE-1", "Salida de emergencia 1°", ar.edu.uade.ronda.core.model.ExitStatus.OBSTRUIDA),
+        )
+        val s = TelemetriaMapper.map(tele(1_000, exits = exits), ConnectionState.CONNECTED, 1_000, 1_000)
+        val labels = s.service.map { it.label }
+        assertTrue(labels.contains("Salida de emergencia PB"))
+        assertTrue(labels.contains("Salida de emergencia 1°"))
+        assertTrue(labels.none { it.contains("de emergencia de emergencia") })
+    }
 }

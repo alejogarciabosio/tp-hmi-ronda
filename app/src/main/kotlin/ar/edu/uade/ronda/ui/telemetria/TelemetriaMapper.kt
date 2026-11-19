@@ -121,7 +121,7 @@ internal object TelemetriaMapper {
                 ExitStatus.OBSTRUIDA -> Triple("Obstruida", StatusLevel.ERROR, "Avisar a seguridad")
                 ExitStatus.NO_VERIFICADA -> Triple("Sin verificar", StatusLevel.WARNING, "Se verifica al pasar por el punto de control")
             }
-            TelemetryReadoutUi("Salida de emergencia ${e.name.removePrefix("Salida ").trim()}", value, "", lvl(level), null, age, detail)
+            TelemetryReadoutUi(e.name, value, "", lvl(level), null, age, detail)
         }
         val unack = t.unacknowledgedAlerts
         val alertLevel = when {
