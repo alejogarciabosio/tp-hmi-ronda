@@ -27,3 +27,15 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// Regenera docs/evidencias/transcripciones/ corriendo los cinco escenarios con tiempo virtual.
+tasks.register<Test>("scenarioTranscripts") {
+    group = "verification"
+    description = "Escribe las transcripciones de los escenarios en docs/evidencias/transcripciones"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform()
+    filter { includeTestsMatching("*ScenarioTranscriptsTest") }
+    systemProperty("ronda.transcripts.dir", rootProject.file("docs/evidencias/transcripciones").absolutePath)
+    outputs.upToDateWhen { false }
+}
