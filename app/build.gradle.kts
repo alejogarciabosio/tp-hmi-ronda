@@ -71,14 +71,20 @@ dependencies {
 // solo `./gradlew :app:recordDemo` lo activa (y entonces corre solo ese test).
 val recordingDemo = gradle.startParameter.taskNames.any { it.endsWith("recordDemo") }
 val demoFramesDir = layout.buildDirectory.dir("demo-frames").get().asFile
+val recordingCapturas = gradle.startParameter.taskNames.any { it.endsWith("recordCapturas") }
+val capturasDir = rootProject.file("docs/evidencias/capturas")
 
 tasks.withType<Test>().configureEach {
-    if (recordingDemo) {
+    if (recordingCapturas) {
+        filter { includeTestsMatching("*CapturasRecorder*") }
+        systemProperty("ronda.capturas.dir", capturasDir.absolutePath)
+        outputs.upToDateWhen { false }
+    } else if (recordingDemo) {
         filter { includeTestsMatching("*SupervisionDemoRecorder*") }
         systemProperty("ronda.demo.frames", demoFramesDir.absolutePath)
         outputs.upToDateWhen { false }
     } else {
-        filter { excludeTestsMatching("*SupervisionDemoRecorder*") }
+        filter { excludeTestsMatching("*SupervisionDemoRecorder*"); excludeTestsMatching("*CapturasRecorder*") }
     }
 }
 
@@ -90,4 +96,10 @@ tasks.register("recordDemo") {
         val out = rootProject.file("docs/evidencias")
         exec { commandLine("bash", rootProject.file("docs/evidencias/armar-demo.sh").absolutePath, demoFramesDir.absolutePath, out.absolutePath) }
     }
+}
+
+tasks.register("recordCapturas") {
+    group = "verification"
+    description = "Genera las capturas de las pantallas y escenarios en docs/evidencias/capturas"
+    dependsOn("testDebugUnitTest")
 }
