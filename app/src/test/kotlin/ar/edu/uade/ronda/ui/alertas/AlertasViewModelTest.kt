@@ -99,4 +99,14 @@ class AlertasViewModelTest {
         vm.onAcknowledge("nada")
         assertTrue(repo.sent.isEmpty())
     }
+
+    private val fault = Alert("a9", AlertType.ROBOT_FAULT, Severity.CRITICAL, "Falla del robot", 950, false,
+        ar.edu.uade.ronda.core.model.Snapshot("sim-falla", "image/jpeg", 950))
+
+    @Test fun laFotoDeLaFallaSeMuestraSinIncidenteMientrasNoSeReconozca() {
+        val s = AlertasMapper.map(inputs(fault))
+        assertEquals("sim-falla", s.active.single().snapshot?.id)
+        val done = AlertasMapper.map(inputs(fault.copy(acknowledged = true)))
+        assertNull(done.acknowledged.single().snapshot)
+    }
 }

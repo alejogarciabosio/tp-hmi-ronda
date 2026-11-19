@@ -81,8 +81,9 @@ internal object AlertasMapper {
             message = a.message,
             time = timeFormat.format(Instant.ofEpochMilli(a.raisedAt)),
             code = Etiquetas.alerta(a.type),
-            // La foto es de una persona o de una zona: solo mientras el incidente sigue activo y la alerta sin reconocer.
-            snapshot = a.snapshot?.takeIf { !a.acknowledged && i.incident != null }?.let {
+            // La foto es de una persona o de una zona: solo mientras la alerta sigue sin reconocer y, salvo la
+            // falla del robot (que no abre un incidente), mientras el incidente sigue activo. No se persiste.
+            snapshot = a.snapshot?.takeIf { !a.acknowledged && (i.incident != null || a.type == AlertType.ROBOT_FAULT) }?.let {
                 val caption = if (i.connection.isStale) "Imagen del momento de la alerta"
                 else "Cámara frontal · ${SupervisionMapper.ageText(i.nowMs - it.capturedAt)}"
                 SnapshotUi(it.id, it.data, caption, "Foto de la cámara frontal del robot: ${titleFor(a.type)}")
