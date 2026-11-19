@@ -16,6 +16,7 @@ import ar.edu.uade.ronda.data.local.RoomHistoryRepository
 import ar.edu.uade.ronda.data.local.toOutcomes
 import ar.edu.uade.ronda.ui.alertas.AlertasViewModel
 import ar.edu.uade.ronda.ui.control.ControlViewModel
+import ar.edu.uade.ronda.ui.desconexion.DesconexionViewModel
 import ar.edu.uade.ronda.ui.historial.HistorialViewModel
 import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
@@ -59,6 +60,7 @@ class AppContainer(
         initializer { ControlViewModel(robotRepository, clock) }
         initializer { AlertasViewModel(robotRepository, clock) }
         initializer { HistorialViewModel(robotRepository, historyRepository, clock) }
+        initializer { DesconexionViewModel(robotRepository, clock) }
     }
 
     init {

@@ -27,6 +27,8 @@ import ar.edu.uade.ronda.ui.alertas.AlertasRoute
 import ar.edu.uade.ronda.ui.alertas.AlertasViewModel
 import ar.edu.uade.ronda.ui.control.ControlRoute
 import ar.edu.uade.ronda.ui.control.ControlViewModel
+import ar.edu.uade.ronda.ui.desconexion.DesconexionRoute
+import ar.edu.uade.ronda.ui.desconexion.DesconexionViewModel
 import ar.edu.uade.ronda.ui.historial.HistorialRoute
 import ar.edu.uade.ronda.ui.historial.HistorialViewModel
 import ar.edu.uade.ronda.ui.misiones.MisionesRoute
@@ -47,7 +49,7 @@ fun RondaNavHost(
     modifier: Modifier = Modifier,
     startDestination: Route = Route.SUPERVISION,
 ) {
-    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL)
+    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL, Route.DESCONEXION)
     NavHost(navController, startDestination.path, modifier) {
         val go: (Route) -> Unit = { navController.navigate(it.path) { launchSingleTop = true } }
         val back: () -> Unit = { navController.popBackStack() }
@@ -78,6 +80,10 @@ fun RondaNavHost(
         composable(Route.HISTORIAL.path) {
             val vm: HistorialViewModel = viewModel(factory = viewModelFactory)
             HistorialRoute(vm, go)
+        }
+        composable(Route.DESCONEXION.path) {
+            val vm: DesconexionViewModel = viewModel(factory = viewModelFactory)
+            DesconexionRoute(vm, go, back)
         }
         Route.entries.filter { it !in implemented }.forEach { route ->
             composable(route.path) { PlaceholderScreen(route, go) }

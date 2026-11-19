@@ -90,7 +90,12 @@ fun SupervisionScreen(
         ) {
             TopRow(onSimulation = { onNavigate(Route.SIMULACION) })
             StateStrip(state.strip)
-            state.staleBanner?.let { StaleDataBanner(it) }
+            state.staleBanner?.let {
+                StaleDataBanner(
+                    it,
+                    Modifier.clickable(role = Role.Button, onClickLabel = "Ver detalle de la desconexión") { onNavigate(Route.DESCONEXION) },
+                )
+            }
 
             Section("PLANO") {
                 Column(Modifier.alpha(if (state.strip.connectionLevel == StatusLevel.STALE) 0.6f else 1f)) {
