@@ -1,7 +1,7 @@
 # Figma — RONDA
 
 Archivo: https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI
-fileKey: `13dj5SYTN8of0MSQdIshDI` · plan **Education** (estructura de 8 páginas, `docs/plan/FIGMA_SPEC.md` §1-A).
+fileKey: `13dj5SYTN8of0MSQdIshDI` · plan **Education** (archivo organizado en ocho páginas: portada, fundamentos, componentes, pantallas, flujo normal, flujo con falla, mapa de navegación y recorrido).
 
 El archivo anterior (`sHIJRf9HU7ci8PdgY7hmIN`, plan Starter) quedó **obsoleto**: no se usa ni se actualiza.
 
@@ -35,7 +35,7 @@ Colección `Color` (`VariableCollectionId:2:2`), modos `Noche` (principal, `2:0`
 | `estado/ok` | `#5FA77A` | `#2F7A4C` | `stateOk` | + círculo lleno |
 | `estado/advertencia` | `#F2A900` | `#A87500` | `stateWarn` | + triángulo + franjas diagonales |
 | `estado/error` | `#E5482D` | `#C2361E` | `stateError` | + rombo |
-| `estado/sin-datos` | `#6E6A5E` | `#7C7767`* | `stateStale` | + círculo punteado + valor tachado |
+| `estado/sin-datos` | `#6E6A5E` | `#7C7767`* | `stateStale` (la app usa `#908B7C` en modo noche, 5,46:1 sobre el fondo; el Figma conserva `#6E6A5E`, ver L5 en `docs/decisiones.md`) | + círculo punteado + valor tachado |
 | `velo` | `#0B0A08` | `#1C1B17`* | `scrim` | velo detrás de la hoja de decisión, opacidad 70 % |
 
 \* Valores de Día sin equivalente en la paleta original; son decisión de diseño. `senal/ambar` en Día baja a `#A87500` porque `#F2A900` no se lee sobre papel (contra `texto/sobre-senal` da 4,5:1).
