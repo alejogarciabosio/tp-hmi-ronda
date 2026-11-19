@@ -2,7 +2,10 @@ package ar.edu.uade.ronda.ui.control
 
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
+import ar.edu.uade.ronda.core.model.Alert
+import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.Command
+import ar.edu.uade.ronda.core.model.Severity
 import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
@@ -122,5 +125,14 @@ class ControlViewModelTest {
         val vm = ControlViewModel(repo, Clock { 1_200L }, ControlSession("RONDA-01"))
         vm.onCancelMission()
         assertTrue(repo.sent.isEmpty())
+    }
+
+    @Test fun conBateriaBajaActivaDestacaRegresarALaBase() {
+        val alerta = Alert("a3", AlertType.LOW_BATTERY, Severity.WARNING, "Batería baja", 0, false)
+        val conAlerta = ControlMapper.map(
+            ControlInputs(tele(1_000, batteryPct = 24, alerts = listOf(alerta)), ConnectionState.CONNECTED, 1_000, null, emptyList(), enabledAll(), 1_400),
+        )
+        assertEquals("Batería baja (24 %): volvé a la base mientras alcanza", conAlerta.lowBatteryReturn)
+        assertEquals(null, ControlMapper.map(inputs()).lowBatteryReturn)
     }
 }

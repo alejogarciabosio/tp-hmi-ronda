@@ -63,6 +63,11 @@ data class SupervisionUiState(
     val decision: DecisionUi? = null,
     /** Hay una decisión pendiente cuya hoja se cerró: se ofrece un botón para reabrirla. */
     val decisionDismissed: Boolean = false,
+    /**
+     * Con una alerta de batería baja activa y regresar habilitado: "Batería baja (24 %): volvé a la
+     * base mientras alcanza". La pantalla lo muestra arriba con el regreso como acción principal.
+     */
+    val lowBatteryReturn: String? = null,
     /** "Vigilante en camino · el robot espera tu orden para seguir", mientras el robot espera pausado. */
     val guardNotice: String? = null,
     /** Aviso legible cuando una acción no se pudo enviar (p. ej. falta la alerta a reconocer). */

@@ -478,4 +478,45 @@ class SupervisionViewModelTest {
         runCurrent()
         assertNull(vm.uiState.value.guardNotice)
     }
+
+    private fun lowBatteryAlert() =
+        Alert("a3", AlertType.LOW_BATTERY, Severity.WARNING, "Batería baja (25 %): alcanza para volver a la base desde acá.", 0, false)
+
+    @Test
+    fun `con bateria baja activa destaca regresar a la base arriba`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, batteryPct = 24, alerts = listOf(lowBatteryAlert())))
+        runCurrent()
+        val s = vm.uiState.value
+        assertEquals("Batería baja (24 %): volvé a la base mientras alcanza", s.lowBatteryReturn)
+        assertEquals(CommandUiState.ENABLED, s.returnToBase.state)
+    }
+
+    @Test
+    fun `si la bateria ya no alcanza el aviso pide regresar ya`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, batteryPct = 14, pose = Pose(1, 40.0, 55.0, 0.0, "Pasillo B"), alerts = listOf(lowBatteryAlert())))
+        runCurrent()
+        assertEquals("Batería baja (14 %): puede no alcanzar para volver a la base. Regresá ya.", vm.uiState.value.lowBatteryReturn)
+    }
+
+    @Test
+    fun `sin alerta de bateria o sin poder regresar no se destaca nada`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, batteryPct = 24))
+        runCurrent()
+        assertNull(vm.uiState.value.lowBatteryReturn, "sin alerta activa la UI queda como está")
+
+        repo.publish(tele(500, batteryPct = 24, alerts = listOf(lowBatteryAlert().copy(acknowledged = true))))
+        runCurrent()
+        assertNull(vm.uiState.value.lowBatteryReturn, "una alerta ya reconocida no está activa")
+
+        repo.availability.value = enabledAll(CommandType.RETURN_TO_SAFE_POINT to "El robot ya está regresando")
+        repo.publish(tele(1_000, OperationalState.REGRESANDO, batteryPct = 24, alerts = listOf(lowBatteryAlert())))
+        runCurrent()
+        assertNull(vm.uiState.value.lowBatteryReturn, "con regresar deshabilitado no se ofrece")
+    }
 }

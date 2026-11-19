@@ -94,6 +94,11 @@ fun SupervisionScreen(
         ) {
             TopRow(onSimulation = { onNavigate(Route.SIMULACION) })
             StateStrip(state.strip)
+            state.lowBatteryReturn?.let { text ->
+                ActionCallout(text, StatusLevel.WARNING, Modifier.padding(horizontal = 16.dp)) {
+                    HoldToConfirm(state.returnToBase.label, onReturnToBase, primary = true)
+                }
+            }
             state.guardNotice?.let { ActionCallout(it, StatusLevel.WARNING, Modifier.padding(horizontal = 16.dp)) }
             state.staleBanner?.let {
                 StaleDataBanner(
@@ -155,13 +160,16 @@ fun SupervisionScreen(
                     CommandButton(state.pause, onPause, Modifier.weight(1f))
                     CommandButton(state.resume, onResume, Modifier.weight(1f))
                 }
-                HoldToConfirm(
-                    state.returnToBase.label, onReturnToBase,
-                    enabled = state.returnToBase.state != CommandUiState.DISABLED && state.returnToBase.state != CommandUiState.PENDING,
-                    disabledReason = state.returnToBase.reason,
-                )
-                if (state.returnToBase.state != CommandUiState.DISABLED) {
-                    state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                // Con batería baja, regresar ya está destacado arriba: no se repite acá.
+                if (state.lowBatteryReturn == null) {
+                    HoldToConfirm(
+                        state.returnToBase.label, onReturnToBase,
+                        enabled = state.returnToBase.state != CommandUiState.DISABLED && state.returnToBase.state != CommandUiState.PENDING,
+                        disabledReason = state.returnToBase.reason,
+                    )
+                    if (state.returnToBase.state != CommandUiState.DISABLED) {
+                        state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                    }
                 }
                 HoldToConfirm(
                     OperationalStopTexts.LABEL, onOperationalStop,

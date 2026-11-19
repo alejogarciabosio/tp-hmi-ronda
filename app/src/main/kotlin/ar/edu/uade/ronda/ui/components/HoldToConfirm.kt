@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onLongClick
@@ -54,37 +56,55 @@ fun HoldToConfirmContent(
     enabled: Boolean = true,
     holdMillis: Int = 1000,
     disabledReason: String? = null,
+    primary: Boolean = false,
 ) {
-    val accent = if (enabled) RondaColors.stateError else RondaColors.ink700
+    // Acción principal: relleno ámbar con texto oscuro, como el botón primario.
+    val filled = primary && enabled
+    val accent = when {
+        !enabled -> RondaColors.ink700
+        primary -> RondaColors.signalAmber
+        else -> RondaColors.stateError
+    }
     Box(
         modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clip(RondaShapes.r2)
-            .border(BorderStroke(1.dp, accent), RondaShapes.r2),
+            .background(if (filled) RondaColors.signalAmber else Color.Transparent)
+            .border(BorderStroke(if (primary) 2.dp else 1.dp, accent), RondaShapes.r2),
         contentAlignment = Alignment.Center,
     ) {
         Box(Modifier.matchParentSize()) {
             HazardStripes(
                 Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)),
-                color = RondaColors.stateError.copy(alpha = 0.55f),
+                color = if (filled) RondaColors.onSignal.copy(alpha = 0.35f) else RondaColors.stateError.copy(alpha = 0.55f),
             )
         }
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label.uppercase(), style = RondaType.botonEtiqueta, color = if (enabled) RondaColors.bone100 else RondaColors.stateStale, textAlign = TextAlign.Center)
+            Text(
+                label.uppercase(), style = RondaType.botonEtiqueta, textAlign = TextAlign.Center,
+                color = when {
+                    !enabled -> RondaColors.stateStale
+                    filled -> RondaColors.onSignal
+                    else -> RondaColors.bone100
+                },
+            )
             Text(
                 when {
                     !enabled -> disabledReason ?: "No disponible"
                     progress > 0f -> "Seguí manteniendo…"
                     else -> "Mantené presionado ${holdSeconds(holdMillis)}"
                 },
-                style = RondaType.textoNota, color = RondaColors.bone400,
+                style = RondaType.textoNota, color = if (filled) RondaColors.onSignal else RondaColors.bone400,
             )
         }
     }
 }
 
-/** Comando destructivo: solo se confirma manteniendo el toque [holdMillis]. Soltar antes cancela. */
+/**
+ * Comando crítico: solo se confirma manteniendo el toque [holdMillis]. Soltar antes cancela.
+ * [primary] lo pinta como acción principal (p. ej. regresar a la base con batería baja).
+ */
 @Composable
 fun HoldToConfirm(
     label: String,
@@ -93,6 +113,7 @@ fun HoldToConfirm(
     enabled: Boolean = true,
     holdMillis: Int = 1000,
     disabledReason: String? = null,
+    primary: Boolean = false,
 ) {
     var progress by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
@@ -121,6 +142,7 @@ fun HoldToConfirm(
         enabled,
         holdMillis,
         disabledReason,
+        primary,
     )
 }
 
@@ -141,6 +163,8 @@ private fun HoldToConfirmPreview() = PreviewSurface {
         HoldToConfirmContent("Cancelar misión", 0.5f)
         HoldToConfirmContent("Cancelar misión", 1f)
         HoldToConfirmContent("Cancelar misión", 0f, enabled = false, disabledReason = "No hay misión en curso")
+        HoldToConfirmContent("Regresar a base", 0f, primary = true)
+        HoldToConfirmContent("Regresar a base", 0.5f, primary = true)
         OperationalStopButton({})
     }
 }

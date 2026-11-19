@@ -3,6 +3,7 @@ package ar.edu.uade.ronda.ui.supervision
 import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.Alert
 import ar.edu.uade.ronda.core.model.AlertResolution
+import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
@@ -70,6 +71,7 @@ internal object SupervisionMapper {
         }
         val dismissed = i.incident != null && i.incident.id == i.dismissedIncidentId
         val guard = guardNotice(i, t, stale)
+        val returnToBase = button("Regresar a base", CommandKind.PRIMARY, CommandType.RETURN_TO_SAFE_POINT, i)
         return SupervisionUiState(
             strip = strip(i, t, stale, ageMs, guard != null),
             staleBanner = if (t != null && stale && ageMs != null) staleBanner(ageMs) else null,
@@ -86,13 +88,24 @@ internal object SupervisionMapper {
                 // Con una decisión abierta, reanudar sin elegir opción lo rechaza el robot.
                 if (i.incident != null) it.copy(state = CommandUiState.DISABLED, reason = "Elegí una opción de la decisión pendiente") else it
             },
-            returnToBase = button("Regresar a base", CommandKind.PRIMARY, CommandType.RETURN_TO_SAFE_POINT, i),
+            returnToBase = returnToBase,
             stop = i.availability[CommandType.OPERATIONAL_STOP].let { StopButtonUi(it?.enabled ?: false, it?.reason) },
             lastCommand = lastCommand(i),
             decision = i.incident?.let { decision(it, i) },
             decisionDismissed = dismissed,
             guardNotice = guard,
+            lowBatteryReturn = if (t != null && !stale) lowBatteryReturn(t, returnToBase) else null,
         )
+    }
+
+    /** Batería baja activa (alerta sin reconocer) y regresar se puede enviar: se destaca el regreso. */
+    private fun lowBatteryReturn(t: RobotTelemetry, returnToBase: CommandButtonUi): String? {
+        if (t.unacknowledgedAlerts.none { it.type == AlertType.LOW_BATTERY }) return null
+        if (returnToBase.state == CommandUiState.DISABLED || returnToBase.state == CommandUiState.PENDING) return null
+        val pct = t.battery.percent
+        val reaches = battery.canReturnToBase(pct, BuildingPlan.distanceToBaseM(t.pose.floor, t.pose.x, t.pose.y))
+        return if (reaches) "Batería baja ($pct %): volvé a la base mientras alcanza"
+        else "Batería baja ($pct %): puede no alcanzar para volver a la base. Regresá ya."
     }
 
     /**

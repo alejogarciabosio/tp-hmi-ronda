@@ -58,6 +58,7 @@ internal object SupervisionPreviewData {
         alerts = listOf(AlertRowUi("a1", "Batería baja: 24 %. Considerá regresar a la base.", StatusLevel.WARNING, "hace 8 s")),
         pause = CommandButtonUi("Pausar", CommandKind.SECONDARY, CommandUiState.PENDING, "Esperando respuesta del robot"),
         lastCommand = LastCommandUi("Pausar", CommandChipUi(CommandChipStatus.PENDING), "hace 1,2 s"),
+        lowBatteryReturn = "Batería baja (24 %): volvé a la base mientras alcanza",
     )
 
     fun sinDatos() = enRonda().copy(

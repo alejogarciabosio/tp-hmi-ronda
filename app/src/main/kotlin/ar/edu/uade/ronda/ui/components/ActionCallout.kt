@@ -62,7 +62,7 @@ private fun ActionCalloutPreview() = PreviewSurface {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ActionCallout("Vigilante en camino · el robot espera tu orden para seguir", StatusLevel.WARNING)
         ActionCallout("Batería baja (24 %): volvé a la base mientras alcanza", StatusLevel.WARNING) {
-            HoldToConfirm("Regresar a base", {})
+            HoldToConfirm("Regresar a base", {}, primary = true)
         }
     }
 }

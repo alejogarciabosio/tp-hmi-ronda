@@ -63,6 +63,9 @@ internal object ControlMapper {
             skipCheckpoint = skip(i),
             cancel = button("Cancelar misión", CommandKind.DESTRUCTIVE, CommandType.CANCEL_MISSION, i),
             log = i.commands.asReversed().map { logRow(it) },
+            // Mismo criterio que Supervisión, pero con el botón de regresar a la base de Control.
+            lowBatteryReturn = sup.lowBatteryReturn,
+            guardNotice = sup.guardNotice,
         )
     }
 

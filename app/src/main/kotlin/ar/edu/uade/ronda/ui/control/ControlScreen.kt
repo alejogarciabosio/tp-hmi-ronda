@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.policy.CommandAvailability
+import ar.edu.uade.ronda.ui.components.ActionCallout
 import ar.edu.uade.ronda.ui.components.CommandButton
 import ar.edu.uade.ronda.ui.components.CommandChip
 import ar.edu.uade.ronda.ui.components.HoldToConfirm
@@ -35,6 +36,7 @@ import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.model.CommandUiState
+import ar.edu.uade.ronda.ui.model.StatusLevel
 import ar.edu.uade.ronda.ui.navigation.Route
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaPreviewData
 import ar.edu.uade.ronda.ui.theme.RondaColors
@@ -77,6 +79,12 @@ fun ControlScreen(
         ) {
             ScreenHeader("Control", onBack, state.robotId)
             StateStrip(state.strip)
+            state.lowBatteryReturn?.let { text ->
+                ActionCallout(text, StatusLevel.WARNING, Modifier.padding(horizontal = 16.dp)) {
+                    HoldToConfirm(state.returnToBase.label, onReturnToBase, primary = true)
+                }
+            }
+            state.guardNotice?.let { ActionCallout(it, StatusLevel.WARNING, Modifier.padding(horizontal = 16.dp)) }
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SectionTitle("DETENCIÓN")
                 HoldToConfirm(
@@ -88,13 +96,16 @@ fun ControlScreen(
                 SectionTitle("ÓRDENES")
                 CommandButton(state.pause, onPause)
                 CommandButton(state.resume, onResume)
-                HoldToConfirm(
-                    state.returnToBase.label, onReturnToBase,
-                    enabled = state.returnToBase.state != CommandUiState.DISABLED && state.returnToBase.state != CommandUiState.PENDING,
-                    disabledReason = state.returnToBase.reason,
-                )
-                if (state.returnToBase.state != CommandUiState.DISABLED) {
-                    state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                // Con batería baja, regresar ya está destacado arriba: no se repite acá.
+                if (state.lowBatteryReturn == null) {
+                    HoldToConfirm(
+                        state.returnToBase.label, onReturnToBase,
+                        enabled = state.returnToBase.state != CommandUiState.DISABLED && state.returnToBase.state != CommandUiState.PENDING,
+                        disabledReason = state.returnToBase.reason,
+                    )
+                    if (state.returnToBase.state != CommandUiState.DISABLED) {
+                        state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                    }
                 }
                 CommandButton(state.safePoint, onSafePoint)
                 CommandButton(state.skipCheckpoint, onSkipCheckpoint)

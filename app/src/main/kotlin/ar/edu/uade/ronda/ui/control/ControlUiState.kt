@@ -27,4 +27,8 @@ data class ControlUiState(
     /** Cortar la misión es destructivo: se confirma manteniendo apretado. */
     val cancel: CommandButtonUi,
     val log: List<CommandLogRowUi> = emptyList(),
+    /** Batería baja activa con regresar habilitado: se destaca el regreso arriba (como en Supervisión). */
+    val lowBatteryReturn: String? = null,
+    /** "Vigilante en camino · el robot espera tu orden para seguir". */
+    val guardNotice: String? = null,
 )
