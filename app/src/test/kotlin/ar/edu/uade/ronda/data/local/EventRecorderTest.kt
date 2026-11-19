@@ -66,6 +66,22 @@ class EventRecorderTest {
         assertEquals(4, fila.checkpointIndex)
     }
 
+    @Test fun laDecisionNombraElPuntoDelEdificioDelIncidente() = runTest {
+        val repo = FakeHistory()
+        val recorder = EventRecorder(repo, TestScope(testScheduler))
+        // Ruta corta: el progreso dice 3 de 3, pero el incidente es en el PC5 del edificio.
+        recorder.recordTelemetry(telemetry(1, OperationalState.REQUIERE_DECISION, progress(total = 3).copy(checkpointIndex = 3)))
+        recorder.recordEvent(
+            RobotEvent.DecisionRequired(
+                "e5", "RONDA-01", 1, Severity.WARNING,
+                ar.edu.uade.ronda.core.model.Incident("i5", ar.edu.uade.ronda.core.model.IncidentType.OBSTACLE, 5, "Obstáculo", emptyList()),
+            ),
+        )
+        val skip = Command("c5", "RONDA-01", 1000, "garita", CommandType.RESUME_MISSION, CommandParams(decision = IncidentDecision.SKIP_CHECKPOINT))
+        recorder.recordCommand(CommandOutcome(skip, CommandStatus.PENDING, 1000))
+        assertEquals(5, repo.events.getValue("c5").checkpointIndex)
+    }
+
     @Test fun eventoTomaLaMisionAbierta() = runTest {
         val repo = FakeHistory()
         val recorder = EventRecorder(repo, TestScope(testScheduler))

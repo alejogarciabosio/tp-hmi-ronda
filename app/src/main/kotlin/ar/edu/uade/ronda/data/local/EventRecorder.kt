@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.data.local
 
+import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.RobotEvent
 import ar.edu.uade.ronda.core.model.RobotTelemetry
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +21,13 @@ class EventRecorder(
     /** Punto donde se dio cada orden: las actualizaciones de estado llegan con el robot ya más adelante. */
     private val checkpointAtSend = HashMap<String, Int?>()
 
+    /**
+     * Punto de control (número del edificio) del incidente abierto: es el que nombran las opciones
+     * ("Saltar el PC5"). En rutas cortas no coincide con el progreso de la misión (3 de 3).
+     */
+    @Volatile
+    private var incidentCheckpoint: Int? = null
+
     fun start(
         telemetry: Flow<RobotTelemetry>,
         events: Flow<RobotEvent>,
@@ -32,16 +40,18 @@ class EventRecorder(
 
     suspend fun recordTelemetry(t: RobotTelemetry) {
         tracker.onTelemetry(t)?.let { history.saveMission(it) }
+        if (t.operationalState == OperationalState.EN_RONDA || t.operationalState == OperationalState.EN_BASE) incidentCheckpoint = null
     }
 
     suspend fun recordEvent(e: RobotEvent) {
+        if (e is RobotEvent.DecisionRequired) incidentCheckpoint = e.incident.checkpointIndex
         history.saveEvent(HistoryMapper.toRecord(e, tracker.currentMissionId))
     }
 
     suspend fun recordCommand(o: CommandOutcome) {
         val checkpoint = synchronized(checkpointAtSend) {
             if (checkpointAtSend.size > MAX_REMEMBERED) checkpointAtSend.clear()
-            checkpointAtSend.getOrPut(o.command.messageId) { tracker.currentCheckpointIndex }
+            checkpointAtSend.getOrPut(o.command.messageId) { incidentCheckpoint ?: tracker.currentCheckpointIndex }
         }
         history.saveEvent(HistoryMapper.toRecord(o, tracker.currentMissionId, checkpoint))
     }
