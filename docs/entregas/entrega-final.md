@@ -132,7 +132,7 @@ Reglas de diseño:
 - Cancelar, regreso y detención usan **mantener presionado 1 s**; iniciar misión muestra un resumen previo de condiciones.
 - Los comandos llevan un tiempo de vida (`ttlMs`): si llegan vencidos, el robot los descarta.
 
-> **Detención operativa (software).** Es una orden simulada enviada al robot. **No reemplaza la parada de emergencia física.** Además, una orden enviada no equivale a una orden ejecutada.
+> **Detención operativa (software).** Es una orden simulada enviada al robot. **No reemplaza la parada física.** Además, una orden enviada no equivale a una orden ejecutada.
 
 Los coeficientes de consumo de batería del simulador se derivan de estos datos en `docs/supuestos-simulacion.md` (ver §11). Antecedentes de cuadrúpedos en patrullaje (Spot, ANYmal, Go2 en proyectos comunitarios y en Shanghai) están en `docs/fuentes.md`; no se halló un Go2 documentado en una ronda nocturna de edificio.
 
@@ -218,7 +218,7 @@ Estructura del archivo:
 
 - **00 Portada:** caso, materia, integrantes, índice con links a las páginas y aviso de que el contrato JSON es una propuesta del grupo, no un protocolo de Unitree.
 - **01 Fundamentos:** variables de color con dos modos (noche, principal, y día), espaciado y radios; estilos de texto (Archivo, IBM Plex Mono e IBM Plex Sans); grilla de 412 × 917 con 4 columnas; símbolos de estado con redundancia (círculo lleno, triángulo con franjas, rombo, círculo punteado, contorno tachado); íconos lineales e ilustraciones simuladas de la cámara frontal.
-- **02 Componentes:** los 14 componentes de la especificación con variantes de estado (normal, deshabilitado, advertencia, error, sin datos) y los auxiliares que usa la app (barra superior, pestañas de piso, alerta compacta, interruptor). Todo ligado a variables.
+- **02 Componentes:** 18 component sets: los 14 de la especificación con variantes de estado (normal, deshabilitado, advertencia, error, sin datos) y los auxiliares que usa la app (barra superior, pestañas de piso, alerta compacta, interruptor). Todo ligado a variables.
 - **03 Pantallas:** 23 pantallas: selección de robot, nueve estados de Supervisión (en ronda, batería baja, incidente, sin datos, en base, PC 8/8, ronda completada, comando rechazado, enlace restaurado y detenido recibiendo imagen), telemetría, misiones y preflight con un control fallido, control, alertas, historial, desconexión, reconexión, decisión requerida, foto ampliada y panel de simulación. Las de Supervisión coinciden con la app (§12).
 - **04 Flujo normal** (escenario 1) y **05 Flujo con falla** (escenarios 3 y 4): secuencias conectadas como prototipo, con punto de inicio propio.
 - **06 Mapa de navegación:** todas las pantallas con las transiciones y sus condiciones (por ejemplo, sin datos por más de 10 s pasa a Desconexión).
