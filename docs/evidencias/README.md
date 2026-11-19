@@ -76,20 +76,20 @@ El guion de cada escenario está en `docs/entregas/guion-video.md`.
 
 ## Video de demostración completo
 
-`video/demo-ronda.mp4` (unos 3 min 50 s, 1920x1080, H.264 yuv420p, 30 fps, sin audio) recorre la app completa contra el simulador, con el teléfono a la izquierda y el texto de cada paso a la derecha:
+`video/demo-ronda.mp4` (3 min 52 s, 1920x1080, H.264 yuv420p, 30 fps, sin audio) recorre la app completa contra el simulador, con el teléfono a la izquierda y el texto de cada paso a la derecha:
 
 | Parte | Qué se ve |
 |---|---|
 | Portada | Título, materia y la aclaración: todo corre sobre el simulador local y el contrato JSON es propio del grupo |
-| Apertura | Selección de robot (RONDA-01 disponible, RONDA-03 en uso, RONDA-02 no compatible), "Tomar control" y Supervisión en base |
-| 1 · Misión normal | Misiones con la verificación previa en verde, "Iniciar ronda" (pendiente, confirmada, verificada), la ronda en cámara rápida, Telemetría y la ronda completada |
+| Apertura | Selección de robot (RONDA-01 disponible, RONDA-03 en uso, RONDA-02 no compatible), "Tomar control", Supervisión en base y, en el panel de simulación, la velocidad ×8 elegida antes del escenario 1 (Supervisión muestra "SIMULACIÓN ×8") |
+| 1 · Misión normal | Misiones con la verificación previa en verde, "Iniciar ronda" (pendiente, confirmada, verificada), la ronda a ×8, Telemetría y la ronda completada |
 | 2 · Batería baja | Escenario cargado desde el panel, alerta a 25 % con "Regresar a base" destacado arriba, decisión a 15 % y confirmación manteniendo presionado |
-| 3 · Desconexión | "Pausar" queda pendiente, se corta el enlace y pasa a sin respuesta; datos como último valor conocido, órdenes deshabilitadas con su motivo, pantalla Desconexión, vuelta del enlace y la alerta atrasada con su hora original |
+| 3 · Desconexión | "Pausar" queda pendiente, se corta el enlace y pasa a sin respuesta; datos como último valor conocido, órdenes deshabilitadas con su motivo, pantalla Desconexión, vuelta del enlace (la pausa sí había llegado) y la alerta de temperatura emitida durante el corte, con su hora original |
 | 4 · Obstáculo | Hoja de decisión con la foto marcada "IMAGEN SIMULADA", "Saltar el PC4" y el punto salteado |
 | 5 · Persona en zona restringida | Alerta y hoja con la foto, "Enviar vigilante": la hoja no vuelve, el robot queda pausado con el aviso "Vigilante en camino", la decisión en Historial (sin foto) y el operador reanuda la ronda |
 | Cierre | MVVM + Repository, detención operativa por software y contrato JSON propio |
 
-Es la app real (`RondaNavHost`, ViewModels reales, simulador con semilla 42 y tiempo virtual) renderizada con Robolectric, sin emulador. La ronda se muestra en cámara rápida avanzando el reloj virtual.
+Es la app real (`RondaNavHost`, ViewModels reales, simulador con semilla 42 y tiempo virtual) renderizada con Robolectric, sin emulador. La velocidad ×8 se elige en el panel como en la demo en vivo, y el reloj virtual avanza en cámara rápida entre cuadros.
 
 ### Cómo regenerarlo
 
