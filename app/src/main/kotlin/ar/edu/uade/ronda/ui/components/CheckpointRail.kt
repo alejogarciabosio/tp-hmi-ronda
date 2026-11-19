@@ -71,7 +71,7 @@ private fun CheckpointMark(state: CheckpointState) {
 fun CheckpointRail(items: List<CheckpointUi>, modifier: Modifier = Modifier) {
     val verified = items.count { it.state == CheckpointState.VERIFIED || it.state == CheckpointState.WITH_ISSUE }
     Column(
-        modifier.fillMaxWidth().semantics { contentDescription = "Puntos de control: $verified de ${items.size} verificados" },
+        modifier.fillMaxWidth().semantics { contentDescription = "Tramo actual de la ronda: $verified de ${items.size} puntos verificados" },
     ) {
         items.forEach { cp ->
             val current = cp.state == CheckpointState.CURRENT

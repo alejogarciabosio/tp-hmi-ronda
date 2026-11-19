@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.components
 
+import android.app.Application
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -20,7 +21,8 @@ import org.robolectric.annotation.Config
 
 /** Estados visibles de los comandos (R9): el motivo se lee y el toque no pasa cuando no corresponde. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+// Application vacía: RondaApp arma AppContainer con Room real y sus trabajos siguen corriendo entre tests.
+@Config(sdk = [34], application = Application::class)
 class CommandButtonUiTest {
     @get:Rule val rule = createComposeRule()
 

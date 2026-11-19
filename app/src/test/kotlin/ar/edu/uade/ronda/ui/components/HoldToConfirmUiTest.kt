@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.components
 
+import android.app.Application
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -16,7 +17,8 @@ import org.robolectric.annotation.Config
 
 /** Órdenes destructivas: un toque accidental no alcanza (riesgo de orden accidental). */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+// Application vacía: RondaApp arma AppContainer con Room real y sus trabajos siguen corriendo entre tests.
+@Config(sdk = [34], application = Application::class)
 class HoldToConfirmUiTest {
     @get:Rule val rule = createComposeRule()
 

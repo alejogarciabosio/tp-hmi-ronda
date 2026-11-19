@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
@@ -186,7 +187,8 @@ private fun TopRow(onSimulation: () -> Unit) {
         Text("Supervisión", style = RondaType.pantallaTitulo, color = RondaColors.bone100, modifier = Modifier.semantics { heading() })
         Box(
             Modifier
-                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .heightIn(min = 48.dp)
+                .widthIn(min = 48.dp)
                 .clickable(role = Role.Button, onClickLabel = "Abrir el panel de simulación", onClick = onSimulation)
                 .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center,
@@ -213,7 +215,8 @@ private fun FloorTabs(tabs: List<FloorTabUi>, onSelect: (Int) -> Unit) {
                 style = if (tab.selected) RondaType.botonEtiqueta else RondaType.rotuloSeccion,
                 color = if (tab.selected) RondaColors.signalAmber else RondaColors.bone400,
                 modifier = Modifier
-                    .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    .heightIn(min = 48.dp)
+                    .widthIn(min = 48.dp)
                     .border(1.dp, if (tab.selected) RondaColors.signalAmber else RondaColors.ink700, RondaShapes.r2)
                     .selectable(tab.selected, role = Role.Tab, onClick = { onSelect(tab.floor) })
                     .padding(horizontal = 16.dp, vertical = 14.dp)
