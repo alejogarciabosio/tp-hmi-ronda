@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -54,6 +55,7 @@ fun SeleccionScreen(state: SeleccionUiState, onTakeControl: (String) -> Unit, on
             Box(
                 Modifier
                     .heightIn(min = MinTouchTarget)
+                    .widthIn(min = MinTouchTarget)
                     .clickable(role = Role.Button, onClickLabel = "Abrir el panel de simulación") { onNavigate(Route.SIMULACION) }
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,

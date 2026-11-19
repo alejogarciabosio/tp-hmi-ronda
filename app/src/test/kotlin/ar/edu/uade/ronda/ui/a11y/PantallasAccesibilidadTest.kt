@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.a11y
 
+import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -44,7 +45,8 @@ import org.robolectric.annotation.Config
  * sobre todo lo que se puede tocar: área táctil de al menos 48 dp y un texto que el lector de pantalla pueda leer.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
+// Application vacía: RondaApp arma AppContainer con Room real y sus trabajos siguen corriendo entre tests.
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi", application = Application::class)
 class PantallasAccesibilidadTest {
     @get:Rule val rule = createComposeRule()
 

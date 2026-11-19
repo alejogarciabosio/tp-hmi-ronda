@@ -268,7 +268,7 @@ Decisiones y límites del panel en D10 y L3 de `docs/decisiones.md`.
   - `PantallasAccesibilidadTest`: todo lo que se puede tocar mide al menos 48 dp y tiene texto para el lector de pantalla, en nueve estados de pantalla.
   - `ContrasteTest`: contraste WCAG de la paleta.
 
-  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` (cantidad de tests y fallas): **[PENDIENTE]**.
+  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` el 19/11/2026 (Windows, JDK 21): `:core` 155 tests y `:app` 109 tests, todos aprobados. `:app:assembleDebug` compila; el APK de depuración pesa 11,9 MB.
 - **Prueba manual en emulador (Pixel, API 35):** se recorrieron Selección, Supervisión, Misiones, Control, Alertas, Historial y Telemetría sin cierres inesperados. La prueba encontró cuatro detalles que se corrigieron: la tendencia de batería en Telemetría, la posición de BASE en el plano, el margen inferior de Supervisión y un test de Room intermitente.
 
 ## 17. Video de demostración

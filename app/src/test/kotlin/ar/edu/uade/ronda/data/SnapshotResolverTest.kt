@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.data
 
+import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.util.Base64
@@ -15,7 +16,8 @@ import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34])
+// Application vacía: RondaApp arma AppContainer con Room real y sus trabajos siguen corriendo entre tests.
+@Config(sdk = [34], application = Application::class)
 class SnapshotResolverTest {
     private fun jpegBase64(): String {
         val bmp = Bitmap.createBitmap(16, 9, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }

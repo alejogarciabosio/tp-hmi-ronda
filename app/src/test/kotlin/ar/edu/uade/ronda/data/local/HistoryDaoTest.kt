@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.data.local
 
+import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -14,7 +15,8 @@ import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+// Application vacía: RondaApp arma AppContainer con Room real y sus trabajos siguen corriendo entre tests.
+@Config(sdk = [34], application = Application::class)
 class HistoryDaoTest {
     private lateinit var db: RondaDatabase
     private lateinit var repo: HistoryRepository
