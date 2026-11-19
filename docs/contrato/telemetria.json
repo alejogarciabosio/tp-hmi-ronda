@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "type": "TELEMETRY",
+  "messageId": "t-000412",
+  "robotId": "RONDA-01",
+  "timestamp": 1763500000500,
+  "timestampIso": "2025-11-18T21:06:40.500Z",
+  "latencyMs": 120,
+  "battery": { "percent": 78, "minutesLeft": 96, "charging": false },
+  "operationalState": "EN_RONDA",
+  "mission": {
+    "id": "m-20251118-01",
+    "name": "Ronda completa",
+    "checkpointIndex": 4,
+    "checkpointsTotal": 8,
+    "stage": "Pasillo 1°A"
+  },
+  "pose": { "floor": 1, "x": 12.4, "y": 3.8, "headingDeg": 90.0, "zone": "Pasillo A" },
+  "motion": { "speedMps": 0.6, "mode": "CAMINANDO" },
+  "alerts": [
+    {
+      "id": "a-0007",
+      "type": "OBSTACLE",
+      "severity": "WARNING",
+      "message": "Objeto detectado en el pasillo, a 2 m.",
+      "raisedAt": 1763499998000,
+      "acknowledged": false
+    }
+  ],
+  "service": {
+    "checkpointsVerified": 3,
+    "checkpointsWithIssues": 1,
+    "techRoomTempC": 24.5,
+    "techRoomTempTrend": "STABLE",
+    "emergencyExitsClear": [
+      { "exitId": "SE-PB", "name": "Salida de emergencia PB", "status": "LIBRE" },
+      { "exitId": "SE-1", "name": "Salida de emergencia 1°", "status": "NO_VERIFICADA" }
+    ]
+  }
+}
