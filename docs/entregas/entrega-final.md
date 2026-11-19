@@ -135,17 +135,52 @@ Reglas de diseño:
 
 Los coeficientes de consumo de batería del simulador se derivan de estos datos en `docs/supuestos-simulacion.md` (ver §11). Antecedentes de cuadrúpedos en patrullaje (Spot, ANYmal, Go2 en proyectos comunitarios y en Shanghai) están en `docs/fuentes.md`; no se halló un Go2 documentado en una ronda nocturna de edificio.
 
-## 9. Escenarios que demostrará el APK
+## 9. Arquitectura
 
-1. **Ronda normal:** inicio, ocho PC, finalización, regreso a base; la misión queda en el historial.
-2. **Batería baja:** arranca con 34 %; al cruzar 25 % aparece la advertencia y la acción "Regresar a base"; a 15 % el robot propone el regreso.
-3. **Desconexión:** corte forzado de 15 s; datos marcados como antiguos, comandos sin confirmar, y recuperación con resincronización.
-4. **Incidente (obstáculo):** en PC4 un objeto bloquea el pasillo; el robot se detiene y ofrece esperar 30 s, saltar el PC4 o regresar a base.
-5. **Escenario propio (persona en zona restringida):** en PC5 el robot detecta a una persona, mantiene 2 m y se identifica por voz; el operador decide entre registrar como autorizada (`AUTHORIZED_PERSON`), enviar a un vigilante (`SEND_GUARD`) o continuar la ronda (`CONTINUE_ROUND`). No se guarda imagen.
+Diagrama y descripción completa en [`docs/arquitectura/arquitectura.md`](../arquitectura/arquitectura.md). Resumen:
 
-## 10. Riesgos
+- Dos módulos Gradle: `:app` (Android: Compose, ViewModels, Room, `AppContainer`) y `:core` (Kotlin/JVM puro: dominio, contrato JSON, `Repository` y simulador). Separar `:core` permite compilar y probar la lógica sin Android SDK.
+- Flujo en un solo sentido: la UI observa `StateFlow` de `UiState` y envía eventos al ViewModel; el ViewModel conoce solo las interfaces `RobotRepository` y `HistoryRepository`.
+- `RobotRepository` desacopla telemetría, comandos y eventos de la implementación. `TransportRobotRepository` hace el trabajo sobre cualquier `Transport`: decodifica el contrato con `ContractCodec`, deriva la conexión (`ConnectionEvaluator`), calcula la habilitación de comandos (`CommandPolicy`) y sigue cada orden (`CommandTracker`).
+- El simulador (`core.sim`: `RobotSimulator` con reloj inyectable, `FakeTransport`, `SimulatedRobotRepository`) produce y consume mensajes JSON del contrato. Solo `AppContainer` conoce esa implementación; ninguna clase de UI ni ViewModel importa el paquete `core.sim`. Un gateway real implicaría escribir otro `Transport`.
+- Room guarda misiones y eventos (historial); un `EventRecorder` escucha al repositorio y persiste.
+- El Panel de simulación usa una interfaz aparte, `SimulationControl` (cortar el enlace, rechazar la próxima orden, demorar respuestas, inyectar incidentes, fijar la batería, cargar escenarios), que la UI de supervisión no ve.
 
-Detalle completo (causa, consecuencia, medida y verificación) en `docs/riesgos.md`.
+## 10. Contrato de mensajes
+
+Los ejemplos JSON de telemetría, comandos, respuestas y eventos están en [`docs/contrato/`](../contrato/README.md) y son los que usa el código.
+
+> **El contrato es una propuesta propia del grupo para un gateway entre la app y el robot. No es el protocolo oficial de Unitree.** El SDK real usa DDS (GO2-2 a GO2-4); un gateway real traduciría estos mensajes a llamadas del SDK.
+
+Tipos de mensaje: telemetría (2 Hz), comando, respuesta (confirmada o rechazada con motivo) y evento (alerta, decisión requerida). Cada mensaje lleva `messageId` y `correlationId` como UUID v4; los comandos llevan `ttlMs`.
+
+## 11. Simulador y modelo de batería
+
+El simulador actualiza batería y telemetría, ejecuta misiones coherentes con sus estados, emite alertas y permite forzar desconexiones y rechazos desde el Panel de simulación.
+
+El consumo de batería sigue un modelo de dos términos: un consumo base por segundo (robot encendido) más un consumo proporcional a la distancia. Los coeficientes son **supuestos del simulador, no mediciones del Go2**; se derivan de 432 Wh y de la autonomía declarada de 2 a 4 h en `docs/supuestos-simulacion.md`, que además justifica la reserva y el mínimo de 40 % para salir a la ronda completa. La ronda completa mide 293 m según el plano del simulador. Con coeficientes realistas una ronda gasta poco, así que los escenarios que necesitan ver bajar la batería usan un factor de consumo acelerado y una carga inicial baja, declarado como tal.
+
+Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a la base; si el enlace vuelve antes, espera la orden del operador. Es un supuesto del caso, no una función verificada del Go2.
+
+## 12. Escenarios y evidencias
+
+| # | Escenario | Qué muestra |
+|---|---|---|
+| 1 | Ronda normal | Inicio, ocho PC, finalización y regreso; la misión queda en el historial |
+| 2 | Batería baja | Arranca con 45 % y consumo acelerado; al cruzar 25 % aparece la advertencia con la acción "Regresar a base" y, a 15 %, el robot propone el regreso (una sola opción) |
+| 3 | Desconexión | Corte forzado de 15 s; datos marcados como antiguos, comandos sin confirmar y recuperación con resincronización |
+| 4 | Incidente (obstáculo) | En PC4 un objeto bloquea el pasillo; el robot se detiene a 2 m y ofrece tres opciones (esperar 30 s, saltar PC4, regresar); el operador salta el punto y queda con observación |
+| 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; el operador decide entre registrar como autorizada, enviar a un vigilante o continuar. No se guarda imagen |
+
+Evidencias:
+
+- Transcripciones de los cinco escenarios en [`docs/evidencias/transcripciones/`](../evidencias/transcripciones/): salida de `ScenarioTranscriptsTest`, que corre cada escenario contra el repositorio simulado con tiempo virtual y semilla fija. Demuestran el comportamiento del simulador y del contrato propio, no el de un robot real. Se regeneran con `./gradlew :core:scenarioTranscripts`; instrucciones en [`docs/evidencias/README.md`](../evidencias/README.md).
+- Capturas de la pantalla de supervisión en [`docs/evidencias/capturas/`](../evidencias/capturas/) (ronda normal, obstáculo con decisión, sin datos, enlace restaurado, comando rechazado) y una grabación en [`docs/evidencias/video/supervision-demo.mp4`](../evidencias/video/supervision-demo.mp4).
+- Capturas y evidencia de los cinco escenarios corridos sobre la app completa: **[PENDIENTE — Iñaki]**. Va una captura o secuencia por escenario tomada del APK, con su transcripción al lado.
+
+## 13. Riesgos
+
+Detalle completo (causa, consecuencia, medida y verificación) en [`docs/riesgos.md`](../riesgos.md). Severidad y probabilidad son estimaciones del grupo, no mediciones.
 
 | # | Riesgo | Medida principal |
 |---|---|---|
@@ -157,21 +192,47 @@ Detalle completo (causa, consecuencia, medida y verificación) en `docs/riesgos.
 | R6 | Dos operadores con órdenes contradictorias | Sesión exclusiva por robot |
 | R7 | Escalones fuera del rango del robot | Relevar escaleras antes de habilitar la ruta |
 
-## 11. Prototipo en Figma
+## 14. Decisiones y limitaciones
 
-Archivo: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN>. Estado al 2026-11-19, detallado en `design/FIGMA.md`.
+Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6) y `messageId` como UUID v4 (D7).
 
-**Hecho (página `01 Sistema`).** Variables de color (tema noche y una muestra del tema día), espaciado y radios; estilos de texto (Archivo, IBM Plex Mono e IBM Plex Sans); símbolos de estado con redundancia (círculo lleno, triángulo con franjas, rombo, círculo punteado, contorno tachado); íconos lineales; y 14 componentes reutilizables con variantes de estado (normal, deshabilitado, advertencia, error), ligados a las variables. La dirección visual parte del plano de evacuación y de la planilla de ronda en papel: líneas finas, filas con reglas, estado siempre con color, forma y texto.
+Limitaciones que importan para evaluar el trabajo:
+
+- No se probó con un Go2 real: el contrato, el consumo y la política de pérdida de enlace son propuestas y supuestos del grupo.
+- Escalones de más de 16 cm (R7): no se puede simular; se resuelve con el relevamiento del edificio.
+- La detección de personas y de salidas obstruidas, y el sensor de temperatura de la sala técnica, no son capacidades nativas del Go2: en el simulador son datos generados.
+- El acople autónomo a la base se simula; la llamada equivalente en el SDK no se pudo confirmar.
+- Los umbrales de temperatura (27 y 32 °C), la retención de 30 días y el mínimo de 40 % de batería son propuestas del grupo.
+- El Document Center de Unitree no se pudo leer; lo que se afirma del SDK sale de los README de GitHub.
+
+## 15. Prototipo en Figma
+
+Archivo actual: <https://www.figma.com/design/sHIJRf9HU7ci8PdgY7hmIN>. **[link final pendiente]**: el prototipo definitivo se está terminando en otra cuenta y este link se reemplaza cuando esté publicado.
+
+Hecho al 2026-11-19 en el archivo actual (página `01 Sistema`, detalle en `design/FIGMA.md`): variables de color (tema noche y una muestra del tema día), espaciado y radios; estilos de texto (Archivo, IBM Plex Mono e IBM Plex Sans); símbolos de estado con redundancia (círculo lleno, triángulo con franjas, rombo, círculo punteado, contorno tachado); íconos lineales; y 14 componentes reutilizables con variantes de estado (normal, deshabilitado, advertencia, error), ligados a las variables. La dirección visual parte del plano de evacuación y de la planilla de ronda en papel: líneas finas, filas con reglas, estado siempre con color, forma y texto.
 
 ![Sistema: componentes](../../design/exports/01-sistema-componentes.png)
 
 ![Franja de estado](../../design/exports/01-componente-statestrip.png)
 
-**Falta para la entrega.** Las páginas `00 Portada y mapa` (portada, mapa de navegación, recorrido) y `02 Pantallas y flujos` (selección de robot, supervisión, telemetría, misiones, control, alertas con decisión requerida, historial, desconexión y panel de simulación; flujo normal y flujo con falla; prototipo navegable) **todavía no están construidas**. El plan Starter de Figma cortó el uso de la herramienta de escritura a las ~20 llamadas, y hay que esperar a que se renueve el cupo o pasar el archivo a un plan con más margen. En esta preentrega, por lo tanto, el prototipo navegable con flujo normal y flujo con falla está **pendiente**; lo que sí está documentado es el sistema de diseño, la lista de pantallas (arriba) y los escenarios de §9, que definen los dos flujos.
+Pendiente de confirmar en el Figma final: portada y mapa de navegación, selección de robot, supervisión, telemetría, misiones, control, alertas con decisión requerida, historial, desconexión y panel de simulación, con el flujo normal (escenario 1) y el flujo con falla (escenarios 3 o 4) navegables. **[link final pendiente]**
 
-## 12. Fuentes
+## 16. Aplicación Android
 
-Consultadas el 2026-11-19. Detalle, datos extraídos y discrepancias entre fuentes en `docs/fuentes.md`.
+El requisito es que el APK funcione sin robot, servidor ni internet. Lo que sigue depende de las fases F6 a F9 y no está redactado todavía; no se afirma ningún resultado de compilación o de tests de `:app` hasta que Iñaki los ejecute.
+
+- **Pantallas restantes de la app** (selección de robot, misiones, control, alertas, historial, desconexión): **[PENDIENTE — Iñaki]**. Va una captura por pantalla y su relación con el Figma.
+- **Panel de simulación** (cortar enlace, forzar rechazo, demorar respuestas, inyectar incidentes, cargar escenarios): **[PENDIENTE — Iñaki]**. Va la descripción de los controles y cómo se usan en la demo.
+- **APK instalable** (ruta del archivo, versión, cómo instalarlo): **[PENDIENTE — Iñaki]**.
+- **Tests de UI y resultado de la suite completa** (`:app:testDebugUnitTest`, pruebas manuales en emulador): **[PENDIENTE — Iñaki]**. Va la lista de tests y su resultado real.
+
+## 17. Video de demostración
+
+**[PENDIENTE — Iñaki]** Video final con los cinco escenarios sobre la app instalada: enlace o ruta, duración y guion por escenario. Hoy existe solo la grabación parcial mencionada en §12.
+
+## 18. Fuentes
+
+Consultadas el 2026-11-19. Detalle, datos extraídos y discrepancias entre fuentes en [`docs/fuentes.md`](../fuentes.md).
 
 **Go2**
 
@@ -183,10 +244,17 @@ Consultadas el 2026-11-19. Detalle, datos extraídos y discrepancias entre fuent
 - GO2-6. Robostore, Go2 EDU: <https://robostore.com/products/go2-edu-40-tops-computing-quadruped-robot-dog>
 - GO2-7. GlobalDroneHQ, Go2 EDU: <https://globaldronehq.com/products/unitree-go2-edu-quadruped-robot>
 - GO2-8. Manual de usuario del Go2 (ManualsLib): <https://www.manualslib.com/manual/3774520/Unitree-Go2.html>
+- GO2-9 a GO2-14. Baterías (OpenElab, Robostore), datasheet EDU+ de QuakeLogic, proyecto comunitario de patrullaje, nota de Shanghai Daily y guía de GlobalDroneHQ: URLs en `docs/fuentes.md`.
 
 **G1**
 
 - G1-1. Unitree, G1: <https://www.unitree.com/g1>
 - G1-2. RobotShop, G1: <https://www.robotshop.com/products/unitree-g1-humanoid-robot-us>
 
-Discrepancias relevantes entre fuentes: cámara de profundidad (oficial: "solo EDU"; distribuidores: accesorio o solo versiones Plus), velocidad y carga máxima en la ficha de un distribuidor (inconsistente consigo misma, se descartó), modelo de LiDAR (L2 oficial frente a L1 en fichas antiguas). Los precios son de lista en dólares, sin impuestos ni flete.
+**Antecedentes y reserva de batería**
+
+- SPOT-1. Boston Dynamics, Spot: <https://bostondynamics.com/products/spot/>
+- ANY-1. ANYbotics, ANYmal: <https://www.anybotics.com/anymal>
+- AMR-1. Open-RMF, configuración de ejemplo con `recharge_threshold: 0.10`: URL en `docs/fuentes.md`.
+
+Discrepancias relevantes entre fuentes: cámara de profundidad (oficial: "solo EDU"; distribuidores: accesorio o solo versiones Plus), velocidad y carga máxima en la ficha de un distribuidor (inconsistente consigo misma, se descartó), modelo de LiDAR (L2 oficial frente a L1 en fichas antiguas), y capacidad de la batería de la EDU (8000 o 15000 mAh según el distribuidor; se adopta 15000 mAh). Los precios son de lista en dólares, sin impuestos ni flete.
