@@ -23,7 +23,8 @@ data class Alert(
 
 enum class IncidentType { OBSTACLE, PERSON_IN_RESTRICTED_ZONE, BATTERY_RETURN }
 
-data class IncidentOption(val id: String, val label: String)
+/** `safePointId` solo viaja en la opción de regresar: indica a qué punto seguro se vuelve. */
+data class IncidentOption(val id: String, val label: String, val safePointId: SafePointId? = null)
 
 /** Situación no prevista en la que el robot se detiene y espera una decisión del operador. */
 data class Incident(

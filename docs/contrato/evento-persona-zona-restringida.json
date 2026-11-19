@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "type": "EVENT",
+  "messageId": "e-0015",
+  "robotId": "RONDA-01",
+  "timestamp": 1763500150000,
+  "timestampIso": "2025-11-18T21:09:10.000Z",
+  "event": "DECISION_REQUIRED",
+  "severity": "CRITICAL",
+  "incident": {
+    "id": "i-0004",
+    "type": "PERSON_IN_RESTRICTED_ZONE",
+    "checkpointIndex": 5,
+    "message": "Persona en zona restringida (Sala técnica) fuera de horario. El robot mantiene 2 m y espera.",
+    "options": [
+      { "id": "AUTHORIZED_PERSON", "label": "Persona autorizada (registrar)" },
+      { "id": "SEND_GUARD", "label": "Enviar vigilante" },
+      { "id": "CONTINUE_ROUND", "label": "Continuar ronda" }
+    ]
+  }
+}

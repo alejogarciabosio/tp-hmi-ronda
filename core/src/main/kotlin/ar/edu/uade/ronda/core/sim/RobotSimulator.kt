@@ -565,7 +565,7 @@ class RobotSimulator(
                 Incident(
                     nextId("i"), IncidentType.BATTERY_RETURN, currentPosition(),
                     "Batería crítica. El robot propone regresar a la base.",
-                    listOf(IncidentOption("RETURN_TO_SAFE_POINT", "Regresar a la base")),
+                    listOf(IncidentOption("RETURN_TO_SAFE_POINT", "Regresar a la base", SafePointId.BASE)),
                 ),
             )
         }
@@ -598,7 +598,7 @@ class RobotSimulator(
                 listOf(
                     IncidentOption("WAIT_30S", "Esperar 30 s"),
                     IncidentOption("SKIP_CHECKPOINT", "Saltar el ${stop.id}"),
-                    IncidentOption("RETURN_TO_SAFE_POINT", "Regresar a la base"),
+                    IncidentOption("RETURN_TO_SAFE_POINT", "Regresar a la base", SafePointId.BASE),
                 ),
             ),
         )

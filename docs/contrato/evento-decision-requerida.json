@@ -15,7 +15,7 @@
     "options": [
       { "id": "WAIT_30S", "label": "Esperar 30 s" },
       { "id": "SKIP_CHECKPOINT", "label": "Saltar el PC4" },
-      { "id": "RETURN_TO_SAFE_POINT", "label": "Regresar a la base" }
+      { "id": "RETURN_TO_SAFE_POINT", "label": "Regresar a la base", "safePointId": "BASE" }
     ]
   }
 }

@@ -43,7 +43,7 @@ class ContractCodecTest {
 
     @Test
     fun `hay ejemplos para todos los tipos de mensaje`() {
-        assertEquals(12, contractFiles().size)
+        assertEquals(13, contractFiles().size)
     }
 
     @ParameterizedTest(name = "{0}")
@@ -144,6 +144,18 @@ class ContractCodecTest {
         assertIs<RobotEvent.DecisionRequired>(decision)
         assertEquals(IncidentType.OBSTACLE, decision.incident.type)
         assertEquals(listOf("WAIT_30S", "SKIP_CHECKPOINT", "RETURN_TO_SAFE_POINT"), decision.incident.options.map { it.id })
+        assertEquals(SafePointId.BASE, decision.incident.options.single { it.id == "RETURN_TO_SAFE_POINT" }.safePointId)
+        assertNull(decision.incident.options.first { it.id == "WAIT_30S" }.safePointId)
+    }
+
+    @Test
+    fun `incidente de persona en zona restringida ofrece las tres resoluciones`() {
+        val e = (ContractCodec.decode(load("evento-persona-zona-restringida.json")) as ContractMessage.Event).value
+        assertIs<RobotEvent.DecisionRequired>(e)
+        assertEquals(IncidentType.PERSON_IN_RESTRICTED_ZONE, e.incident.type)
+        assertEquals(5, e.incident.checkpointIndex)
+        val resoluciones = e.incident.options.map { AlertResolution.valueOf(it.id) }
+        assertEquals(AlertResolution.entries, resoluciones, "cada opción es un valor de resolution de ACKNOWLEDGE_ALERT")
     }
 
     @Test

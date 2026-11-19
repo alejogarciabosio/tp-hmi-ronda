@@ -119,7 +119,7 @@ object ContractCodec {
             val i = incident ?: throw ContractException("DECISION_REQUIRED sin 'incident'")
             RobotEvent.DecisionRequired(
                 messageId, robotId, timestamp, severity,
-                Incident(i.id, i.type, i.checkpointIndex, i.message, i.options.map { IncidentOption(it.id, it.label) }),
+                Incident(i.id, i.type, i.checkpointIndex, i.message, i.options.map { IncidentOption(it.id, it.label, it.safePointId) }),
             )
         }
     }
@@ -184,7 +184,7 @@ object ContractCodec {
             event = EventKind.DECISION_REQUIRED, severity = severity,
             incident = IncidentDto(
                 incident.id, incident.type, incident.checkpointIndex, incident.message,
-                incident.options.map { IncidentOptionDto(it.id, it.label) },
+                incident.options.map { IncidentOptionDto(it.id, it.label, it.safePointId) },
             ),
         )
     }

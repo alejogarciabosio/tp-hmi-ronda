@@ -143,7 +143,7 @@ data class ServiceDto(
 )
 
 @Serializable
-data class IncidentOptionDto(val id: String, val label: String)
+data class IncidentOptionDto(val id: String, val label: String, val safePointId: SafePointId? = null)
 
 @Serializable
 data class IncidentDto(
