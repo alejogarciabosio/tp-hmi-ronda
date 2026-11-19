@@ -69,9 +69,9 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 
 ## Limitaciones
 
-### L1. Escalones mayores a 16 cm (riesgo R7)
+### L1. Escalones mayores a 16 cm (riesgo RG7)
 
-El Go2 declara un escalón máximo de unos 16 cm. Esto no se puede simular: depende del edificio real. Antes de habilitar la ruta hay que relevar la contrahuella y el material de las dos escaleras; si alguna supera el límite, la ronda se limita a un piso. La app solo muestra el modo de movimiento ESCALERA. Ver `docs/riesgos.md`, R7.
+El Go2 declara un escalón máximo de unos 16 cm. Esto no se puede simular: depende del edificio real. Antes de habilitar la ruta hay que relevar la contrahuella y el material de las dos escaleras; si alguna supera el límite, la ronda se limita a un piso. La app solo muestra el modo de movimiento ESCALERA. Ver `docs/riesgos.md`, RG7.
 
 ### L2. Contrato JSON propio
 

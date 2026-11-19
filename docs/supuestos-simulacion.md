@@ -10,7 +10,7 @@ Qué se sabe del Unitree Go2 EDU, qué se calcula a partir de eso y qué queda c
 | Carga autónoma | Parcialmente confirmada | La EDU es compatible con la pila de carga (GO2-1) y el manual dice que soporta carga autónoma planificando la ruta de carga (GO2-8). No se pudo leer la documentación del SDK (GO2-5) para saber si hay una llamada de acople. El proyecto GO2-12 lo resuelve con Nav2 y AprilTag. Spot y ANYmal lo traen como función de producto (SPOT-1, ANY-1). |
 | Evasión de obstáculos | Confirmada, solo frontal | El LiDAR 4D L2 cubre 360 x 96 ° con mínimo de 0,05 m (GO2-1), pero el manual indica que la evasión soporta únicamente obstáculos hacia adelante (GO2-8). |
 | Escalón máximo | Confirmado | ~16 cm; el manual no recomienda subir escaleras de más de 16 cm (GO2-1, GO2-8). Air: ~15 cm. |
-| Ángulo de escalera | No figura | Solo hay pendiente máxima: 40 ° (Pro/X/EDU) y 30 ° (Air) (GO2-1). Una escalera de edificio tiene en general un ángulo distinto; se resuelve relevando el edificio (riesgo R7). |
+| Ángulo de escalera | No figura | Solo hay pendiente máxima: 40 ° (Pro/X/EDU) y 30 ° (Air) (GO2-1). Una escalera de edificio tiene en general un ángulo distinto; se resuelve relevando el edificio (riesgo RG7). |
 | Ambiente | Confirmado | 5 a 35 °C, buen clima, sin grado IP; 2 m de distancia a multitudes y obstáculos (GO2-7, GO2-8). |
 | Velocidad | Confirmada | 0-3,7 m/s en EDU (máx. ~5 m/s de laboratorio) (GO2-1). Para una ronda interior se supone 0,8 m/s (valor del simulador, `WALK_SPEED_MPS`); como referencia, ANYmal camina a 0,75 m/s (ANY-1) y Spot llega a 1,6 m/s (SPOT-1). |
 | Energía de la batería EDU | Confirmada por distribuidores | 15000 mAh x 28,8 V = 432 Wh (GO2-9, GO2-10). Unitree publica solo mAh y el rango 28-33,6 V (GO2-1). |

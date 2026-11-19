@@ -36,7 +36,7 @@ Edificio de dos pisos (planta baja y primer piso) con una garita de seguridad ju
 
 Rutas adicionales para el selector de misiones: "Solo sala técnica" (PC1, PC3, PC5 y regreso) y "Salidas de emergencia" (PC2 y PC6). El punto seguro principal es la base; el alternativo es el descanso de la escalera E, para el caso en que la base quede lejos con batería baja.
 
-La ronda usa dos escaleras. Eso condiciona la plataforma (ver §5) y plantea un riesgo concreto: el Go2 declara un escalón máximo de unos 16 cm (riesgo R7 en §13).
+La ronda usa dos escaleras. Eso condiciona la plataforma (ver §5) y plantea un riesgo concreto: el Go2 declara un escalón máximo de unos 16 cm (riesgo RG7 en §13).
 
 ## 3. Actores, necesidades y situaciones de intervención
 
@@ -175,7 +175,7 @@ Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a 
 | 4 | Incidente (obstáculo) | En PC4 un objeto bloquea el pasillo; el robot se detiene a 2 m y ofrece tres opciones (esperar 30 s, saltar PC4, regresar); el operador salta el punto y queda con observación |
 | 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; llega una foto de la cámara frontal y el operador, viéndola, decide entre registrar como autorizada, enviar a un vigilante o continuar. La foto se muestra para decidir y no se guarda en el historial |
 
-**La máquina propone, la persona decide.** El Go2 no detecta personas de forma nativa; se propone un modelo propio (YOLO, clase `person`) sobre la cámara frontal (ver §6). Ese detector puede dar falsos positivos (una sombra, un objeto, un reflejo) y falsos negativos; un proveedor de videovigilancia plantea que la salida de un detector es "una pista, no una decisión" y que corresponde triaje más verificación humana (HIL-1; opinión de práctica, no una norma). Por eso, ante una posible persona, el robot se detiene a 2 m, adjunta la foto de la cámara frontal y espera: el operador la ve y elige registrar como autorizada, enviar a un vigilante o continuar. El robot nunca declara "intruso" por su cuenta. Que el modelo corra en tiempo real en el Orin del robot no se midió: los benchmarks son de kits de desarrollo (JET-1, JET-2). En el simulador, la detección y la foto son datos generados. La foto de una persona es un dato personal: su retención se trata en D9 y R5.
+**La máquina propone, la persona decide.** El Go2 no detecta personas de forma nativa; se propone un modelo propio (YOLO, clase `person`) sobre la cámara frontal (ver §6). Ese detector puede dar falsos positivos (una sombra, un objeto, un reflejo) y falsos negativos; un proveedor de videovigilancia plantea que la salida de un detector es "una pista, no una decisión" y que corresponde triaje más verificación humana (HIL-1; opinión de práctica, no una norma). Por eso, ante una posible persona, el robot se detiene a 2 m, adjunta la foto de la cámara frontal y espera: el operador la ve y elige registrar como autorizada, enviar a un vigilante o continuar. El robot nunca declara "intruso" por su cuenta. Que el modelo corra en tiempo real en el Orin del robot no se midió: los benchmarks son de kits de desarrollo (JET-1, JET-2). En el simulador, la detección y la foto son datos generados. La foto de una persona es un dato personal: su retención se trata en D9 y RG5.
 
 Evidencias:
 
@@ -189,13 +189,13 @@ Detalle completo (causa, consecuencia, medida y verificación) en [`docs/riesgos
 
 | # | Riesgo | Medida principal |
 |---|---|---|
-| R1 | Colisión o susto a una persona cercana | Velocidad reducida, parada a 2 m de una persona, aviso por voz, ronda después de las 23:30 |
-| R2 | Orden accidental | Mantener presionado 1 s en las órdenes destructivas, estado PENDIENTE visible, un solo comando de misión pendiente |
-| R3 | Pérdida de conexión | Datos marcados como antiguos, comandos deshabilitados con motivo, resincronización al volver; política del robot declarada como supuesto |
-| R4 | Batería insuficiente para volver | Bloqueo de inicio, cálculo de "alcanza para volver", regreso propuesto a 15 % |
-| R5 | Privacidad de personas detectadas | Una sola foto por incidente, mostrada para decidir y no guardada; sin video ni grabación continua; registro mínimo, retención de 30 días, historial solo para supervisor |
-| R6 | Dos operadores con órdenes contradictorias | Sesión exclusiva por robot |
-| R7 | Escalones fuera del rango del robot | Relevar escaleras antes de habilitar la ruta |
+| RG1 | Colisión o susto a una persona cercana | Velocidad reducida, parada a 2 m de una persona, aviso por voz, ronda después de las 23:30 |
+| RG2 | Orden accidental | Mantener presionado 1 s en las órdenes destructivas, estado PENDIENTE visible, un solo comando de misión pendiente |
+| RG3 | Pérdida de conexión | Datos marcados como antiguos, comandos deshabilitados con motivo, resincronización al volver; política del robot declarada como supuesto |
+| RG4 | Batería insuficiente para volver | Bloqueo de inicio, cálculo de "alcanza para volver", regreso propuesto a 15 % |
+| RG5 | Privacidad de personas detectadas | Una sola foto por incidente, mostrada para decidir y no guardada; sin video ni grabación continua; registro mínimo, retención de 30 días, historial solo para supervisor |
+| RG6 | Dos operadores con órdenes contradictorias | Sesión exclusiva por robot |
+| RG7 | Escalones fuera del rango del robot | Relevar escaleras antes de habilitar la ruta |
 
 ## 14. Decisiones y limitaciones
 
@@ -204,7 +204,7 @@ Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones princi
 Limitaciones que importan para evaluar el trabajo:
 
 - No se probó con un Go2 real: el contrato, el consumo y la política de pérdida de enlace son propuestas y supuestos del grupo.
-- Escalones de más de 16 cm (R7): no se puede simular; se resuelve con el relevamiento del edificio.
+- Escalones de más de 16 cm (RG7): no se puede simular; se resuelve con el relevamiento del edificio.
 - La detección de personas y de salidas obstruidas, y el sensor de temperatura de la sala técnica, no son capacidades nativas del Go2: en el simulador son datos generados.
 - El acople autónomo a la base se simula; la llamada equivalente en el SDK no se pudo confirmar.
 - Los umbrales de temperatura (27 y 32 °C), la retención de 30 días y el mínimo de 40 % de batería son propuestas del grupo.
@@ -242,7 +242,7 @@ La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mis
 
 | Pantalla | Qué resuelve | Referencia en el Figma |
 |---|---|---|
-| Selección de robot | Elegir el robot y tomar el control exclusivo (riesgo R6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
+| Selección de robot | Elegir el robot y tomar el control exclusivo (riesgo RG6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
 | Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto | `02-supervision-*.png` |
 | Telemetría | Todas las lecturas del robot y del servicio, con su antigüedad. Con el enlace caído quedan como último dato conocido | `03-telemetria.png` |
 | Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio. "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
