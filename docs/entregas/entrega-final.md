@@ -7,7 +7,7 @@ subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 
 Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
 
-Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado (video final con voz y capturas del APK) figura con el marcador **[PENDIENTE]** y no se describen resultados que no existan.
+Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado (video final con voz) figura con el marcador **[PENDIENTE]** y no se describen resultados que no existan.
 
 Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §18 y detalladas en `docs/fuentes.md`.
 
@@ -185,7 +185,7 @@ Evidencias:
 
 - Transcripciones de los cinco escenarios en [`docs/evidencias/transcripciones/`](../evidencias/transcripciones/): salida de `ScenarioTranscriptsTest`, que corre cada escenario contra el repositorio simulado con tiempo virtual y semilla fija. Demuestran el comportamiento del simulador y del contrato propio, no el de un robot real. Se regeneran con `./gradlew :core:scenarioTranscripts`; instrucciones en [`docs/evidencias/README.md`](../evidencias/README.md).
 - Capturas de la pantalla de supervisión en [`docs/evidencias/capturas/`](../evidencias/capturas/) (ronda normal, obstáculo con decisión, sin datos, enlace restaurado, comando rechazado) y una grabación en [`docs/evidencias/video/supervision-demo.mp4`](../evidencias/video/supervision-demo.mp4).
-- Capturas y evidencia de los cinco escenarios corridos sobre la app completa: **[PENDIENTE]**. Va una captura o secuencia por escenario tomada del APK, con su transcripción al lado.
+- Capturas de los cinco escenarios corridos sobre la app completa: `docs/evidencias/capturas/escenario-1-ronda-normal.png` a `escenario-5-persona.png`, cada una con su transcripción en `docs/evidencias/transcripciones/`.
 
 ## 13. Riesgos
 
@@ -256,7 +256,7 @@ La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mis
 | Desconexión | Último dato conocido marcado como viejo, política declarada del robot sin enlace, órdenes sin respuesta y eventos que llegaron tarde con su hora original | `08-desconexion.png` |
 | Panel de simulación | Herramienta de la demo, separada de la operación (ver abajo) | `09-panel-simulacion.png` |
 
-Capturas de cada pantalla tomadas del APK: van en `docs/evidencias/capturas/` con los nombres `app-01-seleccion.png` a `app-09-panel-simulacion.png` y `escenario-1-ronda-normal.png` a `escenario-5-persona.png` (tabla en [`docs/evidencias/README.md`](../evidencias/README.md)). **[PENDIENTE]** hasta que estén en esa carpeta: hoy solo hay las cinco de Supervisión (`supervision-01` a `supervision-05`).
+Capturas de cada pantalla en `docs/evidencias/capturas/`: `app-01-seleccion.png` a `app-09-panel-simulacion.png` (incluye `app-04b-misiones-preflight-fallido.png`) y `escenario-1-ronda-normal.png` a `escenario-5-persona.png` (tabla en [`docs/evidencias/README.md`](../evidencias/README.md)). Se generan desde el código de la app con el simulador real y Robolectric (`./gradlew :app:recordCapturas`), sin emulador; muestran el primer tramo de cada pantalla, como se ve al abrirla en el teléfono.
 
 **Panel de simulación.** Se abre desde "Simulación", arriba a la derecha de Selección, Supervisión, Misiones, Alertas e Historial. Está marcado con franjas de señalización y el rótulo SIMULACIÓN para que no se confunda con la interfaz de operación. Tiene tres grupos de controles:
 
