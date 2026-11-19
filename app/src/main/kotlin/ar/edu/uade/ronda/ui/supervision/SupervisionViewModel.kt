@@ -9,7 +9,9 @@ import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.IncidentDecision
 import ar.edu.uade.ronda.core.model.SafePointId
+import ar.edu.uade.ronda.core.policy.CommandAvailability
 import ar.edu.uade.ronda.core.repository.RobotRepository
+import ar.edu.uade.ronda.ui.session.ControlSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 class SupervisionViewModel(
     private val repository: RobotRepository,
     private val clock: Clock,
+    private val session: ControlSession,
     tickMs: Long = 500,
 ) : ViewModel() {
 
@@ -54,8 +57,12 @@ class SupervisionViewModel(
     }
 
     private val local = combine(
-        repository.availability, checkpointLog, selectedFloor, dismissedIncidentId, ticker,
-    ) { availability, log, floor, dismissed, _ -> Inputs2(availability, log, floor, dismissed) }
+        repository.availability, session.controlledId, checkpointLog, selectedFloor, dismissedIncidentId, ticker,
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        Inputs2(ControlSession.gate(values[0] as Map<CommandType, CommandAvailability>, values[1] as String?),
+            values[2] as CheckpointLog, values[3] as Int?, values[4] as String?)
+    }
 
     val uiState: StateFlow<SupervisionUiState> = combine(fromRepository, local, notice) { a, b, message ->
         SupervisionMapper.map(
@@ -69,7 +76,8 @@ class SupervisionViewModel(
         SupervisionMapper.map(
             SupervisionInputs(
                 repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
-                repository.activeIncident.value, repository.commands.value, repository.availability.value,
+                repository.activeIncident.value, repository.commands.value,
+                ControlSession.gate(repository.availability.value, session.controlledId.value),
                 CheckpointLog(), null, null, clock.nowMs(),
             ),
         ),

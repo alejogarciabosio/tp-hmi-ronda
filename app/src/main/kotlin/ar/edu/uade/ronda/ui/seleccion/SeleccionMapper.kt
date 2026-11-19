@@ -32,7 +32,7 @@ object SeleccionMapper {
             takeControl = when {
                 mine -> CommandButtonUi("Ir a Supervisión", CommandKind.PRIMARY)
                 linkOk -> CommandButtonUi("Tomar control", CommandKind.PRIMARY)
-                else -> CommandButtonUi("Tomar control", CommandKind.PRIMARY, CommandUiState.DISABLED, "Sin enlace con el robot")
+                else -> CommandButtonUi("Tomar control", CommandKind.PRIMARY, CommandUiState.DISABLED, "Sin conexión con el robot: no se puede tomar el control")
             },
         )
         val ronda03 = RobotCardUi(

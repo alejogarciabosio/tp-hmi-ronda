@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.control
 
+import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.Command
 import ar.edu.uade.ronda.core.model.CommandParams
@@ -83,17 +84,32 @@ class ControlViewModelTest {
         repo.publish(tele(1_000, state = OperationalState.REQUIERE_DECISION))
         repo.activeIncident.value = incident()
         repo.availability.value = enabledAll()
-        val vm = ControlViewModel(repo, Clock { 1_200L })
+        val vm = ControlViewModel(repo, Clock { 1_200L }, ControlSession("RONDA-01"))
         vm.onSkipCheckpoint()
         assertEquals(CommandType.RESUME_MISSION, repo.sent.single().first)
         assertEquals(IncidentDecision.SKIP_CHECKPOINT, repo.sent.single().second.decision)
+    }
+
+    @Test fun sinControlPropioLasOrdenesQuedanDeshabilitadasConSuMotivo() {
+        val repo = FakeRobotRepository()
+        repo.publish(tele(1_000, state = OperationalState.EN_RONDA))
+        repo.availability.value = enabledAll()
+        val session = ControlSession()
+        val vm = ControlViewModel(repo, Clock { 1_200L }, session)
+        assertEquals(CommandUiState.DISABLED, vm.uiState.value.pause.state)
+        assertEquals(ControlSession.NO_CONTROL_REASON, vm.uiState.value.returnToBase.reason)
+        vm.onPause()
+        assertTrue(repo.sent.isEmpty())
+        session.take("RONDA-01")
+        vm.onPause()
+        assertEquals(CommandType.PAUSE_MISSION, repo.sent.single().first)
     }
 
     @Test fun deshabilitadoNoEnvia() {
         val repo = FakeRobotRepository()
         repo.publish(tele(1_000))
         repo.availability.value = enabledAll(CommandType.CANCEL_MISSION to "No hay una misión para cancelar")
-        val vm = ControlViewModel(repo, Clock { 1_200L })
+        val vm = ControlViewModel(repo, Clock { 1_200L }, ControlSession("RONDA-01"))
         vm.onCancelMission()
         assertTrue(repo.sent.isEmpty())
     }

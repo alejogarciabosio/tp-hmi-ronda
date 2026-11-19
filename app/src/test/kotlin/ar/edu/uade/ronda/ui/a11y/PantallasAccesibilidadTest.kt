@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
+import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.ConnectionState
@@ -86,19 +87,19 @@ class PantallasAccesibilidadTest {
             c.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }).joinToString(" ")
     }
 
-    @Test fun seleccion() = check("Selección") { SeleccionRoute(SeleccionViewModel(repo())) { nav(it) } }
+    @Test fun seleccion() = check("Selección") { SeleccionRoute(SeleccionViewModel(repo(), ControlSession())) { nav(it) } }
 
-    @Test fun supervision() = check("Supervisión") { SupervisionRoute(SupervisionViewModel(repo(), clock), { nav(it) }) }
+    @Test fun supervision() = check("Supervisión") { SupervisionRoute(SupervisionViewModel(repo(), clock, ControlSession("RONDA-01")), { nav(it) }) }
 
     @Test fun supervisionSinDatos() = check("Supervisión sin datos") {
-        SupervisionRoute(SupervisionViewModel(repo(ConnectionState.NO_DATA), clock), { nav(it) })
+        SupervisionRoute(SupervisionViewModel(repo(ConnectionState.NO_DATA), clock, ControlSession("RONDA-01")), { nav(it) })
     }
 
     @Test fun telemetria() = check("Telemetría") { TelemetriaRoute(TelemetriaViewModel(repo(), clock), { nav(it) }, {}) }
 
     @Test fun misiones() = check("Misiones") { MisionesRoute(MisionesViewModel(repo(), clock)) { nav(it) } }
 
-    @Test fun control() = check("Control") { ControlRoute(ControlViewModel(repo(), clock), { nav(it) }, {}) }
+    @Test fun control() = check("Control") { ControlRoute(ControlViewModel(repo(), clock, ControlSession("RONDA-01")), { nav(it) }, {}) }
 
     @Test fun alertas() = check("Alertas") { AlertasRoute(AlertasViewModel(repo(), clock)) { nav(it) } }
 

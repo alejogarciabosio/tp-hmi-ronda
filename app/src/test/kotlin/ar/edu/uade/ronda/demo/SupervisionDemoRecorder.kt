@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.printToString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandType
@@ -80,7 +81,7 @@ class SupervisionDemoRecorder {
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test fun grabar() {
-        val vm = SupervisionViewModel(repo, clock)
+        val vm = SupervisionViewModel(repo, clock, ControlSession("RONDA-01"))
         rule.mainClock.autoAdvance = false
         rule.setContent {
             RondaTheme {

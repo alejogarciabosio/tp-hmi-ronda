@@ -52,7 +52,7 @@ fun ControlRoute(viewModel: ControlViewModel, onNavigate: (Route) -> Unit, onBac
         onSafePoint = viewModel::onSafePoint,
         onSkipCheckpoint = viewModel::onSkipCheckpoint,
         onCancelMission = viewModel::onCancelMission,
-        onReleaseControl = { onNavigate(Route.SELECCION) },
+        onReleaseControl = { viewModel.onReleaseControl(); onNavigate(Route.SELECCION) },
     )
 }
 

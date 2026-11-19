@@ -10,6 +10,7 @@ import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.repository.RobotRepository
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandUiState
+import ar.edu.uade.ronda.ui.session.ControlSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 class ControlViewModel(
     private val repository: RobotRepository,
     private val clock: Clock,
+    private val session: ControlSession,
     tickMs: Long = 500,
 ) : ViewModel() {
 
@@ -35,13 +37,14 @@ class ControlViewModel(
         repository.activeIncident, repository.commands,
     ) { t, c, at, inc, cmds -> listOf(t, c, at, inc, cmds) }
 
-    val uiState: StateFlow<ControlUiState> = combine(base, repository.availability, ticker) { _, _, _ -> current() }
+    val uiState: StateFlow<ControlUiState> = combine(base, repository.availability, session.controlledId, ticker) { _, _, _, _ -> current() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), current())
 
     private fun current() = ControlMapper.map(
         ControlInputs(
             repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
-            repository.activeIncident.value, repository.commands.value, repository.availability.value, clock.nowMs(),
+            repository.activeIncident.value, repository.commands.value,
+            ControlSession.gate(repository.availability.value, session.controlledId.value), clock.nowMs(),
         ),
     )
 
@@ -51,6 +54,8 @@ class ControlViewModel(
         if (state == CommandUiState.DISABLED || state == CommandUiState.PENDING) return
         repository.send(type, params)
     }
+
+    fun onReleaseControl() = session.release()
 
     fun onPause() = sendIf({ it.pause }, CommandType.PAUSE_MISSION)
 

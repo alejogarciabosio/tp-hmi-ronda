@@ -20,6 +20,7 @@ import ar.edu.uade.ronda.ui.desconexion.DesconexionViewModel
 import ar.edu.uade.ronda.ui.historial.HistorialViewModel
 import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
+import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
 import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
@@ -51,14 +52,17 @@ class AppContainer(
     val historyRepository: HistoryRepository =
         RoomHistoryRepository(database.missionDao(), database.eventDao())
 
+    /** Control exclusivo del robot: lo comparten Selección, Supervisión y Control. */
+    val controlSession = ControlSession()
+
     val eventRecorder = EventRecorder(historyRepository, appScope)
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
-        initializer { SupervisionViewModel(robotRepository, clock) }
-        initializer { SeleccionViewModel(robotRepository) }
+        initializer { SupervisionViewModel(robotRepository, clock, controlSession) }
+        initializer { SeleccionViewModel(robotRepository, controlSession) }
         initializer { TelemetriaViewModel(robotRepository, clock) }
         initializer { MisionesViewModel(robotRepository, clock) }
-        initializer { ControlViewModel(robotRepository, clock) }
+        initializer { ControlViewModel(robotRepository, clock, controlSession) }
         initializer { AlertasViewModel(robotRepository, clock) }
         initializer { HistorialViewModel(robotRepository, historyRepository, clock) }
         initializer { DesconexionViewModel(robotRepository, clock) }

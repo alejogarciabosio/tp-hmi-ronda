@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.supervision
 
+import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.model.*
 import ar.edu.uade.ronda.ui.model.CheckpointState
@@ -36,7 +37,7 @@ class SupervisionViewModelTest {
 
     /** El reloj es el del planificador de pruebas: avanzar el tiempo virtual avanza la antigüedad. */
     private fun TestScope.viewModel(): SupervisionViewModel {
-        val vm = SupervisionViewModel(repo, Clock { testScheduler.currentTime })
+        val vm = SupervisionViewModel(repo, Clock { testScheduler.currentTime }, ControlSession("RONDA-01"))
         vm.uiState.onEach { }.launchIn(backgroundScope)
         runCurrent()
         return vm
