@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.supervision
 
+import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.Alert
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
@@ -303,15 +304,7 @@ internal object SupervisionMapper {
         null -> "motivo no informado"
     }
 
-    fun commandName(type: CommandType) = when (type) {
-        CommandType.START_MISSION -> "Iniciar ronda"
-        CommandType.PAUSE_MISSION -> "Pausar"
-        CommandType.RESUME_MISSION -> "Reanudar"
-        CommandType.CANCEL_MISSION -> "Cancelar misión"
-        CommandType.RETURN_TO_SAFE_POINT -> "Regresar a base"
-        CommandType.OPERATIONAL_STOP -> "Detención operativa"
-        CommandType.ACKNOWLEDGE_ALERT -> "Reconocer alerta"
-    }
+    fun commandName(type: CommandType) = Etiquetas.comando(type)
 
     private fun lastCommand(i: SupervisionInputs): LastCommandUi? {
         val c = i.commands.lastOrNull() ?: return null

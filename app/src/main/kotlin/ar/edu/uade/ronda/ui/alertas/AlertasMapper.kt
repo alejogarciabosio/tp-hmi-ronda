@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.alertas
 
+import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.Alert
 import ar.edu.uade.ronda.core.model.AlertType
 import ar.edu.uade.ronda.core.model.CommandStatus
@@ -77,7 +78,7 @@ internal object AlertasMapper {
             title = title,
             message = a.message,
             time = timeFormat.format(Instant.ofEpochMilli(a.raisedAt)),
-            code = codeFor(a.type),
+            code = Etiquetas.alerta(a.type),
             // La foto es de una persona o de una zona: solo mientras el incidente sigue activo y la alerta sin reconocer.
             snapshot = a.snapshot?.takeIf { !a.acknowledged && i.incident != null }?.let {
                 val caption = if (i.connection.isStale) "Imagen del momento de la alerta"
@@ -115,15 +116,5 @@ internal object AlertasMapper {
         AlertType.EXIT_BLOCKED -> "Salida de emergencia obstruida"
         AlertType.LINK_DEGRADED -> "Enlace degradado"
         AlertType.ROBOT_FAULT -> "Falla del robot"
-    }
-
-    fun codeFor(type: AlertType) = when (type) {
-        AlertType.OBSTACLE -> "OBSTACLE"
-        AlertType.LOW_BATTERY -> "BAT-LOW"
-        AlertType.PERSON_DETECTED -> "PERSON-ZONE"
-        AlertType.TECH_ROOM_TEMPERATURE -> "TEMP-ROOM"
-        AlertType.EXIT_BLOCKED -> "EXIT-BLOCKED"
-        AlertType.LINK_DEGRADED -> "LINK-DEGRADED"
-        AlertType.ROBOT_FAULT -> "FAULT"
     }
 }

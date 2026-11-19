@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.historial
 
+import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.RobotTelemetry
@@ -84,7 +85,7 @@ internal object HistorialMapper {
         }
         val text = when (e.kind) {
             EventKind.COMANDO.name -> {
-                val name = CommandType.entries.firstOrNull { it.name == e.type }?.let { SupervisionMapper.commandName(it) } ?: e.type
+                val name = CommandType.entries.firstOrNull { it.name == e.type }?.let { Etiquetas.comando(it) } ?: "orden"
                 val status = when (e.commandStatus) {
                     "PENDING" -> "pendiente"
                     "CONFIRMED" -> "confirmada"
@@ -97,7 +98,7 @@ internal object HistorialMapper {
             }
             else -> e.message
         }
-        return EventRowUi(e.sourceId, hour.format(Instant.ofEpochMilli(e.timestamp)), level, text, e.type.replace('_', '-'))
+        return EventRowUi(e.sourceId, hour.format(Instant.ofEpochMilli(e.timestamp)), level, text, Etiquetas.registro(e.kind, e.type))
     }
 
     private const val DAY_MS = 24L * 60 * 60 * 1000
