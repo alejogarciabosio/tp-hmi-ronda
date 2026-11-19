@@ -645,4 +645,20 @@ class SupervisionViewModelTest {
         scale.value = 8.0; runCurrent()
         assertEquals("SIMULACIÓN ×8", vm.uiState.value.strip.simulationBadge)
     }
+
+    @Test
+    fun `en falla guia a reconocerla y muestra por que regresar no esta habilitado`() = runTest(dispatcher) {
+        val vm = viewModel()
+        val fault = Alert("f1", AlertType.ROBOT_FAULT, Severity.CRITICAL, "Falla del robot", 0, false)
+        repo.availability.value = enabledAll(CommandType.RETURN_TO_SAFE_POINT to "Reconocé la falla para habilitar el regreso a la base")
+        repo.publish(tele(0, OperationalState.FALLA, alerts = listOf(fault)))
+        runCurrent()
+        assertEquals("Sí: reconocé la falla en Alertas para poder regresarlo a la base", vm.uiState.value.strip.actionText)
+        assertEquals("Reconocé la falla para habilitar el regreso a la base", vm.uiState.value.returnToBase.reason)
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.FALLA, alerts = listOf(fault.copy(acknowledged = true))))
+        runCurrent()
+        assertEquals(CommandUiState.ENABLED, vm.uiState.value.returnToBase.state)
+        assertEquals("Sí: regresá el robot a la base; requiere un técnico", vm.uiState.value.strip.actionText)
+    }
 }

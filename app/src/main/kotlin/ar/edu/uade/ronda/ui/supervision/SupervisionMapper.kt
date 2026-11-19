@@ -150,10 +150,12 @@ internal object SupervisionMapper {
         val label = if (stale) "${stateLabel(s)} (último conocido)" else stateLabel(s)
         val (needs, text) = when {
             stale -> true to "Sí: sin datos del robot, su estado actual es desconocido"
-            s == OperationalState.REQUIERE_DECISION -> true to "Sí: decidí cómo seguir en PC${t.mission?.checkpointIndex ?: i.incident?.checkpointIndex ?: "?"}"
+            s == OperationalState.REQUIERE_DECISION -> true to "Sí: decidí cómo seguir en PC${i.incident?.checkpointIndex ?: t.mission?.checkpointIndex ?: "?"}"
             s == OperationalState.DETENIDO -> true to "Sí: reanudar o regresar a base"
             guardOnTheWay -> true to "Sí: reanudá la ronda cuando el vigilante lo indique"
-            s == OperationalState.FALLA -> true to "Sí: el robot requiere un técnico"
+            s == OperationalState.FALLA ->
+                if (t.unacknowledgedAlerts.any { it.type == AlertType.ROBOT_FAULT }) true to "Sí: reconocé la falla en Alertas para poder regresarlo a la base"
+                else true to "Sí: regresá el robot a la base; requiere un técnico"
             t.unacknowledgedAlerts.any { it.severity == Severity.CRITICAL } -> true to "Sí: hay una alerta crítica sin reconocer"
             else -> false to "No"
         }
@@ -355,7 +357,7 @@ internal object SupervisionMapper {
         }
         val option = c.command.params.resolution?.let { Etiquetas.opcion(it.name) }
         val label = listOfNotNull(commandName(c.command.type), option).joinToString(" · ")
-        return LastCommandUi(label, CommandChipUi(chip), detail)
+        return LastCommandUi(label, CommandChipUi(chip, c.verifiedWithoutAck), detail)
     }
 
     // ---- Decisión ----
