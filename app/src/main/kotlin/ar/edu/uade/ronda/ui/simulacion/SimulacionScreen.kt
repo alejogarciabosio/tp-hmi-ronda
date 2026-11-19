@@ -1,5 +1,9 @@
 package ar.edu.uade.ronda.ui.simulacion
 
+import androidx.compose.ui.semantics.liveRegion
+
+import androidx.compose.ui.semantics.LiveRegionMode
+
 import ar.edu.uade.ronda.ui.theme.RondaShapes
 
 import androidx.compose.ui.semantics.contentDescription
@@ -115,6 +119,10 @@ fun SimulacionScreen(
                         CommandButton(inj.button, { onInject(inj.injection) })
                         Text(inj.description, style = RondaType.textoNota, color = RondaColors.bone400)
                     }
+                }
+
+                state.injectionRejection?.let {
+                    Text(it, style = RondaType.textoCuerpo, color = RondaColors.stateError, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
 
                 SectionTitle(state.batteryTitle)

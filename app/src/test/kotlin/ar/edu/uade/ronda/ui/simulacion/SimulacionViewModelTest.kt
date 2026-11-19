@@ -206,4 +206,9 @@ class SimulacionViewModelTest {
         vm.onTimeScale(3.0)
         assertEquals("scale:4.0", control.calls.last())
     }
+
+    @Test fun muestraElRechazoDeLaUltimaInyeccion() {
+        val s = SimulacionMapper.map(inputs(SimulationSettings(lastInjectionRejection = "El robot no está en ronda.")))
+        assertEquals("No se inyectó: El robot no está en ronda.", s.injectionRejection)
+    }
 }

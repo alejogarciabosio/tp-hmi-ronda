@@ -71,6 +71,7 @@ object SimulacionMapper {
             batteryTitle = battery?.let { "Batería · $it %" } ?: "Batería · sin dato",
             batteryMinus = batteryButton("Batería −$BATTERY_STEP %", battery, battery != null && battery > 0),
             batteryPlus = batteryButton("Batería +$BATTERY_STEP %", battery, battery != null && battery < 100),
+            injectionRejection = s.lastInjectionRejection?.let { "No se inyectó: $it" },
             timeScaleTitle = "Velocidad · ×${s.timeScale.toInt()}",
             timeScales = SimulationSettings.ALLOWED_TIME_SCALES.map { TimeScaleUi(it, "×${it.toInt()}", it == s.timeScale) },
         )

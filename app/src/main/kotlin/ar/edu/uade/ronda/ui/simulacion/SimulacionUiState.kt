@@ -42,5 +42,7 @@ data class SimulacionUiState(
     val batteryPlus: CommandButtonUi,
     /** "Velocidad · ×4" */
     val timeScaleTitle: String = "Velocidad · ×1",
+    /** Por qué el simulador rechazó la última inyección de obstáculo o persona. */
+    val injectionRejection: String? = null,
     val timeScales: List<TimeScaleUi> = emptyList(),
 )
