@@ -23,8 +23,8 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 02:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 98 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 02:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 98 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 03:03.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 98 % | Escalera E (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-03:32.5  EVENTO   alerta OBSTACLE WARNING (emitida a 03:32.5): Objeto detectado en el pasillo, a 2 m.
-03:32.5  EVENTO   decisión requerida OBSTACLE en PC 4 (emitida a 03:32.5): Un objeto bloquea el Pasillo A. El robot se detuvo. Opciones: Esperar 30 s, Saltar el PC4, Regresar a la base
+03:32.5  EVENTO   alerta OBSTACLE WARNING (emitida a 03:32.5): Objeto detectado en el pasillo, a 2 m. [foto adjunta: sim-obstaculo, image/jpeg, por id]
+03:32.5  EVENTO   decisión requerida OBSTACLE en PC 4 (emitida a 03:32.5): Un objeto bloquea el Pasillo A. El robot se detuvo. Opciones: Esperar 30 s, Saltar el PC4, Regresar a la base [foto adjunta: sim-obstaculo, image/jpeg, por id]
 03:32.5  TELEMETRIA REQUIERE_DECISION | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 97 % | Pasillo A (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
 03:32.5  OPERADOR elige "Saltar el PC4"
 03:32.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RESUME_MISSION -> PENDIENTE

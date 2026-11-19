@@ -4,6 +4,7 @@ import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.RobotEvent
+import ar.edu.uade.ronda.core.model.Snapshot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -46,10 +47,10 @@ class Transcript(private val scope: TestScope, private val rig: ScenarioRig, tit
         scope.backgroundScope.launch {
             rig.repo.events.collect { e ->
                 when (e) {
-                    is RobotEvent.AlertRaised -> log("EVENTO   alerta ${e.alert.type} ${e.alert.severity} (emitida a ${at(e.timestamp)}): ${e.alert.message}")
+                    is RobotEvent.AlertRaised -> log("EVENTO   alerta ${e.alert.type} ${e.alert.severity} (emitida a ${at(e.timestamp)}): ${e.alert.message}${foto(e.alert.snapshot)}")
                     is RobotEvent.DecisionRequired -> log(
                         "EVENTO   decisión requerida ${e.incident.type} en PC ${e.incident.checkpointIndex} (emitida a ${at(e.timestamp)}): " +
-                            "${e.incident.message} Opciones: ${e.incident.options.joinToString { it.label }}",
+                            "${e.incident.message} Opciones: ${e.incident.options.joinToString { it.label }}${foto(e.incident.snapshot)}",
                     )
                 }
             }
@@ -59,6 +60,9 @@ class Transcript(private val scope: TestScope, private val rig: ScenarioRig, tit
         }
         scope.runCurrent()
     }
+
+    private fun foto(s: Snapshot?): String =
+        s?.let { " [foto adjunta: ${it.id}, ${it.mediaType}, ${if (it.data == null) "por id" else "embebida"}]" }.orEmpty()
 
     private fun at(epochMs: Long): String = stamp(epochMs - startMs)
 
