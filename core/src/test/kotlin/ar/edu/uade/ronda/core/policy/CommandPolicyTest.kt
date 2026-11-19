@@ -85,6 +85,7 @@ class CommandPolicyTest {
             // Reanudar
             case("reanudar pausada", RESUME_MISSION, t.ctx(PAUSADA), true),
             case("reanudar detenida", RESUME_MISSION, t.ctx(DETENIDO), true),
+            case("reanudar con decisión pendiente", RESUME_MISSION, t.ctx(REQUIERE_DECISION), true),
             case("reanudar en ronda", RESUME_MISSION, t.ctx(EN_RONDA), false, "No hay una misión pausada o detenida para reanudar"),
             case("reanudar con alerta crítica sin reconocer", RESUME_MISSION, t.ctx(DETENIDO, alerts = listOf(t.alert(Severity.CRITICAL))), false, "Reconocé la alerta antes de reanudar"),
             case("reanudar con alerta crítica reconocida", RESUME_MISSION, t.ctx(DETENIDO, alerts = listOf(t.alert(Severity.CRITICAL, acknowledged = true))), true),

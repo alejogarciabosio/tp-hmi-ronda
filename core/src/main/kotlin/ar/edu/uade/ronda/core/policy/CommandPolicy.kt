@@ -63,6 +63,8 @@ class CommandPolicy(private val battery: BatteryPolicy = BatteryPolicy()) {
     fun evaluateAll(ctx: CommandContext): Map<CommandType, CommandAvailability> =
         CommandType.entries.associateWith { evaluate(it, ctx) }
 
+    private val RESUMABLE = setOf(OperationalState.PAUSADA, OperationalState.DETENIDO, OperationalState.REQUIERE_DECISION)
+
     private fun evaluateStop(ctx: CommandContext): CommandAvailability = when {
         // Con el enlace caído el estado que vemos es viejo: mejor dejar enviar la orden.
         ctx.connection.isStale -> CommandAvailability.Enabled
@@ -80,7 +82,8 @@ class CommandPolicy(private val battery: BatteryPolicy = BatteryPolicy()) {
     }
 
     private fun evaluateResume(ctx: CommandContext): CommandAvailability {
-        if (ctx.state != OperationalState.PAUSADA && ctx.state != OperationalState.DETENIDO) {
+        // Con REQUIERE_DECISION, reanudar lleva la decisión del operador (esperar o saltar el PC).
+        if (ctx.state !in RESUMABLE) {
             return CommandAvailability.disabled("No hay una misión pausada o detenida para reanudar")
         }
         val criticalPending = ctx.alerts.any { !it.acknowledged && it.severity == Severity.CRITICAL }

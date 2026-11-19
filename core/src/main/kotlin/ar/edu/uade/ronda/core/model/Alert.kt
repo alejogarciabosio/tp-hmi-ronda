@@ -21,7 +21,7 @@ data class Alert(
     val acknowledged: Boolean,
 )
 
-enum class IncidentType { OBSTACLE, PERSON_IN_RESTRICTED_ZONE }
+enum class IncidentType { OBSTACLE, PERSON_IN_RESTRICTED_ZONE, BATTERY_RETURN }
 
 data class IncidentOption(val id: String, val label: String)
 
