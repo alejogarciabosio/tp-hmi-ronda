@@ -165,9 +165,10 @@ internal object MisionesMapper {
             CommandStatus.REJECTED -> CommandChipStatus.REJECTED
             CommandStatus.NO_RESPONSE -> CommandChipStatus.NO_RESPONSE
         }
-        val detail = when (c.status) {
-            CommandStatus.REJECTED -> c.reasonText ?: "El robot rechazó la orden"
-            CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
+        val detail = when {
+            c.status == CommandStatus.REJECTED -> c.reasonText ?: "El robot rechazó la orden"
+            c.status == CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
+            c.verifiedWithoutAck -> "${SupervisionMapper.VERIFIED_WITHOUT_ACK} · ${SupervisionMapper.ageText(nowMs - c.sentAt)}"
             else -> SupervisionMapper.ageText(nowMs - c.sentAt)
         }
         val route = c.command.params.routeId?.displayName ?: "ronda"

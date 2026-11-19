@@ -125,6 +125,9 @@ internal object SupervisionMapper {
     fun simulationBadge(scale: Double): String? =
         if (scale > 1.0) "SIMULACIÓN ×${scale.toInt()}" else null
 
+    /** La telemetría mostró el efecto aunque la confirmación del robot no llegó (o llegó tarde). */
+    const val VERIFIED_WITHOUT_ACK = "Verificada por telemetría (sin confirmación)"
+
     const val GUARD_NOTICE = "Vigilante en camino · el robot espera tu orden para seguir"
 
     // ---- Franja de estado ----
@@ -344,9 +347,10 @@ internal object SupervisionMapper {
             CommandStatus.REJECTED -> CommandChipStatus.REJECTED
             CommandStatus.NO_RESPONSE -> CommandChipStatus.NO_RESPONSE
         }
-        val detail = when (c.status) {
-            CommandStatus.REJECTED -> rejectionText(c)
-            CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
+        val detail = when {
+            c.status == CommandStatus.REJECTED -> rejectionText(c)
+            c.status == CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
+            c.verifiedWithoutAck -> "$VERIFIED_WITHOUT_ACK · ${ageText(i.nowMs - c.sentAt)}"
             else -> ageText(i.nowMs - c.sentAt)
         }
         val option = c.command.params.resolution?.let { Etiquetas.opcion(it.name) }

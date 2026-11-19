@@ -121,9 +121,10 @@ internal object ControlMapper {
             p.resolution != null -> "${SupervisionMapper.commandName(c.command.type)} · ${Etiquetas.opcion(p.resolution!!.name)}"
             else -> SupervisionMapper.commandName(c.command.type)
         }
-        val detail = when (c.status) {
-            CommandStatus.REJECTED -> rejection(c)
-            CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
+        val detail = when {
+            c.status == CommandStatus.REJECTED -> rejection(c)
+            c.status == CommandStatus.NO_RESPONSE -> "no se sabe si se ejecutó"
+            c.verifiedWithoutAck -> SupervisionMapper.VERIFIED_WITHOUT_ACK
             else -> null
         }
         return CommandLogRowUi(c.id, time(c.sentAt), label, CommandChipUi(chip), detail)

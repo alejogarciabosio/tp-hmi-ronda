@@ -149,4 +149,17 @@ class ControlViewModelTest {
         assertEquals("Sin conexión con el robot: no se pueden enviar órdenes", ControlMapper.map(i).resume.reason)
         assertEquals("Elegí una opción de la decisión pendiente", ControlMapper.map(inputs(incident = true)).resume.reason)
     }
+
+    @Test fun laOrdenVerificadaSinConfirmacionLoDice() {
+        val c = tracked(CommandType.PAUSE_MISSION, CommandStatus.VERIFIED, 1_000).copy(verifiedWithoutAck = true)
+        val s = ControlMapper.map(inputs(listOf(c)))
+        assertEquals("Verificada por telemetría (sin confirmación)", s.log.single().detail)
+        val sup = ar.edu.uade.ronda.ui.supervision.SupervisionMapper.map(
+            ar.edu.uade.ronda.ui.supervision.SupervisionInputs(
+                tele(1_000), ConnectionState.CONNECTED, 1_000, null, listOf(c), enabledAll(),
+                ar.edu.uade.ronda.core.repository.CheckpointLog(), null, null, 1_400,
+            ),
+        )
+        assertTrue(sup.lastCommand!!.detail!!.startsWith("Verificada por telemetría (sin confirmación)"))
+    }
 }
