@@ -28,6 +28,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     buildFeatures {
         compose = true
     }
@@ -56,4 +60,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     testImplementation(kotlin("test"))
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
