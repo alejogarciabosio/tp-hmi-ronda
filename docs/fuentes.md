@@ -121,3 +121,41 @@ La guía GO2-14 (de un distribuidor, no neutral) coincide con el planteo del cas
 - Consumo en reposo del Go2 (W): ninguna fuente.
 - Práctica de reserva de batería en AMR: no hay una norma. Ver `docs/supuestos-simulacion.md`.
 - Un hilo de Open-RMF sobre un factor de seguridad de 1,2 para volver al cargador apareció en una búsqueda, pero la página dio 403 y no se pudo abrir; no se usa.
+
+## Ampliación del 2026-11-19 (cámara, cómputo a bordo y detección de personas)
+
+Consulta de todas las páginas: **2026-11-19**.
+
+### Fuentes nuevas
+
+| ID | Tipo | Fuente | URL | Consulta |
+|---|---|---|---|---|
+| CAM-1 | Desarrollador | `unitree_sdk2`, carpeta `example/go2` (incluye `go2_video_client.cpp`); se leyó el código del ejemplo | https://github.com/unitreerobotics/unitree_sdk2/blob/main/example/go2/go2_video_client.cpp | 2026-11-19 |
+| CAM-2 | Desarrollador | `unitree_sdk2_python`, carpeta `example/go2/front_camera` (`capture_image.py`, `camera_opencv.py`); se leyó el código de ambos | https://github.com/unitreerobotics/unitree_sdk2_python/tree/master/example/go2/front_camera | 2026-11-19 |
+| GO2-15 | Ficha de distribuidor | Robostore, Go2 EDU Plus 100 TOPS ("NVIDIA Jetson Orin NX 16gb, 100 TOPS") | https://robostore.com/products/go2-edu-plus-100-tops-computing-quadruped-robot-dog | 2026-11-19 |
+| JET-1 | Documentación de fabricante de software | Ultralytics, guía NVIDIA Jetson (tablas de benchmark) | https://docs.ultralytics.com/guides/nvidia-jetson/ | 2026-11-19 |
+| JET-2 | Proyecto comunitario | `hokwangchoi/jetson-orin-nano-benchmarks` (YOLOv8n en Orin Nano, JetPack 6.2.2, modo MAXN_SUPER) | https://github.com/hokwangchoi/jetson-orin-nano-benchmarks | 2026-11-19 |
+| YOL-1 | Documentación de fabricante de software | Ultralytics, YOLOv8 (mAP 37,3 para YOLOv8n a 640 px; 3,2 M de parámetros; preentrenado en COCO) | https://docs.ultralytics.com/models/yolov8/ | 2026-11-19 |
+| YOL-2 | Documentación de fabricante de software | Ultralytics, dataset COCO (80 categorías; clase 0 = `person`) | https://docs.ultralytics.com/datasets/detect/coco/ | 2026-11-19 |
+| HIL-1 | Artículo técnico de un proveedor | N. Sapunov, "Tuning Analytics: False Alarms, Accuracy, and the Operator's Reality", Fora Soft, 9-06-2026 | https://www.forasoft.com/learn/video-surveillance/articles-vms/tuning-analytics-false-alarms-accuracy | 2026-11-19 |
+
+### Datos extraídos
+
+| Tema | Dato | Fuente | Observación |
+|---|---|---|---|
+| Cómputo a bordo | La ficha oficial lista el "módulo de alta potencia de cómputo" de la EDU como "varias marcas y modelos, como Orin (40-100 TOPS)"; no nombra Orin Nano ni Orin NX | GO2-1 | **No confirmado por Unitree qué módulo trae cada configuración.** |
+| Cómputo a bordo | "NVIDIA Jetson Orin Nano 8gb, 40 TOPS" (EDU de 40 TOPS) y "NVIDIA Jetson Orin NX 16gb, 100 TOPS" (EDU Plus de 100 TOPS) | GO2-6, GO2-15 | Solo distribuidor. Ninguna de las dos páginas dice dónde se monta el módulo. Una búsqueda mostró otros comercios que llaman "Orin NX 8GB" al de 40 TOPS y describen un "docking station" aparte para el módulo; no se abrieron esas páginas y no se usan. El grupo toma como supuesto una configuración de 40 TOPS (Orin Nano 8 GB), la menos favorable. |
+| Cámara por SDK | C++: `unitree::robot::go2::VideoClient`, `Init()` y `GetImageSample(std::vector<uint8_t>&)`; devuelve 0 si salió bien. El ejemplo escribe los bytes tal cual en un archivo `.jpg`, cada 3 s | CAM-1 | El código no declara el formato; la extensión `.jpg` indica JPEG (inferencia). |
+| Cámara por SDK | Python: `unitree_sdk2py.go2.video.video_client.VideoClient`, `GetImageSample()` devuelve `(code, data)`. `capture_image.py` guarda los bytes en `img.jpg`; `camera_opencv.py` los decodifica con `cv2.imdecode` | CAM-2 | Mismo comentario sobre el formato. Que `cv2.imdecode` los acepte es coherente con JPEG. La resolución de la foto no figura en el ejemplo (la ficha GO2-6 da 1280x720 para la cámara). |
+| Cámara por SDK | El Document Center no pudo leerse (GO2-5): no se confirmaron tasa de cuadros, resolución ni latencia del servicio de video | GO2-5 | |
+| Rendimiento de YOLO en Jetson | YOLOv8n, 640x640, batch 1, Orin Nano en modo MAXN_SUPER, JetPack 6.2.2: PyTorch FP32 20,9 ms (47,9 FPS); TensorRT FP16 4,43 ms (225 FPS); TensorRT INT8 3,49 ms | JET-2 | Latencia de GPU, sin transferencias H2D/D2H; no aclara si incluye pre y posproceso. Es un solo proyecto comunitario. |
+| Rendimiento de YOLO en Jetson | YOLO26n (no v8n), TensorRT, 640 px: 4,57 ms en Orin Nano Super Developer Kit (JetPack 6.1) y 4,13 ms en Orin NX 16 GB (JetPack 6.0 o 5.1.3) | JET-1 | Excluye pre y posproceso. La tabla dice FP32 en el texto y FP16 en la fila: precisión poco clara. No es YOLOv8n. |
+| Detector preentrenado | YOLOv8n: mAP 37,3 (COCO val, 640 px), 3,2 M de parámetros; COCO tiene 80 clases y la clase 0 es `person` | YOL-1, YOL-2 | |
+| Falsos positivos | Un falso positivo es una alarma por algo que no ocurrió ("persona" disparada por una sombra, un gato o el barrido de un faro); un detector de "99 %" puede equivocarse casi en cada alarma si el evento es raro; el análisis de eventos raros debe ser "triaje más verificación, nunca una alarma autónoma" y su salida "una pista, no una decisión". Los operadores "pierden hasta 45 % de la actividad en pantalla tras ~12 min" | HIL-1 | Fuente de un proveedor de videovigilancia (no una norma ni un paper revisado); es opinión de práctica profesional. No se encontró una norma que exija confirmación humana. |
+
+### Qué no se confirmó
+
+- Modelo y TOPS del módulo de cómputo por configuración, según Unitree (solo rango 40-100 TOPS y fichas de distribuidores).
+- FPS y resolución reales del servicio de video del Go2, y el formato de la imagen declarado por Unitree.
+- Rendimiento de YOLOv8n en el módulo concreto del Go2 (los benchmarks son de kits de desarrollo y de la placa Super, que puede ser más rápida que la que viene en el robot).
+- Una norma, guía oficial o paper revisado sobre confirmación humana de detecciones en seguridad.

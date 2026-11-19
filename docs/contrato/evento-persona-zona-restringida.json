@@ -16,6 +16,12 @@
       { "id": "AUTHORIZED_PERSON", "label": "Persona autorizada (registrar)" },
       { "id": "SEND_GUARD", "label": "Enviar vigilante" },
       { "id": "CONTINUE_ROUND", "label": "Continuar ronda" }
-    ]
+    ],
+    "snapshot": {
+      "id": "sim-persona",
+      "mediaType": "image/jpeg",
+      "capturedAt": 1763500149800,
+      "data": null
+    }
   }
 }

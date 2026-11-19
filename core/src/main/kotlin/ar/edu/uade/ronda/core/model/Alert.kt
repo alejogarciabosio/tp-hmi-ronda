@@ -1,5 +1,11 @@
 package ar.edu.uade.ronda.core.model
 
+/**
+ * Foto de la cámara frontal adjunta a un incidente. `data` es JPEG en base64 y puede faltar:
+ * en ese caso la app resuelve la imagen por `id`.
+ */
+data class Snapshot(val id: String, val mediaType: String, val capturedAt: Long, val data: String? = null)
+
 enum class Severity { INFO, WARNING, CRITICAL }
 
 enum class AlertType {
@@ -19,6 +25,7 @@ data class Alert(
     val message: String,
     val raisedAt: Long,
     val acknowledged: Boolean,
+    val snapshot: Snapshot? = null,
 )
 
 enum class IncidentType { OBSTACLE, PERSON_IN_RESTRICTED_ZONE, BATTERY_RETURN }
@@ -33,4 +40,5 @@ data class Incident(
     val checkpointIndex: Int,
     val message: String,
     val options: List<IncidentOption>,
+    val snapshot: Snapshot? = null,
 )

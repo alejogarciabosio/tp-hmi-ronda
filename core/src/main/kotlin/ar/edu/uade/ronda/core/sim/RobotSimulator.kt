@@ -39,6 +39,7 @@ import ar.edu.uade.ronda.core.model.RouteId
 import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.model.ServiceTelemetry
 import ar.edu.uade.ronda.core.model.Severity
+import ar.edu.uade.ronda.core.model.Snapshot
 import ar.edu.uade.ronda.core.model.TempTrend
 import ar.edu.uade.ronda.core.policy.BatteryPolicy
 import kotlin.math.abs
@@ -191,7 +192,7 @@ class RobotSimulator(
             stopMoving()
             state = FALLA
             incident = null
-            raiseAlert(nowMs, AlertType.ROBOT_FAULT, Severity.CRITICAL, "Falla del robot. Requiere técnico.")
+            raiseAlert(nowMs, AlertType.ROBOT_FAULT, Severity.CRITICAL, "Falla del robot. Requiere técnico.", snapshot("sim-falla", nowMs))
         }
         return drain()
     }
@@ -592,7 +593,7 @@ class RobotSimulator(
 
     private fun raiseObstacle(now: Long) {
         val stop = stops[nextStop]
-        raiseAlert(now, AlertType.OBSTACLE, Severity.WARNING, "Objeto detectado en el pasillo, a ${INCIDENT_DISTANCE_M.toInt()} m.")
+        raiseAlert(now, AlertType.OBSTACLE, Severity.WARNING, "Objeto detectado en el pasillo, a ${INCIDENT_DISTANCE_M.toInt()} m.", snapshot("sim-obstaculo", now))
         requireDecision(
             now,
             Incident(
@@ -603,13 +604,14 @@ class RobotSimulator(
                     IncidentOption("SKIP_CHECKPOINT", "Saltar el ${stop.id}"),
                     IncidentOption("RETURN_TO_SAFE_POINT", "Regresar a la base", SafePointId.BASE),
                 ),
+                snapshot("sim-obstaculo", now),
             ),
         )
     }
 
     private fun raisePerson(now: Long) {
         val stop = stops[nextStop]
-        raiseAlert(now, AlertType.PERSON_DETECTED, Severity.CRITICAL, "Persona detectada en ${stop.zone}. El robot mantiene 2 m y se identificó por parlante.")
+        raiseAlert(now, AlertType.PERSON_DETECTED, Severity.CRITICAL, "Persona detectada en ${stop.zone}. El robot mantiene 2 m y se identificó por parlante.", snapshot("sim-persona", now))
         requireDecision(
             now,
             Incident(
@@ -620,6 +622,7 @@ class RobotSimulator(
                     IncidentOption("SEND_GUARD", "Enviar vigilante"),
                     IncidentOption("CONTINUE_ROUND", "Continuar ronda"),
                 ),
+                snapshot("sim-persona", now),
             ),
         )
     }
@@ -640,8 +643,11 @@ class RobotSimulator(
         linkHold = false
     }
 
-    private fun raiseAlert(now: Long, type: AlertType, severity: Severity, message: String) {
-        val alert = Alert(nextId("a"), type, severity, message, now, acknowledged = false)
+    /** El simulador no genera imagen: manda solo el id y la app la resuelve (`data` null). */
+    private fun snapshot(id: String, now: Long) = Snapshot(id, "image/jpeg", now)
+
+    private fun raiseAlert(now: Long, type: AlertType, severity: Severity, message: String, snapshot: Snapshot? = null) {
+        val alert = Alert(nextId("a"), type, severity, message, now, acknowledged = false, snapshot = snapshot)
         alerts += alert
         outbox += SimOutput(
             OutputKind.EVENT,

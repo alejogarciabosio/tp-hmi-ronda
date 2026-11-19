@@ -7,6 +7,7 @@ import ar.edu.uade.ronda.core.model.CommandAck
 import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.EmergencyExit
 import ar.edu.uade.ronda.core.model.Incident
+import ar.edu.uade.ronda.core.model.Snapshot
 import ar.edu.uade.ronda.core.model.IncidentOption
 import ar.edu.uade.ronda.core.model.MissionProgress
 import ar.edu.uade.ronda.core.model.Motion
@@ -92,7 +93,11 @@ object ContractCodec {
         ),
     )
 
-    private fun AlertDto.toDomain() = Alert(id, type, severity, message, raisedAt, acknowledged)
+    private fun SnapshotDto.toDomain() = Snapshot(id, mediaType, capturedAt, data)
+
+    private fun Snapshot.toDto() = SnapshotDto(id, mediaType, capturedAt, data)
+
+    private fun AlertDto.toDomain() = Alert(id, type, severity, message, raisedAt, acknowledged, snapshot?.toDomain())
 
     private fun CommandDto.toDomain() = Command(
         messageId = messageId,
@@ -119,7 +124,7 @@ object ContractCodec {
             val i = incident ?: throw ContractException("DECISION_REQUIRED sin 'incident'")
             RobotEvent.DecisionRequired(
                 messageId, robotId, timestamp, severity,
-                Incident(i.id, i.type, i.checkpointIndex, i.message, i.options.map { IncidentOption(it.id, it.label, it.safePointId) }),
+                Incident(i.id, i.type, i.checkpointIndex, i.message, i.options.map { IncidentOption(it.id, it.label, it.safePointId) }, i.snapshot?.toDomain()),
             )
         }
     }
@@ -147,7 +152,7 @@ object ContractCodec {
         ),
     )
 
-    private fun Alert.toDto() = AlertDto(id, type, severity, message, raisedAt, acknowledged)
+    private fun Alert.toDto() = AlertDto(id, type, severity, message, raisedAt, acknowledged, snapshot?.toDto())
 
     private fun Command.toDto() = CommandDto(
         messageId = messageId,
@@ -185,6 +190,7 @@ object ContractCodec {
             incident = IncidentDto(
                 incident.id, incident.type, incident.checkpointIndex, incident.message,
                 incident.options.map { IncidentOptionDto(it.id, it.label, it.safePointId) },
+                incident.snapshot?.toDto(),
             ),
         )
     }

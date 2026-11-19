@@ -178,6 +178,7 @@ class EscenariosTest {
         val incidente = assertNotNull(rig.repo.activeIncident.value)
         assertEquals(IncidentType.PERSON_IN_RESTRICTED_ZONE, incidente.type)
         assertEquals(5, incidente.checkpointIndex)
+        assertEquals("sim-persona", incidente.snapshot?.id)
         assertEquals(listOf("AUTHORIZED_PERSON", "SEND_GUARD", "CONTINUE_ROUND"), incidente.options.map { it.id })
         val alerta = rig.telemetry.alerts.single { it.type == AlertType.PERSON_DETECTED }
 
