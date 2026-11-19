@@ -18,7 +18,20 @@ data class SimulationSettings(
     val responseDelayMs: Long = 0,
     val latencyOverrideMs: Int? = null,
     val drainFactor: Double = 1.0,
-)
+    /** Escala de tiempo de la simulación: ×1, ×4 u ×8 (ver [ALLOWED_TIME_SCALES]). */
+    val timeScale: Double = 1.0,
+    /**
+     * Por qué ahora no se puede inyectar un obstáculo ni una persona (sin enlace, o el robot no está
+     * en ronda), o `null` si se puede. La UI lo usa para deshabilitar esos botones con el motivo.
+     */
+    val incidentInjectionBlockedReason: String? = null,
+    /** Motivo del último rechazo de una inyección de obstáculo o persona; se borra con la próxima aceptada. */
+    val lastInjectionRejection: String? = null,
+) {
+    companion object {
+        val ALLOWED_TIME_SCALES: List<Double> = listOf(1.0, 4.0, 8.0)
+    }
+}
 
 /**
  * Controles del panel de simulación. Es una interfaz aparte de `RobotRepository`:
@@ -38,6 +51,20 @@ interface SimulationControl {
     fun rejectNextCommand(reason: RejectReason = RejectReason.INVALID_STATE, text: String? = null)
     fun setResponseDelayMs(delayMs: Long)
     fun setLatencyMs(latencyMs: Int?)
+
+    /**
+     * Acelera la simulación: el robot se mueve y sus fases avanzan `scale` veces más rápido. Valores
+     * permitidos: 1, 4 y 8 ([SimulationSettings.ALLOWED_TIME_SCALES]); otro valor lanza
+     * `IllegalArgumentException`. La conexión y el vencimiento de las órdenes siguen con el reloj real.
+     * Cargar un escenario o reiniciar no cambia la escala.
+     */
+    fun setTimeScale(scale: Double)
+
+    /**
+     * Inyectan un obstáculo o una persona delante del robot. Solo se aceptan con enlace y con el robot
+     * en ronda; si no, no pasa nada en el robot y el motivo queda en
+     * [SimulationSettings.lastInjectionRejection].
+     */
     fun injectObstacle()
     fun injectPersonInRestrictedZone()
     fun injectFault()

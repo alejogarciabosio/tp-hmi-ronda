@@ -8,6 +8,7 @@ import ar.edu.uade.ronda.core.model.IncidentType
 import ar.edu.uade.ronda.core.model.RejectReason
 import ar.edu.uade.ronda.core.transport.Transport
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,12 +44,17 @@ class FakeTransport(
 
     private val heldEvents = ArrayDeque<String>()
 
+    /** Temporizador de "cortar enlace N s": se cancela si el panel toca el enlace, reinicia o carga un escenario. */
+    @Volatile
+    private var linkRestoreJob: Job? = null
+
     init {
         scope.launch {
             while (isActive) {
                 delay(tickMs)
                 val outputs = synchronized(lock) { simulator.tick(clock.nowMs()) }
                 deliver(outputs)
+                refreshInjectionAvailability()
             }
         }
     }
@@ -79,6 +85,22 @@ class FakeTransport(
 
     // ---- SimulationControl ----
 
+    private fun cancelLinkTimer() {
+        linkRestoreJob?.cancel()
+        linkRestoreJob = null
+    }
+
+    private fun injectionBlockedReason(): String? =
+        if (!_settings.value.linkUp) "Sin enlace con el robot: no se puede inyectar un obstáculo ni una persona."
+        else synchronized(lock) { simulator.incidentInjectionBlockedReason() }
+
+    private fun refreshInjectionAvailability() {
+        val reason = injectionBlockedReason()
+        if (_settings.value.incidentInjectionBlockedReason != reason) {
+            _settings.update { it.copy(incidentInjectionBlockedReason = reason) }
+        }
+    }
+
     override fun loadScenario(scenario: SimScenario) {
         reset()
         synchronized(lock) {
@@ -98,20 +120,30 @@ class FakeTransport(
     }
 
     override fun setLinkUp(up: Boolean) {
+        cancelLinkTimer()
+        applyLink(up)
+    }
+
+    private fun applyLink(up: Boolean) {
         val flushed = synchronized(lock) {
             if (_settings.value.linkUp == up) return
             _settings.update { it.copy(linkUp = up) }
-            simulator.setLinkUp(clock.nowMs(), up)
+            // Con el enlace caído, la alerta de enlace perdido queda retenida con su hora original.
+            val outputs = simulator.setLinkUp(clock.nowMs(), up)
+            outputs.filter { it.kind == OutputKind.EVENT }.forEach { heldEvents.addLast(it.json) }
             if (up) heldEvents.toList().also { heldEvents.clear() } else emptyList()
         }
         flushed.forEach { _incoming.tryEmit(it) }
+        refreshInjectionAvailability()
     }
 
     override fun cutLinkFor(durationMs: Long) {
-        setLinkUp(false)
-        scope.launch {
+        cancelLinkTimer()
+        applyLink(false)
+        linkRestoreJob = scope.launch {
             delay(durationMs)
-            setLinkUp(true)
+            linkRestoreJob = null
+            applyLink(true)
         }
     }
 
@@ -126,8 +158,28 @@ class FakeTransport(
         _settings.update { it.copy(latencyOverrideMs = latencyMs) }
     }
 
-    override fun injectObstacle() = deliver(synchronized(lock) { simulator.injectObstacle(clock.nowMs()) })
-    override fun injectPersonInRestrictedZone() = deliver(synchronized(lock) { simulator.injectPerson(clock.nowMs()) })
+    override fun setTimeScale(scale: Double) {
+        require(scale in SimulationSettings.ALLOWED_TIME_SCALES) {
+            "Escala de tiempo no permitida: $scale (válidas: ${SimulationSettings.ALLOWED_TIME_SCALES})"
+        }
+        synchronized(lock) { simulator.setTimeScale(clock.nowMs(), scale) }
+        _settings.update { it.copy(timeScale = scale) }
+    }
+
+    override fun injectObstacle() = injectIncident { simulator.injectObstacle(it) }
+    override fun injectPersonInRestrictedZone() = injectIncident { simulator.injectPerson(it) }
+
+    /** Rechaza la inyección de forma explícita (motivo en `settings`) si no hay enlace o el robot no está en ronda. */
+    private fun injectIncident(inject: (Long) -> List<SimOutput>) {
+        val reason = injectionBlockedReason()
+        if (reason != null) {
+            _settings.update { it.copy(lastInjectionRejection = reason, incidentInjectionBlockedReason = reason) }
+            return
+        }
+        _settings.update { it.copy(lastInjectionRejection = null) }
+        deliver(synchronized(lock) { inject(clock.nowMs()) })
+        refreshInjectionAvailability()
+    }
     override fun injectFault() = deliver(synchronized(lock) { simulator.injectFault(clock.nowMs()) })
 
     override fun setBatteryPercent(percent: Int) = synchronized(lock) { simulator.setBatteryPercent(percent) }
@@ -136,10 +188,13 @@ class FakeTransport(
         synchronized(lock) { simulator.setExitObstructed(exitId, obstructed) }
 
     override fun reset() {
+        cancelLinkTimer()
         synchronized(lock) {
             simulator.reset()
             heldEvents.clear()
         }
-        _settings.value = SimulationSettings()
+        // Reiniciar no cambia la velocidad de la demo.
+        _settings.value = SimulationSettings(timeScale = _settings.value.timeScale)
+        refreshInjectionAvailability()
     }
 }
