@@ -82,6 +82,47 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **En la app.** Al elegir una opción, la hoja se cierra en el acto; si el robot rechaza la orden, el incidente sigue abierto y "Decidir cómo seguir" la reabre. Mientras el robot espera tras `SEND_GUARD`, Supervisión muestra arriba "Vigilante en camino · el robot espera tu orden para seguir" y la franja de estado pide reanudar. El historial guarda la opción elegida junto a la orden ("Orden: Reconocer alerta · Enviar vigilante · confirmada", "Orden: Reanudar · Saltar el PC4 · verificada"): la base guarda el valor crudo (`commandOption`, `checkpointIndex`) y la pantalla lo traduce con `Etiquetas`, así la capa de datos no depende de la UI. Sin imágenes ni datos de la persona.
 - **Consecuencias.** La espera del vigilante es una pausa común: se reanuda, se regresa o se cancela con las mismas órdenes de siempre, y no hace falta un estado nuevo en el contrato. El robot no sabe cuándo llegó el vigilante; lo decide el operador.
 
+## D13. Modo acelerado (×1, ×4, ×8)
+
+- **Contexto.** Una ronda completa tardaba unos 8,5 minutos reales: imposible de mostrar entera en la demo en vivo (antes L3).
+- **Decisión.** `SimulationControl.setTimeScale(scale)` acepta 1, 4 u 8 (`SimulationSettings.ALLOWED_TIME_SCALES`) y la escala vigente se publica en `SimulationSettings.timeScale`. El simulador lleva un reloj de simulación propio que avanza la hora real multiplicada por la escala: con él corren el desplazamiento, la preparación, la verificación de cada punto, la espera de 30 s ante un obstáculo, el regreso automático a los 60 s sin enlace, la batería y la temperatura. Cargar un escenario o reiniciar no cambia la escala.
+- **Lo que no se acelera.** La telemetría sigue saliendo a 2 Hz reales, el vencimiento de las órdenes (`ttlMs`), la antigüedad de la telemetría que define la conexión y los timestamps de los mensajes usan el reloj real. Así la app se comporta igual que con un robot real: solo el robot "camina más rápido".
+- **Escalera.** Al revisar los tiempos se encontró que el tramo que cambia de piso iba entero a velocidad de escalera (PC8→base, 57 m, tardaba 143 s). Ahora solo los 12 m de escalera van a 0,4 m/s y el resto se camina a 0,8 m/s (PC8→base ≈ 87 s). El modo de movimiento muestra ESCALERA solo en ese tramo.
+- **Consecuencias.** A ×8 la ronda completa dura alrededor de un minuto. A esa escala el robot recorre ~3 m por mensaje de telemetría: el mapa salta más entre muestras.
+
+## D14. Al cancelar, el robot regresa solo a la base
+
+- **Contexto.** Tras "Cancelar" el robot quedaba varado en `CANCELADA` hasta que el operador ordenara regresar.
+- **Decisión.** Igual que con `COMPLETADA`: a los ~2 s (de simulación) el robot inicia solo el regreso a la base. En esos 2 s el operador todavía puede elegir otro punto seguro con "Regresar".
+- **Llegada sin misión.** Si el robot llega a un punto seguro sin una ruta activa (por ejemplo, Cancelar y luego "Ir al descanso de la escalera E"), queda `DETENIDO` y la telemetría ya no trae misión. `CommandPolicy` recibe `hasMission` y deshabilita Reanudar y Cancelar sin misión; el robot también rechaza Reanudar. La salida es "Regresar a la base".
+
+## D15. Detención operativa durante una decisión
+
+- **Contexto.** Detener al robot mientras esperaba una decisión lo dejaba `DETENIDO`, el repositorio borraba el incidente y, al reanudar, el robot volvía a `REQUIERE_DECISION` sin volver a pedirla: la app no tenía opciones que mostrar.
+- **Decisión.** El repositorio conserva el incidente mientras el robot esté `DETENIDO` viniendo de `REQUIERE_DECISION`. Reanudar (habilitado aunque la alerta crítica de persona siga sin reconocer, porque no mueve al robot) devuelve al robot a `REQUIERE_DECISION` y el robot reemite `DECISION_REQUIRED` con el mismo incidente. Mientras está detenido no se acepta reconocer la alerta de persona sin decidir: se rechaza con motivo para no dejar la decisión sin salida.
+
+## D16. Verificación por telemetría sin respuesta
+
+- **Contexto.** Una orden ejecutada cuya respuesta se perdió o llegó tarde quedaba SIN RESPUESTA para siempre, aunque la telemetría mostrara el efecto.
+- **Decisión.** `CommandTracker` guarda el estado operativo al enviar (`TrackedCommand.stateAtSend`). Si la orden vence sin respuesta pero una telemetría posterior al envío ya mostró un cambio coherente con la orden respecto de ese estado (por ejemplo, de `EN_RONDA` a `PAUSADA` para Pausar), pasa a VERIFICADA con `verifiedWithoutAck = true`; lo mismo si el cambio aparece después de quedar SIN RESPUESTA. Mientras corre el ttl se espera la respuesta: si llega a tiempo, la verificación es la normal. La UI lo muestra como "Verificada por telemetría (sin confirmación)".
+- **Para evitar falsos positivos.** Sin telemetría previa al envío no se verifica sin respuesta; si el estado ya era el esperado al enviar, tampoco; y el cambio tiene que ser el de la orden (una pausa no se verifica porque el robot quedó DETENIDO). Una detención enviada sin enlace sí se verifica si el robot se detuvo solo por la pérdida de enlace: el efecto pedido (robot quieto) es real.
+
+## D17. Enlace perdido e inyecciones durante el corte
+
+- **Decisión.** Al cortarse el enlace con el robot en movimiento, el robot se detiene y emite `ALERT_RAISED` `LINK_DEGRADED` (WARNING) "Enlace perdido: me detuve en <zona>". El transporte la retiene y la entrega al volver el enlace con su hora original. Durante el corte, inyectar un obstáculo o una persona se rechaza en forma explícita: `SimulationSettings.lastInjectionRejection` trae el motivo, y `incidentInjectionBlockedReason` dice en todo momento si se puede inyectar (sin enlace, o el robot no está en ronda) para que la UI deshabilite esos botones. Inyectar una falla sí se permite: es lo que muestra la retención de eventos.
+- **Temporizador.** "Cortar enlace 15 s" guarda su temporizador y lo cancela si el panel toca el enlace a mano, reinicia o carga un escenario.
+
+## D18. Salida de la falla
+
+- **Contexto.** "Inyectar falla" dejaba al robot en `FALLA` sin ninguna orden posible.
+- **Decisión.** La falla se despeja de dos maneras: (1) el operador reconoce la alerta `ROBOT_FAULT` y ordena "Regresar a la base"; el robot vuelve y queda `EN_BASE`, donde lo atiende el técnico, y la misión se da por terminada. Solo se acepta regresar a la base, no al descanso de la escalera. (2) "Reiniciar" en el panel de simulación, que representa al técnico reiniciando el robot. La alerta lleva la foto `sim-falla` como `snapshot` (D9).
+- **Consecuencias.** Es un supuesto de la simulación: en un robot real, si la falla impide caminar, la única salida es el técnico en sitio.
+
+## D19. Una sola numeración de puntos de control en los incidentes
+
+- **Contexto.** En las rutas cortas el título del incidente decía "· PC3" (posición en la ruta) y la opción "Saltar el PC5" (número del edificio).
+- **Decisión.** `incident.checkpointIndex` es el número del punto de control en el edificio (PC5 → 5), el mismo del plano y de las opciones. `mission.checkpointIndex` sigue siendo el progreso dentro de la ruta (3 de 3). En la ronda completa ambos coinciden.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo RG7)
@@ -92,15 +133,15 @@ El Go2 declara un escalón máximo de unos 16 cm. Esto no se puede simular: depe
 
 El contrato de `docs/contrato/` es una propuesta del grupo y no el protocolo oficial de Unitree. Un gateway real traduciría estos mensajes a llamadas del SDK.
 
-### L3. Sin velocidad de simulación ×4
+### L3. Velocidad de simulación
 
-El plan preveía un selector ×1/×4 en el panel. No se implementó: el simulador avanza con el reloj real y acelerarlo exige un reloj propio en `core`. Una ronda completa dura unos 8 minutos y medio, así que la demo usa las inyecciones del panel (batería, obstáculo, persona, corte de enlace) para llegar a cada situación sin esperar la ronda entera.
+Resuelta: ver D13. El selector ×1/×4/×8 lo ofrece el panel de simulación.
 
 ### L4. Diferencias entre la app y el Figma
 
 - **Batería mínima por ruta:** la app exige 40 % para la ronda completa, 35 % para la sala técnica y 34 % para las salidas de emergencia (`BatteryPolicy`, D8). El Figma muestra 20 % y 15 % para las rutas cortas, valores anteriores al recálculo de D8.
 - **Posición de la base:** la app dibuja la base donde la ubica `BuildingLayout.base`, arriba a la izquierda de PB, para que el robot en base quede sobre el cuadro BASE. El Figma y `recorrido.svg` la ubican abajo a la izquierda, en la garita (ver `design/FIGMA.md`).
-- **Panel de simulación:** botones de escenario y demora distintos (ver D10) y sin selector de velocidad (L3).
+- **Panel de simulación:** botones de escenario y demora distintos (ver D10); el selector de velocidad suma ×8 (D13).
 - **Color del dato viejo:** la app usa `#908B7C` (ver L5); el Figma conserva `#6E6A5E` en `estado/sin-datos`.
 
 ### L5. Contraste del gris de dato viejo

@@ -54,6 +54,17 @@ En la app, el simulador de `:core` produce y consume estos mismos mensajes a tra
 
 El gateway solo responde `CONFIRMED` o `REJECTED`. Los estados `PENDIENTE` y `SIN_RESPUESTA` (timeout de 4 s) los calcula la app, y la ejecución verificada surge de la telemetría.
 
+Si la respuesta no llega pero una telemetría posterior al envío muestra un cambio de estado coherente con la orden (respecto del que había al enviarla), la app la da por VERIFICADA "por telemetría (sin confirmación)" en vez de dejarla SIN_RESPUESTA (ver D16).
+
+## Alertas del robot que no abren decisión
+
+- `LINK_DEGRADED` (WARNING): al perder el enlace en movimiento el robot se detiene y avisa "Enlace perdido: me detuve en <zona>". La alerta viaja cuando el enlace vuelve, con su `timestamp` y `raisedAt` originales. Si en 60 s no vuelve, el robot regresa solo a la base.
+- `ROBOT_FAULT` (CRITICAL): el robot queda en `FALLA` y solo acepta `ACKNOWLEDGE_ALERT`. Reconocida la falla, acepta `RETURN_TO_SAFE_POINT` a `BASE` (no al descanso), y al llegar queda `EN_BASE` (ver D18).
+
+## Estados después de terminar o cancelar
+
+`COMPLETADA` y `CANCELADA` duran unos 2 s: después el robot pasa solo a `REGRESANDO` hacia la base. Si se lo manda a un punto seguro sin misión activa, llega `DETENIDO` y sin `mission`; `RESUME_MISSION` se rechaza y la salida es regresar a la base (ver D14).
+
 ## Códigos de rechazo (`reasonCode`)
 
 `INVALID_STATE`, `LOW_BATTERY`, `NOT_CONNECTED`, `COMMAND_PENDING`, `UNACKNOWLEDGED_ALERT`, `EXPIRED`, `UNKNOWN_TARGET`.
@@ -62,7 +73,7 @@ El gateway solo responde `CONFIRMED` o `REJECTED`. Los estados `PENDIENTE` y `SI
 
 Las `options` de `DECISION_REQUIRED` son las que la UI ofrece al operador. La respuesta viaja como uno de los siete comandos: regresar usa `RETURN_TO_SAFE_POINT`; esperar o saltar el punto de control usan `RESUME_MISSION` con el parámetro opcional `decision` (`WAIT_30S`, `SKIP_CHECKPOINT`); el resultado de la persona en zona restringida usa `ACKNOWLEDGE_ALERT` con `resolution`.
 
-`checkpointIndex` del incidente es 1-based y usa la misma numeración que `mission.checkpointIndex`: la posición dentro de la ruta de la misión, del punto de control que el robot estaba alcanzando al detenerse (todavía no verificado). Los verificados hasta ahí se cuentan en `service.checkpointsVerified`. No es el número del PC del edificio: en la ruta `SOLO_SALA_TECNICA` la sala técnica (PC5) es el índice 3.
+`checkpointIndex` del incidente es el número del punto de control en el edificio, el mismo del plano y de las opciones (`Saltar el PC5`): el del punto que el robot estaba alcanzando al detenerse (todavía no verificado). Los verificados hasta ahí se cuentan en `service.checkpointsVerified`. No es la posición dentro de la ruta: esa es `mission.checkpointIndex`, el progreso. En la ruta `SOLO_SALA_TECNICA` la sala técnica es el incidente `checkpointIndex: 5` y la misión va por `checkpointIndex: 3` de 3. En la ronda completa coinciden (ver D19).
 
 La opción `RETURN_TO_SAFE_POINT` lleva `safePointId` (`BASE` o `DESCANSO_ESCALERA_E`); la app lo copia al comando `RETURN_TO_SAFE_POINT` que envía. Las demás opciones no llevan `safePointId`.
 
