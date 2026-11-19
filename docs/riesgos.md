@@ -7,7 +7,7 @@ Dos aclaraciones que valen para todo el documento:
 - La "Detención operativa (software)" de la app es una orden simulada enviada al robot. **No reemplaza la parada de emergencia física** ni el corte de energía del robot.
 - Una orden enviada no es una orden ejecutada. La app distingue enviada, aceptada y verificada por telemetría.
 
-Cada riesgo se describe con causa, consecuencia, medida (de interfaz, de lógica o de procedimiento) y la forma de verificar que la medida existe y funciona. "Verificación" remite a escenarios del simulador (E1 a E5, ver preentrega §9) o a tests de `core`; los nombres de tests citados existen en el repositorio.
+Cada riesgo se describe con causa, consecuencia, medida (de interfaz, de lógica o de procedimiento) y la forma de verificar que la medida existe y funciona. "Verificación" remite a escenarios del simulador (E1 a E5, ver entrega final §12) o a tests de `core`; los tests citados son los de `core` y `app` del repositorio, sin los nombres exactos de cada caso.
 
 ## Resumen
 
