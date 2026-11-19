@@ -83,4 +83,45 @@ class HistoryMapperTest {
         val closed = t.onTelemetry(telemetry(3, OperationalState.EN_BASE))!!
         assertEquals("CANCELADA", closed.result)
     }
+
+    @Test fun rondaCompletadaQueRegresaALaBaseSigueCompletada() {
+        val t = MissionTracker()
+        t.onTelemetry(telemetry(2, OperationalState.EN_RONDA, progress()))
+        val closed = t.onTelemetry(telemetry(3, OperationalState.COMPLETADA, progress(), verified = 8))!!
+        assertEquals("COMPLETADA", closed.result)
+        // El robot sigue informando la misma misión mientras vuelve: no se reabre ni se recierra.
+        assertNull(t.onTelemetry(telemetry(4, OperationalState.REGRESANDO, progress(), verified = 8)))
+        assertNull(t.currentMissionId)
+        assertNull(t.onTelemetry(telemetry(5, OperationalState.REGRESANDO, progress(), verified = 8)))
+        assertNull(t.onTelemetry(telemetry(6, OperationalState.EN_BASE)))
+    }
+
+    @Test fun rondaCanceladaQueRegresaALaBaseSigueCancelada() {
+        val t = MissionTracker()
+        t.onTelemetry(telemetry(2, OperationalState.EN_RONDA, progress()))
+        val closed = t.onTelemetry(telemetry(3, OperationalState.CANCELADA, progress(), verified = 2))!!
+        assertEquals("CANCELADA", closed.result)
+        assertEquals(3, closed.endedAt)
+        assertNull(t.onTelemetry(telemetry(4, OperationalState.REGRESANDO, progress(), verified = 2)))
+        assertNull(t.onTelemetry(telemetry(5, OperationalState.EN_BASE)))
+    }
+
+    @Test fun unaMisionNuevaTrasCerrarLaAnteriorSeAbre() {
+        val t = MissionTracker()
+        t.onTelemetry(telemetry(2, OperationalState.EN_RONDA, progress()))
+        t.onTelemetry(telemetry(3, OperationalState.COMPLETADA, progress()))
+        t.onTelemetry(telemetry(4, OperationalState.REGRESANDO, progress()))
+        t.onTelemetry(telemetry(5, OperationalState.EN_BASE))
+        val again = t.onTelemetry(telemetry(6, OperationalState.EN_RONDA, progress("m2")))!!
+        assertEquals("m2", again.id)
+        assertEquals("EN_CURSO", again.result)
+    }
+
+    @Test fun regresarSinTerminarLaRondaLaCierraCanceladaAlLlegar() {
+        val t = MissionTracker()
+        t.onTelemetry(telemetry(2, OperationalState.EN_RONDA, progress()))
+        assertNull(t.onTelemetry(telemetry(3, OperationalState.REGRESANDO, progress())))
+        val closed = t.onTelemetry(telemetry(4, OperationalState.EN_BASE))!!
+        assertEquals("CANCELADA", closed.result)
+    }
 }

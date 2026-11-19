@@ -82,6 +82,12 @@ object HistoryMapper {
 class MissionTracker {
     private var open: MissionRecord? = null
 
+    /**
+     * Misiones ya cerradas. Tras COMPLETADA o CANCELADA el robot sigue informando la misma misión
+     * mientras regresa a la base: esa telemetría no debe reabrirla.
+     */
+    private val closedIds = ArrayDeque<String>()
+
     val currentMissionId: String? get() = open?.id
 
     /** Punto de la ruta que informó la última telemetría con misión. */
@@ -95,7 +101,7 @@ class MissionTracker {
         val result = HistoryMapper.resultOf(t.operationalState)
         val current = open
         if (current == null) {
-            if (m == null || result != null) return null
+            if (m == null || result != null || m.id in closedIds) return null
             return MissionRecord(
                 id = m.id, robotId = t.robotId, routeName = m.name, startedAt = t.timestamp,
                 endedAt = null, result = MissionResult.EN_CURSO.name,
@@ -110,14 +116,24 @@ class MissionTracker {
             anomalies = t.service.checkpointsWithIssues,
         )
         return when {
-            result != null -> updated.copy(endedAt = t.timestamp, result = result.name).also { open = null }
+            result != null -> updated.copy(endedAt = t.timestamp, result = result.name).also { close(current.id) }
             // La misión desapareció sin estado terminal (p. ej. vuelta a base): se cierra como cancelada.
             m == null || m.id != current.id ->
                 current.copy(endedAt = t.timestamp, result = MissionResult.CANCELADA.name).also {
-                    open = null
+                    close(current.id)
                 }
             updated != current -> updated.also { open = it }
             else -> null
         }
+    }
+
+    private fun close(id: String) {
+        open = null
+        closedIds.addLast(id)
+        if (closedIds.size > MAX_CLOSED) closedIds.removeFirst()
+    }
+
+    private companion object {
+        const val MAX_CLOSED = 32
     }
 }
