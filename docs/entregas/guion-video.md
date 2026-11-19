@@ -45,9 +45,9 @@ El simulador corre a velocidad real (una ronda completa dura unos 8 minutos y me
 | Toma | Qué se ve | Qué se dice |
 |---|---|---|
 | 4.1 | Panel: "4 · Obstáculo"; iniciar la ronda; "Inyectar obstáculo" (en la ronda real salta en el PC4) | |
-| 4.2 | Supervisión REQUIERE DECISIÓN; hoja con la foto "IMAGEN SIMULADA" y tres opciones | "El robot no puede pasar: se detiene a un metro y manda una foto de la cámara frontal. Ofrece esperar 30 s, saltar el punto o regresar." |
+| 4.2 | Supervisión REQUIERE DECISIÓN; hoja con la foto "IMAGEN SIMULADA" y tres opciones | "El robot no puede pasar: se detiene a 2 m y manda una foto de la cámara frontal. Ofrece esperar 30 s, saltar el punto o regresar." |
 | 4.3 | Elegir "Saltar el PC4": el punto queda con observación y la ronda sigue | "El punto saltado queda registrado con observación, no como verificado." |
-| 4.4 | Control: "Cancelar misión" con un toque corto (no pasa nada), después mantener 1 s | "Las órdenes destructivas piden mantener presionado: un toque accidental no alcanza." |
+| 4.4 | Control: "Cancelar misión" con un toque corto (no pasa nada), después mantener 1 s | "Cancelar, regresar a la base y detener piden mantener presionado: un toque accidental no alcanza." |
 | 4.5 | Detención operativa (software) con su aclaración | "Este botón es una detención por software y no reemplaza la parada física del robot." |
 
 ## 5. Persona en zona restringida (5:40–6:50)
