@@ -4,7 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -53,7 +53,7 @@ fun ScreenHeader(
         )
         trailing?.let {
             val clickable = if (onTrailingClick != null) {
-                Modifier.heightIn(min = MinTouchTarget).clickable(role = Role.Button, onClick = onTrailingClick).padding(horizontal = 8.dp)
+                Modifier.sizeIn(minWidth = MinTouchTarget, minHeight = MinTouchTarget).clickable(role = Role.Button, onClick = onTrailingClick).padding(horizontal = 8.dp)
             } else Modifier
             Box(clickable, contentAlignment = Alignment.Center) {
                 Text(it, style = RondaType.rotuloChico, color = RondaColors.bone400)

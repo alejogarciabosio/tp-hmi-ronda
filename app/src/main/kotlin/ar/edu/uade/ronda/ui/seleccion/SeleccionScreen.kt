@@ -3,7 +3,7 @@ package ar.edu.uade.ronda.ui.seleccion
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,7 +53,7 @@ fun SeleccionScreen(state: SeleccionUiState, onTakeControl: (String) -> Unit, on
                 modifier = Modifier.weight(1f).semantics { heading() })
             Box(
                 Modifier
-                    .heightIn(min = MinTouchTarget)
+                    .sizeIn(minWidth = MinTouchTarget, minHeight = MinTouchTarget)
                     .clickable(role = Role.Button, onClickLabel = "Abrir el panel de simulación") { onNavigate(Route.SIMULACION) }
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,

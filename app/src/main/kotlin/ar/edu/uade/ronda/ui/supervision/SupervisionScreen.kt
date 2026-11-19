@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -178,7 +178,7 @@ private fun TopRow(onSimulation: () -> Unit) {
         Text("Supervisión", style = RondaType.pantallaTitulo, color = RondaColors.bone100, modifier = Modifier.semantics { heading() })
         Box(
             Modifier
-                .heightIn(min = 48.dp)
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                 .clickable(role = Role.Button, onClickLabel = "Abrir el panel de simulación", onClick = onSimulation)
                 .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center,
@@ -205,7 +205,7 @@ private fun FloorTabs(tabs: List<FloorTabUi>, onSelect: (Int) -> Unit) {
                 style = if (tab.selected) RondaType.botonEtiqueta else RondaType.rotuloSeccion,
                 color = if (tab.selected) RondaColors.signalAmber else RondaColors.bone400,
                 modifier = Modifier
-                    .heightIn(min = 48.dp)
+                    .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                     .border(1.dp, if (tab.selected) RondaColors.signalAmber else RondaColors.ink700, RondaShapes.r2)
                     .selectable(tab.selected, role = Role.Tab, onClick = { onSelect(tab.floor) })
                     .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -225,7 +225,7 @@ internal fun AlertRow(ui: AlertRowUi, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .background(RondaColors.ink900, RondaShapes.r2)
             .border(1.dp, ui.level.color(), RondaShapes.r2)
             .clickable(role = Role.Button, onClickLabel = "Abrir alertas", onClick = onClick)
