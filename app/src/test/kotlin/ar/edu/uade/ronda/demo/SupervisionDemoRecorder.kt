@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ar.edu.uade.ronda.ui.session.ControlSession
 import ar.edu.uade.ronda.core.Clock
+import androidx.compose.runtime.remember
+import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
+import ar.edu.uade.ronda.ui.operacion.ProvideOperationalBar
 import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.RejectReason
@@ -92,7 +95,9 @@ class SupervisionDemoRecorder {
                         label, color = Color(0xFFF2B33D), fontSize = 12.sp,
                         modifier = Modifier.fillMaxWidth().background(Color(0xFF0E0D0B)).padding(horizontal = 12.dp, vertical = 6.dp),
                     )
-                    Box(Modifier.fillMaxSize()) { SupervisionRoute(vm, onNavigate = {}) }
+                    // Como en el NavHost: la barra fija de detención operativa la provee un ViewModel compartido.
+                    val bar = remember { OperationalBarViewModel(repo, clock) }
+                    ProvideOperationalBar(bar) { Box(Modifier.fillMaxSize()) { SupervisionRoute(vm, onNavigate = {}) } }
                 }
             }
         }
