@@ -21,3 +21,23 @@ Son la salida de `ScenarioTranscriptsTest` (en `core/src/test/.../scenarios/`), 
 La tarea corre solo esa clase de tests y reescribe los archivos de `transcripciones/`. Con `./gradlew :core:test` los escenarios se ejecutan y se verifican igual, pero no se escribe nada. Si cambia el simulador, hay que regenerar y commitear las transcripciones.
 
 Las transcripciones salen del simulador: demuestran el comportamiento de la app y el contrato propio del grupo, no el de un robot real.
+
+## Video y capturas de la pantalla Supervisión
+
+`video/supervision-demo.mp4` (unos 50 s, 540 px de ancho, H.264 yuv420p) muestra la pantalla Supervisión real: el ViewModel real conectado al repositorio simulado, con tiempo virtual y semilla fija (42). Guion con el rótulo del paso arriba:
+
+1. Ronda normal: avanza hasta el PC 3.
+2. Obstáculo: se abre la hoja de decisión y se elige "Saltar el PC4".
+3. Enlace cortado: "Desconectado · hace N s", valores en estado último conocido, nunca "Conectado".
+4. Enlace restaurado: el robot quedó detenido y el operador reanuda.
+5. Rechazo forzado de "Pausar", con su motivo visible en Órdenes.
+
+`capturas/supervision-*.png` son los cuadros clave de cada paso.
+
+### Cómo regenerarlos
+
+```bash
+./gradlew :app:recordDemo
+```
+
+La tarea corre solo `SupervisionDemoRecorder` (Robolectric con gráficos nativos, sin emulador), escribe los cuadros en `app/build/demo-frames` y `docs/evidencias/armar-demo.sh` arma el MP4 y copia las capturas con ffmpeg (hay que tenerlo instalado). Ese test está excluido de `:app:testDebugUnitTest`. Es la app corriendo contra el simulador, no contra un robot real.
