@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "type": "COMMAND",
+  "messageId": "c-0001",
+  "robotId": "RONDA-01",
+  "issuedAt": 1763500000000,
+  "issuedAtIso": "2025-11-18T21:06:40.000Z",
+  "operatorId": "garita-pb",
+  "command": "START_MISSION",
+  "params": { "routeId": "RONDA_COMPLETA" },
+  "ttlMs": 4000
+}
