@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ar.edu.uade.ronda.core.control.SimScenario
 import ar.edu.uade.ronda.core.control.SimulationControl
+import ar.edu.uade.ronda.core.control.SimulationSettings
 import ar.edu.uade.ronda.core.repository.RobotRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -67,6 +68,10 @@ class SimulacionViewModel(
     fun onBatteryStep(delta: Int) {
         val current = repository.telemetry.value?.battery?.percent ?: return
         control.setBatteryPercent((current + delta).coerceIn(0, 100))
+    }
+
+    fun onTimeScale(scale: Double) {
+        if (scale in SimulationSettings.ALLOWED_TIME_SCALES && scale != control.settings.value.timeScale) control.setTimeScale(scale)
     }
 
     fun onReset() {

@@ -165,4 +165,45 @@ class SimulacionViewModelTest {
         advanceUntilIdle()
         assertFalse(vm.uiState.value.toggles.first { it.toggle == SimToggle.REJECT_NEXT }.on)
     }
+
+    @Test fun elEscenarioCargadoSeDiceConTexto() {
+        val s = SimulacionMapper.map(inputs(SimulationSettings(scenario = SimScenario.DISCONNECTION)))
+        assertTrue(s.scenarios.single { it.selected }.label.endsWith("· cargado"))
+        assertTrue(s.scenarios.filter { !it.selected }.none { it.label.contains("cargado") })
+    }
+
+    @Test fun conElEnlaceCaidoNoSeInyectaObstaculoNiPersona() {
+        val s = SimulacionMapper.map(inputs(SimulationSettings(linkUp = false)))
+        listOf(SimInjection.OBSTACLE, SimInjection.PERSON).forEach { k ->
+            val b = s.injections.first { it.injection == k }.button
+            assertEquals(CommandUiState.DISABLED, b.state)
+            assertTrue(b.reason!!.startsWith("Sin enlace"))
+        }
+    }
+
+    @Test fun elMotivoDelSimuladorBloqueaLaInyeccion() {
+        val s = SimulacionMapper.map(inputs(SimulationSettings(incidentInjectionBlockedReason = "El robot está verificando un punto.")))
+        assertEquals("El robot está verificando un punto.", s.injections.first { it.injection == SimInjection.OBSTACLE }.button.reason)
+    }
+
+    @Test fun laAyudaDelEscenario3DescribeComoSeDemuestra() {
+        val hint = SimulacionMapper.map(inputs(SimulationSettings(scenario = SimScenario.DISCONNECTION))).scenarioHint
+        assertTrue(hint.contains("Cortar enlace 15 s"))
+        assertTrue(hint.contains("falla"))
+        assertTrue(hint.contains("SIN RESPUESTA"))
+    }
+
+    @Test fun elSelectorDeVelocidadMuestraElValorActualYLoCambia() = runTest(dispatcher) {
+        val control = FakeSimulationControl()
+        val vm = SimulacionViewModel(control, FakeRobotRepository())
+        subscribe(vm)
+        assertEquals("Velocidad · ×1", vm.uiState.value.timeScaleTitle)
+        assertEquals(listOf("×1", "×4", "×8"), vm.uiState.value.timeScales.map { it.label })
+        vm.onTimeScale(4.0); advanceUntilIdle()
+        assertEquals("scale:4.0", control.calls.last())
+        assertEquals("Velocidad · ×4", vm.uiState.value.timeScaleTitle)
+        assertEquals(4.0, vm.uiState.value.timeScales.single { it.selected }.scale, 0.0)
+        vm.onTimeScale(3.0)
+        assertEquals("scale:4.0", control.calls.last())
+    }
 }

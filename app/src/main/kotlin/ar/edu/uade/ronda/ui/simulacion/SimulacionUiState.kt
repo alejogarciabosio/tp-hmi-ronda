@@ -27,6 +27,9 @@ data class SimInjectionUi(
     val description: String,
 )
 
+/** Una opción del selector de velocidad: ×1, ×4 u ×8. */
+data class TimeScaleUi(val scale: Double, val label: String, val selected: Boolean)
+
 data class SimulacionUiState(
     val scenarios: List<ScenarioUi>,
     /** Qué hacer después de cargar el escenario elegido para que se vea en la app. */
@@ -37,4 +40,7 @@ data class SimulacionUiState(
     val batteryTitle: String,
     val batteryMinus: CommandButtonUi,
     val batteryPlus: CommandButtonUi,
+    /** "Velocidad · ×4" */
+    val timeScaleTitle: String = "Velocidad · ×1",
+    val timeScales: List<TimeScaleUi> = emptyList(),
 )

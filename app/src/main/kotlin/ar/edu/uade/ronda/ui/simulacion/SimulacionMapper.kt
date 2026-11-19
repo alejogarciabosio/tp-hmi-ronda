@@ -29,7 +29,7 @@ object SimulacionMapper {
         val battery = i.telemetry?.battery?.percent
         return SimulacionUiState(
             scenarios = SimScenario.entries.mapIndexed { idx, sc ->
-                ScenarioUi(sc, "${idx + 1} · ${sc.displayName}", sc == s.scenario)
+                ScenarioUi(sc, "${idx + 1} · ${sc.displayName}" + if (sc == s.scenario) " · cargado" else "", sc == s.scenario)
             },
             scenarioHint = hint(s.scenario),
             toggles = listOf(
@@ -58,29 +58,34 @@ object SimulacionMapper {
                 if (s.linkUp) null else "El enlace ya está cortado.",
             ),
             injections = listOf(
-                injection(SimInjection.OBSTACLE, "Inyectar obstáculo", "El robot se detiene y pide decisión.", inRound, i.incident),
-                injection(SimInjection.PERSON, "Inyectar persona", "Alerta crítica en zona restringida; el robot pide decisión.", inRound, i.incident),
+                injection(SimInjection.OBSTACLE, "Inyectar obstáculo", "El robot se detiene y pide decisión.", inRound, i.incident, s),
+                injection(SimInjection.PERSON, "Inyectar persona", "Alerta crítica en zona restringida; el robot pide decisión.", inRound, i.incident, s),
+                // La falla sí se puede inyectar sin enlace: es lo que el escenario 3 usa para mostrar un evento que llega tarde.
                 SimInjectionUi(
                     SimInjection.FAULT,
                     CommandButtonUi("Inyectar falla del robot", CommandKind.SECONDARY),
-                    "El robot queda en FALLA y pide un técnico.",
+                    if (s.linkUp) "El robot queda en FALLA y pide un técnico."
+                    else "Con el enlace cortado, la falla ocurre igual y la app la recibe al volver el enlace, con su hora original.",
                 ),
             ),
             batteryTitle = battery?.let { "Batería · $it %" } ?: "Batería · sin dato",
             batteryMinus = batteryButton("Batería −$BATTERY_STEP %", battery, battery != null && battery > 0),
             batteryPlus = batteryButton("Batería +$BATTERY_STEP %", battery, battery != null && battery < 100),
+            timeScaleTitle = "Velocidad · ×${s.timeScale.toInt()}",
+            timeScales = SimulationSettings.ALLOWED_TIME_SCALES.map { TimeScaleUi(it, "×${it.toInt()}", it == s.timeScale) },
         )
     }
 
     private fun injection(
-        kind: SimInjection, label: String, description: String, inRound: Boolean, incident: Incident?,
+        kind: SimInjection, label: String, description: String, inRound: Boolean, incident: Incident?, s: SimulationSettings,
     ): SimInjectionUi {
         val type = if (kind == SimInjection.OBSTACLE) IncidentType.OBSTACLE else IncidentType.PERSON_IN_RESTRICTED_ZONE
         val reason = when {
+            !s.linkUp -> "Sin enlace: el robot no puede pedir la decisión. Restablecé el enlace."
             incident?.type == type -> "Ya hay un incidente así abierto."
             incident != null -> "Hay otra decisión pendiente."
             !inRound -> "Solo durante una ronda en curso."
-            else -> null
+            else -> s.incidentInjectionBlockedReason
         }
         val state = if (reason == null) CommandUiState.ENABLED else CommandUiState.DISABLED
         return SimInjectionUi(kind, CommandButtonUi(label, CommandKind.SECONDARY, state, reason), description)
@@ -102,7 +107,7 @@ object SimulacionMapper {
         SimScenario.LOW_BATTERY ->
             "Arranca con 40 % y una celda degradada. Iniciá la ronda: a mitad de camino cruza el 25 % y aparece la alerta; cerca del 15 % el robot propone volver."
         SimScenario.DISCONNECTION ->
-            "Iniciá la ronda y tocá «Cortar enlace 15 s»: los datos quedan viejos, las órdenes quedan sin respuesta y al volver llegan los eventos con su hora original."
+            "Iniciá la ronda y tocá «Cortar enlace 15 s»: los datos quedan marcados como viejos y Pausar se deshabilita. Durante el corte, mantené la detención operativa (queda SIN RESPUESTA) e inyectá una falla: al volver el enlace, la falla llega con su hora original y el robot queda en FALLA."
         SimScenario.OBSTACLE ->
             "Iniciá la ronda: al llegar al PC4 un objeto bloquea el pasillo y el robot pide decisión."
         SimScenario.PERSON_IN_RESTRICTED_ZONE ->

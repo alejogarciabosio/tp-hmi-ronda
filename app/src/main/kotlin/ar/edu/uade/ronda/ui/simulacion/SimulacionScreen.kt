@@ -1,5 +1,17 @@
 package ar.edu.uade.ronda.ui.simulacion
 
+import ar.edu.uade.ronda.ui.theme.RondaShapes
+
+import androidx.compose.ui.semantics.contentDescription
+
+import androidx.compose.foundation.selection.selectableGroup
+
+import androidx.compose.foundation.selection.selectable
+
+import androidx.compose.foundation.layout.Box
+
+import androidx.compose.foundation.border
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,6 +64,7 @@ fun SimulacionRoute(viewModel: SimulacionViewModel, onBack: () -> Unit) {
         onInject = viewModel::onInject,
         onBatteryStep = viewModel::onBatteryStep,
         onReset = viewModel::onReset,
+        onTimeScale = viewModel::onTimeScale,
     )
 }
 
@@ -65,6 +78,7 @@ fun SimulacionScreen(
     onInject: (SimInjection) -> Unit,
     onBatteryStep: (Int) -> Unit,
     onReset: () -> Unit,
+    onTimeScale: (Double) -> Unit = {},
 ) {
     // Las franjas arriba y abajo marcan que esto no es parte de la interfaz de operación.
     Column(Modifier.fillMaxSize().background(RondaColors.ink950)) {
@@ -82,11 +96,8 @@ fun SimulacionScreen(
                 )
 
                 SectionTitle("Escenarios")
-                state.scenarios.forEach { sc ->
-                    CommandButton(
-                        CommandButtonUi(sc.label.uppercase(), if (sc.selected) CommandKind.PRIMARY else CommandKind.SECONDARY),
-                        onClick = { onLoadScenario(sc.scenario) },
-                    )
+                Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.scenarios.forEach { sc -> ScenarioRow(sc) { onLoadScenario(sc.scenario) } }
                 }
                 Text(state.scenarioHint, style = RondaType.textoCuerpo, color = RondaColors.bone100)
                 Text("Cargar un escenario reinicia el robot en la base.", style = RondaType.textoNota, color = RondaColors.bone400)
@@ -112,11 +123,57 @@ fun SimulacionScreen(
                     CommandButton(state.batteryPlus, { onBatteryStep(SimulacionMapper.BATTERY_STEP) }, Modifier.weight(1f))
                 }
 
+                SectionTitle(state.timeScaleTitle)
+                Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.timeScales.forEach { ts -> TimeScaleChip(ts, Modifier.weight(1f)) { onTimeScale(ts.scale) } }
+                }
+                Text(
+                    "Acelera el movimiento del robot para la demo. Fuera de ×1, Supervisión muestra «SIMULACIÓN ×N» en la franja de estado.",
+                    style = RondaType.textoNota, color = RondaColors.bone400,
+                )
+
                 SectionTitle("Simulación")
                 CommandButton(CommandButtonUi("Reiniciar simulación", CommandKind.SECONDARY), onReset)
             }
         }
         HazardStripes(Modifier.fillMaxWidth().height(8.dp))
+    }
+}
+
+/** El escenario cargado se distingue por borde, relleno, marca y texto «· cargado», no solo por color. */
+@Composable
+private fun ScenarioRow(sc: ScenarioUi, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .border(if (sc.selected) 2.dp else 1.dp, if (sc.selected) RondaColors.signalAmber else RondaColors.ink700, RondaShapes.r2)
+            .background(if (sc.selected) RondaColors.ink850 else RondaColors.ink950, RondaShapes.r2)
+            .selectable(sc.selected, role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(if (sc.selected) "◉" else "○", style = RondaType.textoEnfasis, color = if (sc.selected) RondaColors.signalAmber else RondaColors.bone400)
+        Text(sc.label.uppercase(), style = RondaType.botonEtiqueta, color = if (sc.selected) RondaColors.signalAmber else RondaColors.bone100)
+    }
+}
+
+@Composable
+private fun TimeScaleChip(ui: TimeScaleUi, modifier: Modifier, onClick: () -> Unit) {
+    Box(
+        modifier
+            .heightIn(min = 48.dp)
+            .border(if (ui.selected) 2.dp else 1.dp, if (ui.selected) RondaColors.signalAmber else RondaColors.ink700, RondaShapes.r2)
+            .background(if (ui.selected) RondaColors.ink850 else RondaColors.ink950, RondaShapes.r2)
+            .selectable(ui.selected, role = Role.RadioButton, onClick = onClick)
+            .semantics { contentDescription = "Velocidad ${ui.label}" + if (ui.selected) ", actual" else "" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            ui.label + if (ui.selected) " · actual" else "",
+            style = RondaType.botonEtiqueta, color = if (ui.selected) RondaColors.signalAmber else RondaColors.bone100,
+        )
     }
 }
 
