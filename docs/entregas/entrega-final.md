@@ -7,7 +7,7 @@ subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 
 Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
 
-Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado figura con el marcador **[PENDIENTE]** y no se describen resultados que no existan.
+Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado (video final con voz y capturas del APK) figura con el marcador **[PENDIENTE]** y no se describen resultados que no existan.
 
 Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §18 y detalladas en `docs/fuentes.md`.
 
@@ -240,7 +240,7 @@ Foto del incidente: cuando el robot pide una decisión (obstáculo, persona en z
 
 ## 16. Aplicación Android
 
-El requisito es que el APK funcione sin robot, servidor ni internet. No se afirma ningún resultado de compilación o de tests de `:app` que no se haya ejecutado.
+El APK funciona sin robot, servidor ni internet: todo corre sobre el simulador local y el manifest no pide permisos de red. Las nueve pantallas del Figma están implementadas; el resultado de la compilación y de los tests figura al final de esta sección.
 
 La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mismo esquema: un `ViewModel` arma un único `StateFlow` de estado a partir del `RobotRepository`, un mapper puro traduce ese estado a textos, niveles y motivos, y el composable solo dibuja. Ninguna pantalla importa el simulador.
 
@@ -250,13 +250,13 @@ La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mis
 | Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto | `02-supervision-*.png` |
 | Telemetría | Todas las lecturas del robot y del servicio, con su antigüedad. Con el enlace caído quedan como último dato conocido | `03-telemetria.png` |
 | Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio. "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
-| Control | Pausar, reanudar, regresar a base o a un punto seguro, saltar un punto ante un obstáculo, cancelar (mantener presionado) y registro de órdenes con su estado | `05-control.png` |
-| Alertas | Alertas activas por severidad, reconocimiento y miniatura de la foto. La alerta de persona abre la decisión en vez de reconocerse sola | `06-alertas.png` |
+| Control | Pausar, reanudar, regresar a base o a un punto seguro, saltar un punto ante un obstáculo, cancelar y regresar a la base (ambos con mantener presionado) y registro de órdenes con su estado | `05-control.png` |
+| Alertas | Alertas activas por severidad, reconocimiento y miniatura de la foto, que se muestra solo mientras la alerta no está reconocida y el incidente sigue activo. La alerta de persona abre la decisión en vez de reconocerse sola | `06-alertas.png` |
 | Historial | Misiones y eventos guardados en Room, con filtros por tipo, severidad y período. Retención de 30 días | `07-historial.png` |
 | Desconexión | Último dato conocido marcado como viejo, política declarada del robot sin enlace, órdenes sin respuesta y eventos que llegaron tarde con su hora original | `08-desconexion.png` |
 | Panel de simulación | Herramienta de la demo, separada de la operación (ver abajo) | `09-panel-simulacion.png` |
 
-Capturas de cada pantalla tomadas del APK: **[PENDIENTE]**. Van en `docs/evidencias/capturas/` con el mismo nombre que el export del Figma.
+Capturas de cada pantalla tomadas del APK: van en `docs/evidencias/capturas/` con los nombres `app-01-seleccion.png` a `app-09-panel-simulacion.png` y `escenario-1-ronda-normal.png` a `escenario-5-persona.png` (tabla en [`docs/evidencias/README.md`](../evidencias/README.md)). **[PENDIENTE]** hasta que estén en esa carpeta: hoy solo hay las cinco de Supervisión (`supervision-01` a `supervision-05`).
 
 **Panel de simulación.** Se abre desde "Simulación", arriba a la derecha de Selección, Supervisión, Misiones, Alertas e Historial. Está marcado con franjas de señalización y el rótulo SIMULACIÓN para que no se confunda con la interfaz de operación. Tiene tres grupos de controles:
 
@@ -265,19 +265,19 @@ Capturas de cada pantalla tomadas del APK: **[PENDIENTE]**. Van en `docs/evidenc
 - **Batería:** sube o baja 10 puntos para llegar a los umbrales de 25 % y 15 % sin esperar la descarga.
 
 Decisiones y límites del panel en D10 y L3 de `docs/decisiones.md`.
-- **APK instalable** (ruta del archivo, versión, cómo instalarlo): **[PENDIENTE]**.
+- **APK instalable.** `docs/entregas/apk/ronda-debug.apk` (compilación de depuración, `versionName` 0.1.0, `versionCode` 1, unos 12 MB). Para instalarlo en un Android 8.0 o superior (minSdk 26): `adb install -r docs/entregas/apk/ronda-debug.apk`, o copiar el archivo al celular y permitir la instalación de orígenes desconocidos. Se genera con `./gradlew :app:assembleDebug` (`app/build/outputs/apk/debug/app-debug.apk`).
 - **Tests de `:app`.** Hay un test por pantalla sobre su mapper o ViewModel con un repositorio falso: `SupervisionViewModelTest`, `SeleccionMapperTest`, `TelemetriaMapperTest`, `MisionesViewModelTest`, `ControlViewModelTest`, `AlertasViewModelTest`, `HistorialMapperTest`, `DesconexionMapperTest` y `SimulacionViewModelTest`. Hay tests de Room (`HistoryDaoTest`) y tests de interfaz con Compose sobre Robolectric:
   - `CommandButtonUiTest`: con la orden deshabilitada se ve el motivo y el toque no hace nada. Una orden pendiente no se repite. Una orden rechazada o sin respuesta se puede reintentar.
   - `HoldToConfirmUiTest`: un toque corto no detiene el robot y mantener presionado 1 s sí. La aclaración de que no reemplaza la parada física está siempre visible, y TalkBack confirma con la acción de mantener.
   - `PantallasAccesibilidadTest`: todo lo que se puede tocar mide al menos 48 dp y tiene texto para el lector de pantalla, en nueve estados de pantalla.
   - `ContrasteTest`: contraste WCAG de la paleta.
 
-  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` el 19/11/2026 (Windows, JDK 21): `:core` 155 tests y `:app` 109 tests, todos aprobados. `:app:assembleDebug` compila; el APK de depuración pesa 11,9 MB.
+  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` al cierre de la integración (19/11/2026): `:core` 155 tests y `:app` 114 tests, sin fallas. `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
 - **Prueba manual en emulador (Pixel, API 35):** se recorrieron Selección, Supervisión, Misiones, Control, Alertas, Historial y Telemetría sin cierres inesperados. La prueba encontró cuatro detalles que se corrigieron: la tendencia de batería en Telemetría, la posición de BASE en el plano, el margen inferior de Supervisión y un test de Room intermitente.
 
 ## 17. Video de demostración
 
-Guion por escenario, con tiempos y lo que se dice en cada toma, en [`docs/entregas/guion-video.md`](guion-video.md). Video grabado sobre el APK (enlace o ruta y duración): **[PENDIENTE]**. Hoy existe solo la grabación parcial mencionada en §12.
+Guion por escenario, con tiempos y lo que se dice en cada toma, en [`docs/entregas/guion-video.md`](guion-video.md). Video final grabado sobre el APK y con voz (enlace o ruta y duración): **[PENDIENTE]**. Hoy existe solo la grabación parcial sin voz de la pantalla Supervisión mencionada en §12.
 
 ## 18. Fuentes
 
