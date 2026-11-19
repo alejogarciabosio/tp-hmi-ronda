@@ -48,8 +48,8 @@
   <path d="M117,528 L108,543 H115 L113,552 L124,536 H117 Z" fill="#F2A900"/>
   <text x="115" y="514" font-size="11" fill="#1C1B17" text-anchor="middle" font-weight="700">BASE</text>
   <!-- salida emergencia PB -->
-  <rect x="668" y="346" width="28" height="28" fill="#2E7D4F" stroke="#1C1B17" stroke-width="1"/>
-  <path d="M674,360 H688 M683,354 L689,360 L683,366" fill="none" stroke="#fff" stroke-width="2.2"/>
+  <rect x="648" y="346" width="28" height="28" fill="#2E7D4F" stroke="#1C1B17" stroke-width="1"/>
+  <path d="M654,360 H670 M665,354 L671,360 L665,366" fill="none" stroke="#fff" stroke-width="2.2"/>
   <text x="660" y="412" font-size="11" fill="#1C1B17" text-anchor="end">Salida de emergencia PB</text>
   <!-- punto seguro alternativo -->
   <path d="M610,245 l11,11 l-11,11 l-11,-11 z" fill="#FBF9F3" stroke="#1C1B17" stroke-width="2"/>
@@ -57,15 +57,15 @@
   <text x="647" y="259" font-size="10.5" fill="#1C1B17" paint-order="stroke" stroke="#FBF9F3" stroke-width="3">esc. E (PS alt.)</text>
 
   <!-- ruta PB (salida: BASE -> PC1 -> PC2 -> PC3) -->
-  <path d="M133,545 H300 V500 M300,500 V360 H610 V318" fill="none" stroke="#B86E00" stroke-width="3" stroke-dasharray="9 5" marker-end="url(#flecha)"/>
+  <path d="M133,545 H300 V500 M300,500 V360 H620 V318" fill="none" stroke="#B86E00" stroke-width="3" stroke-dasharray="9 5" marker-end="url(#flecha)"/>
   <!-- ruta PB (retorno: bajada O -> BASE) -->
   <path d="M110,300 V510" fill="none" stroke="#B86E00" stroke-width="3" stroke-dasharray="9 5" marker-end="url(#flecha)"/>
   <text x="104" y="420" font-size="11" fill="#B86E00" text-anchor="end" font-weight="700">regreso</text>
 
   <g font-size="13" font-weight="700" text-anchor="middle" fill="#fff">
     <circle cx="300" cy="500" r="14" fill="#1C1B17"/><text x="300" y="505">1</text>
-    <circle cx="560" cy="360" r="14" fill="#1C1B17"/><text x="560" y="365">2</text>
-    <circle cx="610" cy="305" r="14" fill="#1C1B17"/><text x="610" y="310">3</text>
+    <circle cx="620" cy="360" r="14" fill="#1C1B17"/><text x="620" y="365">2</text>
+    <circle cx="620" cy="305" r="14" fill="#1C1B17"/><text x="620" y="310">3</text>
   </g>
 
   <!-- ===== PRIMER PISO ===== -->
@@ -89,8 +89,8 @@
   <rect x="1000" y="410" width="30" height="18" fill="#FBF9F3" stroke="#1C1B17" stroke-width="1"/>
   <text x="1015" y="423" font-size="11" font-weight="700" fill="#1C1B17" text-anchor="middle">T°C</text>
   <!-- salida emergencia 1° -->
-  <rect x="706" y="346" width="28" height="28" fill="#2E7D4F" stroke="#1C1B17" stroke-width="1"/>
-  <path d="M728,360 H714 M719,354 L713,360 L719,366" fill="none" stroke="#fff" stroke-width="2.2"/>
+  <rect x="724" y="346" width="28" height="28" fill="#2E7D4F" stroke="#1C1B17" stroke-width="1"/>
+  <path d="M746,360 H732 M737,354 L731,360 L737,366" fill="none" stroke="#fff" stroke-width="2.2"/>
   <text x="745" y="412" font-size="11" fill="#1C1B17">Salida de emergencia 1°</text>
 
   <!-- ruta 1° -->
