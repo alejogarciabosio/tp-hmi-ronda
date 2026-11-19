@@ -46,15 +46,15 @@
   <text x="115" y="582" font-size="11" fill="#1C1B17" text-anchor="middle" font-weight="700">GARITA</text>
   <rect x="97" y="522" width="36" height="36" fill="#1C1B17"/>
   <path d="M117,528 L108,543 H115 L113,552 L124,536 H117 Z" fill="#F2A900"/>
-  <text x="115" y="514" font-size="11" fill="#1C1B17" text-anchor="middle" font-weight="700">BASE</text>
+  <text x="145" y="514" font-size="11" fill="#1C1B17" text-anchor="middle" font-weight="700">BASE</text>
   <!-- salida emergencia PB -->
   <rect x="648" y="346" width="28" height="28" fill="#2E7D4F" stroke="#1C1B17" stroke-width="1"/>
   <path d="M654,360 H670 M665,354 L671,360 L665,366" fill="none" stroke="#fff" stroke-width="2.2"/>
   <text x="660" y="412" font-size="11" fill="#1C1B17" text-anchor="end">Salida de emergencia PB</text>
   <!-- punto seguro alternativo -->
   <path d="M610,245 l11,11 l-11,11 l-11,-11 z" fill="#FBF9F3" stroke="#1C1B17" stroke-width="2"/>
-  <text x="647" y="246" font-size="10.5" fill="#1C1B17" paint-order="stroke" stroke="#FBF9F3" stroke-width="3">Descanso</text>
-  <text x="647" y="259" font-size="10.5" fill="#1C1B17" paint-order="stroke" stroke="#FBF9F3" stroke-width="3">esc. E (PS alt.)</text>
+  <text x="596" y="246" text-anchor="end" font-size="10.5" fill="#1C1B17" paint-order="stroke" stroke="#FBF9F3" stroke-width="3">Descanso</text>
+  <text x="596" y="259" text-anchor="end" font-size="10.5" fill="#1C1B17" paint-order="stroke" stroke="#FBF9F3" stroke-width="3">esc. E (PS alt.)</text>
 
   <!-- ruta PB (salida: BASE -> PC1 -> PC2 -> PC3) -->
   <path d="M133,545 H300 V500 M300,500 V360 H620 V318" fill="none" stroke="#B86E00" stroke-width="3" stroke-dasharray="9 5" marker-end="url(#flecha)"/>
@@ -131,15 +131,15 @@
   </g>
 
   <g font-size="12" fill="#1C1B17">
-    <text x="860" y="674" font-size="13" font-weight="700" letter-spacing="2">PUNTOS DE CONTROL</text>
-    <text x="860" y="696">PC1  Hall PB</text>
-    <text x="860" y="714">PC2  Salida de emergencia PB (LiDAR + cámara)</text>
-    <text x="860" y="732">PC3  Escalera E (subida)</text>
-    <text x="860" y="750">PC4  Pasillo 1°A</text>
-    <text x="1120" y="696">PC5  Sala técnica 1° (temperatura)</text>
-    <text x="1120" y="714">PC6  Salida de emergencia 1° (LiDAR + cámara)</text>
-    <text x="1120" y="732">PC7  Pasillo 1°B</text>
-    <text x="1120" y="750">PC8  Escalera O (bajada), luego regreso a BASE</text>
+    <text x="760" y="674" font-size="13" font-weight="700" letter-spacing="2">PUNTOS DE CONTROL</text>
+    <text x="760" y="696">PC1  Hall PB</text>
+    <text x="760" y="714">PC2  Salida de emergencia PB (LiDAR + cámara)</text>
+    <text x="760" y="732">PC3  Escalera E (subida)</text>
+    <text x="760" y="750">PC4  Pasillo 1°A</text>
+    <text x="1060" y="696">PC5  Sala técnica 1° (temperatura)</text>
+    <text x="1060" y="714">PC6  Salida de emergencia 1° (LiDAR + cámara)</text>
+    <text x="1060" y="732">PC7  Pasillo 1°B</text>
+    <text x="1060" y="750">PC8  Escalera O (bajada), luego regreso a BASE</text>
   </g>
   <text x="40" y="788" font-size="11" fill="#4A463B">Esquema ilustrativo del caso de estudio: no representa el relevamiento de un edificio real. La altura de los escalones debe medirse antes de operar (el Go2 declara 16 cm como máximo).</text>
 </svg>
