@@ -158,7 +158,7 @@ Tipos de mensaje: telemetría (2 Hz), comando, respuesta (confirmada o rechazada
 
 El simulador actualiza batería y telemetría, ejecuta misiones coherentes con sus estados, emite alertas y permite forzar desconexiones y rechazos desde el Panel de simulación.
 
-El consumo de batería sigue un modelo de dos términos: un consumo base por segundo (robot encendido) más un consumo proporcional a la distancia. Los coeficientes son **supuestos del simulador, no mediciones del Go2**; se derivan de 432 Wh y de la autonomía declarada de 2 a 4 h en `docs/supuestos-simulacion.md`, que además justifica la reserva y el mínimo de 40 % para salir a la ronda completa. La ronda completa mide 293 m según el plano del simulador. Con coeficientes realistas una ronda gasta poco, así que los escenarios que necesitan ver bajar la batería usan un factor de consumo acelerado y una carga inicial baja, declarado como tal.
+El consumo de batería sigue un modelo de dos términos: un consumo base por segundo (robot encendido) más un consumo proporcional a la distancia. Los coeficientes son **supuestos del simulador, no mediciones del Go2**; se derivan de 432 Wh y de la autonomía declarada de 2 a 4 h en `docs/supuestos-simulacion.md`, que además justifica la reserva y el mínimo de 40 % para salir a la ronda completa. La ronda completa mide 293 m según el plano del simulador. Con coeficientes realistas una ronda completa gasta alrededor de 7 %, así que el escenario de batería baja simula una celda degradada (consumo multiplicado por 6) en lugar de forzar una carga inicial irreal (decisión D8 en `docs/decisiones.md`).
 
 Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a la base; si el enlace vuelve antes, espera la orden del operador. Es un supuesto del caso, no una función verificada del Go2.
 
@@ -167,7 +167,7 @@ Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a 
 | # | Escenario | Qué muestra |
 |---|---|---|
 | 1 | Ronda normal | Inicio, ocho PC, finalización y regreso; la misión queda en el historial |
-| 2 | Batería baja | Arranca con 45 % y consumo acelerado; al cruzar 25 % aparece la advertencia con la acción "Regresar a base" y, a 15 %, el robot propone el regreso (una sola opción) |
+| 2 | Batería baja | Sale con 40 % (mínimo operativo) y una celda degradada que multiplica el consumo; al cruzar 25 % (cerca del PC 4) aparece la advertencia con la acción "Regresar a base" y, a 15 % (PC 7), el robot propone el regreso (una sola opción). Llega a la base con ~2 %: el robot estima el regreso con consumo nominal, limitación registrada en D8 |
 | 3 | Desconexión | Corte forzado de 15 s; datos marcados como antiguos, comandos sin confirmar y recuperación con resincronización |
 | 4 | Incidente (obstáculo) | En PC4 un objeto bloquea el pasillo; el robot se detiene a 2 m y ofrece tres opciones (esperar 30 s, saltar PC4, regresar); el operador salta el punto y queda con observación |
 | 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; el operador decide entre registrar como autorizada, enviar a un vigilante o continuar. No se guarda imagen |
