@@ -10,10 +10,10 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 00:00.5  TELEMETRIA EN_BASE | sin misión | PC verificados 0, con observación 0 | batería 45 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 00:00.5  CONEXION CONNECTED
 00:00.5  OPERADOR inicia la ronda completa
-00:00.5  COMANDO  c-0001 START_MISSION -> PENDIENTE
-00:00.7  COMANDO  c-0001 START_MISSION -> CONFIRMADA (el robot aceptó la orden)
+00:00.5  COMANDO  2c74ff92-e086-4298-9cf0-37f0aff89ed0 START_MISSION -> PENDIENTE
+00:00.7  COMANDO  2c74ff92-e086-4298-9cf0-37f0aff89ed0 START_MISSION -> CONFIRMADA (el robot aceptó la orden)
 00:01.0  TELEMETRIA PREPARANDO | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 45 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-00:01.0  COMANDO  c-0001 START_MISSION -> VERIFICADA (la telemetría refleja el efecto)
+00:01.0  COMANDO  2c74ff92-e086-4298-9cf0-37f0aff89ed0 START_MISSION -> VERIFICADA (la telemetría refleja el efecto)
 00:03.5  TELEMETRIA EN_RONDA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 45 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 00:33.5  TELEMETRIA EN_RONDA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 41 % | Hall PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 00:40.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 40 % | Hall PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
@@ -34,10 +34,10 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 04:51.5  TELEMETRIA REQUIERE_DECISION | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 15 % | Salida de emergencia 1° (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
 04:51.5  NOTA     el robot pide decisión: Batería crítica. El robot propone regresar a la base.
 04:51.5  OPERADOR elige "Regresar a la base"
-04:51.5  COMANDO  c-0002 RETURN_TO_SAFE_POINT -> PENDIENTE
-04:51.7  COMANDO  c-0002 RETURN_TO_SAFE_POINT -> CONFIRMADA (el robot aceptó la orden)
+04:51.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> PENDIENTE
+04:51.7  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> CONFIRMADA (el robot aceptó la orden)
 04:52.0  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 15 % | Salida de emergencia 1° (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-04:52.0  COMANDO  c-0002 RETURN_TO_SAFE_POINT -> VERIFICADA (la telemetría refleja el efecto)
+04:52.0  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> VERIFICADA (la telemetría refleja el efecto)
 05:22.0  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 13 % | Salida de emergencia 1° (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
 05:52.0  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 11 % | Salida de emergencia 1° (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
 06:22.0  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 9 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
