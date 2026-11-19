@@ -4,6 +4,7 @@ import ar.edu.uade.ronda.ui.model.ConnectionView
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
+import ar.edu.uade.ronda.core.model.Incident
 import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.RobotTelemetry
 import ar.edu.uade.ronda.core.model.RouteId
@@ -35,6 +36,8 @@ internal data class MisionesInputs(
     val nowMs: Long,
     /** Robot que controla este operador (ver `ControlSession`); null si no tomó el control. */
     val controlledId: String? = null,
+    /** Decisión que el robot espera, si la hay: la política la necesita para evaluar. */
+    val incident: Incident? = null,
 )
 
 /**
@@ -70,6 +73,8 @@ internal object MisionesMapper {
                 hasPendingCommand = i.commands.any { it.status == CommandStatus.PENDING && it.command.type != CommandType.ACKNOWLEDGE_ALERT },
                 alerts = t?.alerts.orEmpty(),
                 selectedRoute = i.selectedRoute,
+                hasMission = t?.mission != null,
+                pendingDecision = i.incident != null,
             ),
         )
         val lastStart = i.commands.lastOrNull { it.command.type == CommandType.START_MISSION }
@@ -172,6 +177,6 @@ internal object MisionesMapper {
             else -> SupervisionMapper.ageText(nowMs - c.sentAt)
         }
         val route = c.command.params.routeId?.displayName ?: "ronda"
-        return LastCommandUi("Iniciar: $route", CommandChipUi(chip), detail)
+        return LastCommandUi("Iniciar: $route", CommandChipUi(chip, c.verifiedWithoutAck), detail)
     }
 }

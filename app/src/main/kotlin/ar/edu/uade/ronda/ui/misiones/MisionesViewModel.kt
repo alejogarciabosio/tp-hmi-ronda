@@ -37,13 +37,14 @@ class MisionesViewModel(
         repository.telemetry, repository.connection, repository.lastTelemetryAt, repository.commands,
         combine(selectedRoute, session.controlledId, ticker) { r, _, _ -> r },
     ) { t, c, at, cmds, route ->
-        MisionesMapper.map(MisionesInputs(t, c, at, cmds, route, clock.nowMs(), session.controlledId.value))
+        MisionesMapper.map(MisionesInputs(t, c, at, cmds, route, clock.nowMs(), session.controlledId.value, repository.activeIncident.value))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), current())
 
     private fun current() = MisionesMapper.map(
         MisionesInputs(
             repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
             repository.commands.value, selectedRoute.value, clock.nowMs(), session.controlledId.value,
+            repository.activeIncident.value,
         ),
     )
 
