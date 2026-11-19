@@ -1,6 +1,6 @@
 # Fuentes técnicas
 
-Todas las páginas se abrieron el **2026-11-19**. Las fichas de distribuidores se usan solo como contraste de la ficha oficial; cuando difieren, se indica. Los precios son de lista, sin impuestos ni flete, y cambian: sirven para ordenar magnitudes, no para presupuestar.
+Todas las páginas se consultaron el **2026-11-19**; el contenido del Document Center (GO2-5) no pudo leerse (ver más abajo). Las fichas de distribuidores se usan solo como contraste de la ficha oficial; cuando difieren, se indica. Los precios son de lista, sin impuestos ni flete, y cambian: sirven para ordenar magnitudes, no para presupuestar.
 
 ## Unitree Go2
 
@@ -32,6 +32,7 @@ Limitación sobre GO2-5: el Document Center es una aplicación que se renderiza 
 |---|---|---|---|
 | Dimensiones de pie | 70 x 31 x 40 cm | GO2-1 | |
 | Peso | ~15 kg con batería | GO2-1 | |
+| Actuadores | 12 motores articulares de aleación de aluminio; par pico ~45 N·m | GO2-1 | La ficha no indica "grados de libertad" de forma explícita; se cita la cantidad de motores. |
 | Batería | 8000 mAh (Air/Pro/X); **15000 mAh de larga duración (EDU)** | GO2-1 | GO2-6 también muestra 8000 mAh en un campo de su ficha; GO2-1, GO2-6 y GO2-7 coinciden en 15000 mAh para EDU. Se adopta 15000 mAh. |
 | Autonomía | ~1-2 h (8000 mAh); **~2-4 h (15000 mAh)** | GO2-1, GO2-6, GO2-7 | GO2-8: baja con velocidad alta, carga, cambios de postura bruscos y terreno irregular. Para planificar se usa el extremo bajo. |
 | Cargador | 33,6 V 9 A, carga rápida (EDU) | GO2-1, GO2-6, GO2-7 | |
