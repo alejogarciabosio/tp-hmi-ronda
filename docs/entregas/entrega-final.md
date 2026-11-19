@@ -148,7 +148,8 @@ Diagrama y descripción completa en [`docs/arquitectura/arquitectura.md`](../arq
 - Flujo en un solo sentido: la UI observa `StateFlow` de `UiState` y envía eventos al ViewModel; el ViewModel conoce solo las interfaces `RobotRepository` y `HistoryRepository`.
 - `RobotRepository` desacopla telemetría, comandos y eventos de la implementación. `TransportRobotRepository` hace el trabajo sobre cualquier `Transport`: decodifica el contrato con `ContractCodec`, deriva la conexión (`ConnectionEvaluator`), calcula la habilitación de comandos (`CommandPolicy`) y sigue cada orden (`CommandTracker`).
 - El simulador (`core.sim`: `RobotSimulator` con reloj inyectable, `FakeTransport`, `SimulatedRobotRepository`) produce y consume mensajes JSON del contrato. Solo `AppContainer` conoce esa implementación; ninguna clase de UI ni ViewModel importa el paquete `core.sim`. Un gateway real implicaría escribir otro `Transport`.
-- Room guarda misiones y eventos (historial); un `EventRecorder` escucha al repositorio y persiste.
+- Room guarda misiones y eventos (historial); un `EventRecorder` escucha al repositorio y persiste, incluida la decisión del operador en cada orden (valor crudo que la pantalla traduce).
+- La historia de puntos de control de la ronda (`CheckpointHistory`, en `:core`) la crea `AppContainer` y recolecta la telemetría con el alcance de la aplicación: salir de Supervisión o recrear su ViewModel no borra los puntos ya verificados, y se reinicia con cada misión nueva.
 - El Panel de simulación usa una interfaz aparte, `SimulationControl` (cortar el enlace, rechazar la próxima orden, demorar respuestas, inyectar incidentes, fijar la batería, cargar escenarios), que la UI de supervisión no ve.
 
 ## 10. Contrato de mensajes
@@ -174,10 +175,10 @@ Supuesto de pérdida de enlace: el robot se detiene y a los 60 s regresa solo a 
 | # | Escenario | Qué muestra |
 |---|---|---|
 | 1 | Ronda normal | Inicio, ocho PC, finalización y regreso; la misión queda en el historial |
-| 2 | Batería baja | Sale con 40 % (mínimo operativo) y una celda degradada que multiplica el consumo; al cruzar 25 % (cerca del PC 4) aparece la advertencia con la acción "Regresar a base" y, a 15 % (PC 7), el robot propone el regreso (una sola opción). Llega a la base con ~2 %: el robot estima el regreso con consumo nominal, limitación registrada en D8 |
+| 2 | Batería baja | Sale con 40 % (mínimo operativo) y una celda degradada que multiplica el consumo; al cruzar 25 % (cerca del PC 4) aparece la advertencia y Supervisión y Control destacan arriba "Batería baja (N %): volvé a la base mientras alcanza" con "Regresar a base" como acción principal (mantener presionado 1 s) y, a 15 % (PC 7), el robot propone el regreso (una sola opción). Llega a la base con ~2 %: el robot estima el regreso con consumo nominal, limitación registrada en D8 |
 | 3 | Desconexión | Corte forzado de 15 s; datos marcados como antiguos, comandos sin confirmar y recuperación con resincronización |
 | 4 | Incidente (obstáculo) | En PC4 un objeto bloquea el pasillo; el robot se detiene a 2 m y ofrece tres opciones (esperar 30 s, saltar PC4, regresar); el operador salta el punto y queda con observación |
-| 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; llega una foto de la cámara frontal y el operador, viéndola, decide entre registrar como autorizada, enviar a un vigilante o continuar. La foto se muestra para decidir y no se guarda en el historial |
+| 5 | Persona en zona restringida (propio del servicio) | En PC5 el robot mantiene 2 m y se identifica por voz; llega una foto de la cámara frontal y el operador, viéndola, decide entre registrar como autorizada, enviar a un vigilante o continuar. Cualquier decisión cierra el incidente y la hoja no vuelve (D12): con "Enviar vigilante" el robot mantiene la distancia y queda pausado en el PC5, la app avisa "Vigilante en camino · el robot espera tu orden para seguir" y la ronda sigue cuando el operador reanuda. El historial registra la decisión ("Reconocer alerta · Enviar vigilante"). La foto se muestra para decidir y no se guarda en el historial |
 
 **La máquina propone, la persona decide.** El Go2 no detecta personas de forma nativa; se propone un modelo propio (YOLO, clase `person`) sobre la cámara frontal (ver §6). Ese detector puede dar falsos positivos (una sombra, un objeto, un reflejo) y falsos negativos; un proveedor de videovigilancia plantea que la salida de un detector es "una pista, no una decisión" y que corresponde triaje más verificación humana (HIL-1; opinión de práctica, no una norma). Por eso, ante una posible persona, el robot se detiene a 2 m, adjunta la foto de la cámara frontal y espera: el operador la ve y elige registrar como autorizada, enviar a un vigilante o continuar. El robot nunca declara "intruso" por su cuenta. Que el modelo corra en tiempo real en el Orin del robot no se midió: los benchmarks son de kits de desarrollo (JET-1, JET-2). En el simulador, la detección y la foto son datos generados. La foto de una persona es un dato personal: su retención se trata en D9 y RG5.
 
@@ -185,7 +186,7 @@ Evidencias:
 
 - Transcripciones de los cinco escenarios en [`docs/evidencias/transcripciones/`](../evidencias/transcripciones/): salida de `ScenarioTranscriptsTest`, que corre cada escenario contra el repositorio simulado con tiempo virtual y semilla fija. Demuestran el comportamiento del simulador y del contrato propio, no el de un robot real. Se regeneran con `./gradlew :core:scenarioTranscripts`; instrucciones en [`docs/evidencias/README.md`](../evidencias/README.md).
 - Capturas de la pantalla de supervisión en [`docs/evidencias/capturas/`](../evidencias/capturas/) (ronda normal, obstáculo con decisión, sin datos, enlace restaurado, comando rechazado) y una grabación en [`docs/evidencias/video/supervision-demo.mp4`](../evidencias/video/supervision-demo.mp4).
-- Capturas de los cinco escenarios corridos sobre la app completa: `docs/evidencias/capturas/escenario-1-ronda-normal.png` a `escenario-5-persona.png`, cada una con su transcripción en `docs/evidencias/transcripciones/`.
+- Capturas de los cinco escenarios corridos sobre la app completa: `docs/evidencias/capturas/escenario-1-ronda-normal.png` a `escenario-5-persona.png`, más `escenario-5b-vigilante-en-camino.png` (el robot pausado tras enviar al vigilante), cada una con su transcripción en `docs/evidencias/transcripciones/`.
 
 ## 13. Riesgos
 
@@ -197,13 +198,13 @@ Detalle completo (causa, consecuencia, medida y verificación) en [`docs/riesgos
 | RG2 | Orden accidental | Mantener presionado 1 s en cancelar, regresar y detener, estado PENDIENTE visible, un solo comando de misión pendiente |
 | RG3 | Pérdida de conexión | Datos marcados como antiguos, comandos deshabilitados con motivo, resincronización al volver; política del robot declarada como supuesto |
 | RG4 | Batería insuficiente para volver | Bloqueo de inicio, cálculo de "alcanza para volver", regreso propuesto a 15 % |
-| RG5 | Privacidad de personas detectadas | Una sola foto por incidente, mostrada para decidir y no guardada; sin video ni grabación continua; registro mínimo, retención de 30 días, historial solo para supervisor |
+| RG5 | Privacidad de personas detectadas | Una sola foto por incidente, mostrada para decidir y no guardada; sin video ni grabación continua; registro mínimo (hecho, punto, hora y decisión del operador, sin imagen), retención de 30 días, historial solo para supervisor |
 | RG6 | Dos operadores con órdenes contradictorias | Control exclusivo por robot (`ControlSession`): sin control propio las órdenes quedan deshabilitadas; la detención operativa siempre está disponible |
 | RG7 | Escalones fuera del rango del robot | Relevar escaleras antes de habilitar la ruta |
 
 ## 14. Decisiones y limitaciones
 
-Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6), `messageId` como UUID v4 (D7), coeficientes de batería y celda degradada en el escenario 2 (D8), foto adjunta al incidente (D9) panel de simulación con los cinco escenarios del plan (D10) y control exclusivo con `ControlSession`, sin que la detención operativa dependa de él (D11).
+Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6), `messageId` como UUID v4 (D7), coeficientes de batería y celda degradada en el escenario 2 (D8), foto adjunta al incidente (D9) panel de simulación con los cinco escenarios del plan (D10) y control exclusivo con `ControlSession`, sin que la detención operativa dependa de él (D11) y que toda decisión del operador cierra el incidente activo (D12).
 
 Limitaciones que importan para evaluar el trabajo:
 
@@ -247,16 +248,16 @@ La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mis
 | Pantalla | Qué resuelve | Referencia en el Figma |
 |---|---|---|
 | Selección de robot | Elegir el robot y tomar el control exclusivo (`ControlSession`, riesgo RG6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
-| Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto | `02-supervision-*.png` |
+| Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto. Arriba destaca lo que hay que hacer ahora: regresar a la base con batería baja o reanudar cuando el vigilante resolvió | `02-supervision-*.png` |
 | Telemetría | Todas las lecturas del robot y del servicio, con su antigüedad. Con el enlace caído quedan como último dato conocido | `03-telemetria.png` |
 | Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio. "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
 | Control | Pausar, reanudar, regresar a base o a un punto seguro, saltar un punto ante un obstáculo, cancelar y regresar a la base (ambos con mantener presionado) y registro de órdenes con su estado | `05-control.png` |
 | Alertas | Alertas activas por severidad, reconocimiento y miniatura de la foto, que se muestra solo mientras la alerta no está reconocida y el incidente sigue activo. La alerta de persona abre la decisión en vez de reconocerse sola | `06-alertas.png` |
-| Historial | Misiones y eventos guardados en Room, con filtros por tipo, severidad y período. Retención de 30 días | `07-historial.png` |
+| Historial | Misiones y eventos guardados en Room, con filtros por tipo, severidad y período; cada orden dice qué decidió el operador ("Reanudar · Saltar el PC4"). Retención de 30 días | `07-historial.png` |
 | Desconexión | Último dato conocido marcado como viejo, política declarada del robot sin enlace, órdenes sin respuesta y eventos que llegaron tarde con su hora original | `08-desconexion.png` |
 | Panel de simulación | Herramienta de la demo, separada de la operación (ver abajo) | `09-panel-simulacion.png` |
 
-Capturas de cada pantalla en `docs/evidencias/capturas/`: `app-01-seleccion.png` a `app-09-panel-simulacion.png` (incluye `app-04b-misiones-preflight-fallido.png`) y `escenario-1-ronda-normal.png` a `escenario-5-persona.png` (tabla en [`docs/evidencias/README.md`](../evidencias/README.md)). Se generan desde el código de la app con el simulador real y Robolectric (`./gradlew :app:recordCapturas`), sin emulador; muestran el primer tramo de cada pantalla, como se ve al abrirla en el teléfono.
+Capturas de cada pantalla en `docs/evidencias/capturas/`: `app-01-seleccion.png` a `app-09-panel-simulacion.png` (incluye `app-04b-misiones-preflight-fallido.png`) y `escenario-1-ronda-normal.png` a `escenario-5b-vigilante-en-camino.png` (tabla en [`docs/evidencias/README.md`](../evidencias/README.md)). Se generan desde el código de la app con el simulador real y Robolectric (`./gradlew :app:recordCapturas`), sin emulador; muestran el primer tramo de cada pantalla, como se ve al abrirla en el teléfono.
 
 **Panel de simulación.** Se abre desde "Simulación", arriba a la derecha de Selección, Supervisión, Misiones, Alertas e Historial. Está marcado con franjas de señalización y el rótulo SIMULACIÓN para que no se confunda con la interfaz de operación. Tiene tres grupos de controles:
 
@@ -272,7 +273,7 @@ Decisiones y límites del panel en D10 y L3 de `docs/decisiones.md`.
   - `PantallasAccesibilidadTest`: todo lo que se puede tocar mide al menos 48 dp y tiene texto para el lector de pantalla, en nueve estados de pantalla.
   - `ContrasteTest`: contraste WCAG de la paleta.
 
-  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` al cierre de la integración (19/11/2026): `:core` 155 tests y `:app` 114 tests, sin fallas. `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
+  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` al cierre de la integración (19/11/2026): `:core` 165 tests y `:app` 130 tests, sin fallas. `:app:assembleDebug` compila; el APK de depuración pesa 12 MB.
 - **Prueba manual en emulador (Pixel, API 35):** se recorrieron Selección, Supervisión, Misiones, Control, Alertas, Historial y Telemetría sin cierres inesperados. La prueba encontró cuatro detalles que se corrigieron: la tendencia de batería en Telemetría, la posición de BASE en el plano, el margen inferior de Supervisión y un test de Room intermitente.
 
 ## 17. Video de demostración

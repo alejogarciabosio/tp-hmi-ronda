@@ -56,8 +56,8 @@ El simulador corre a velocidad real (una ronda completa dura unos 8 minutos y me
 |---|---|---|
 | 5.1 | Panel: "5 · Persona en zona restringida"; iniciar; "Inyectar persona" (en la ronda real salta en el PC5, sala técnica) | |
 | 5.2 | Alerta crítica y hoja de decisión con la foto | "El detector puede equivocarse: una sombra o un reflejo. Por eso el robot no declara un intruso: se detiene a 2 m, se identifica por voz y espera." |
-| 5.3 | Opciones: persona autorizada, enviar vigilante, continuar; elegir "Enviar vigilante" | "La persona que mira la foto decide." |
-| 5.4 | Historial: el evento sin foto | "La foto se usa para decidir y no se guarda. El registro dice solo qué pasó, dónde y qué decidió el operador." |
+| 5.3 | Opciones: persona autorizada, enviar vigilante, continuar; elegir "Enviar vigilante". La hoja se cierra y arriba aparece "Vigilante en camino · el robot espera tu orden para seguir" | "La persona que mira la foto decide. El robot espera pausado hasta que el operador lo reanude." |
+| 5.4 | Historial: el evento sin foto y la orden "Reconocer alerta · Enviar vigilante" | "La foto se usa para decidir y no se guarda. El registro dice solo qué pasó, dónde y qué decidió el operador." |
 
 ## 6. Cierre (6:50–7:30)
 
