@@ -83,10 +83,11 @@ class FakeTransport(
         reset()
         synchronized(lock) {
             when (scenario) {
-                // Con 45 % y consumo doble cruza el 25 % a mitad de ronda sin quedar bloqueada al iniciar.
+                // Sale con el mínimo operativo (40 %) y una celda degradada que gasta 6 veces lo normal:
+                // la ronda (~7 % nominal) cruza el 25 % a mitad de camino y el 15 % cerca del final. Ver D8.
                 SimScenario.LOW_BATTERY -> {
-                    simulator.setBatteryPercent(45)
-                    simulator.drainFactor = 2.0
+                    simulator.setBatteryPercent(40)
+                    simulator.drainFactor = 6.0
                 }
                 SimScenario.OBSTACLE -> simulator.planIncident("PC4", IncidentType.OBSTACLE)
                 SimScenario.PERSON_IN_RESTRICTED_ZONE -> simulator.planIncident("PC5", IncidentType.PERSON_IN_RESTRICTED_ZONE)

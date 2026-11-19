@@ -736,8 +736,8 @@ class RobotSimulator(
         const val COMPLETED_HOLD_MS = 2_000L
         const val LINK_LOSS_RETURN_MS = 60_000L
         const val INCIDENT_DISTANCE_M = 2.0
-        const val IDLE_PERCENT_PER_S = 0.003
-        const val CHARGE_PERCENT_PER_S = 0.01
+        const val IDLE_PERCENT_PER_S = 0.007
+        const val CHARGE_PERCENT_PER_S = 0.015
         const val LOW_BATTERY_PERCENT = 25.0
         const val CRITICAL_BATTERY_PERCENT = 15.0
         const val TEMP_WARNING_C = 27.0
