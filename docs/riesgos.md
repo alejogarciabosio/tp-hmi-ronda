@@ -7,7 +7,7 @@ Dos aclaraciones que valen para todo el documento:
 - La "Detención operativa (software)" de la app es una orden simulada enviada al robot. **No reemplaza la parada de emergencia física** ni el corte de energía del robot.
 - Una orden enviada no es una orden ejecutada. La app distingue enviada, aceptada y verificada por telemetría.
 
-Cada riesgo se describe con causa, consecuencia, medida (de interfaz, de lógica o de procedimiento) y la forma de verificar que la medida existe y funciona. "Verificación" remite a escenarios del simulador (E1 a E5, ver preentrega §9) o a tests de `core`; los nombres de tests son los previstos y se ajustan cuando exista el código.
+Cada riesgo se describe con causa, consecuencia, medida (de interfaz, de lógica o de procedimiento) y la forma de verificar que la medida existe y funciona. "Verificación" remite a escenarios del simulador (E1 a E5, ver preentrega §9) o a tests de `core`; los nombres de tests citados existen en el repositorio.
 
 ## Resumen
 
@@ -18,7 +18,7 @@ Cada riesgo se describe con causa, consecuencia, medida (de interfaz, de lógica
 | RG3 | Pérdida de conexión | Alta | Media | Datos marcados como antiguos, comandos deshabilitados, resincronización | E3 |
 | RG4 | Batería insuficiente para volver a la base | Alta | Media | Bloqueo de inicio, cálculo de "alcanza para volver" | E2 |
 | RG5 | Privacidad de las personas detectadas | Media | Alta | No se guardan imágenes, registro mínimo, retención acotada | E5 |
-| RG6 | Dos operadores con órdenes contradictorias | Media | Baja | Sesión exclusiva por robot | selección de robot |
+| RG6 | Dos operadores con órdenes contradictorias | Media | Baja | Control exclusivo por robot (`ControlSession`); detención operativa siempre disponible | `SupervisionViewModelTest`, `ControlViewModelTest` |
 | RG7 | Escalones fuera del rango del robot | Alta | A confirmar | Relevamiento previo, ruta solo por tramos validados | procedimiento |
 
 Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no mediciones.
@@ -39,11 +39,11 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 
 ## RG2. Orden accidental
 
-- **Descripción.** El operador cancela la misión, pide regreso o detiene al robot por un toque involuntario (garita con poca luz, guantes, celular en la mano).
+- **Descripción.** El operador cancela la misión, pide el regreso a la base o detiene al robot por un toque involuntario (garita con poca luz, guantes, celular en la mano).
 - **Causa.** Botones de consecuencia física cercanos entre sí o de un solo toque.
 - **Consecuencia.** Ronda interrumpida sin necesidad; o, al revés, una orden de movimiento enviada sin querer.
 - **Medidas.**
-  - Interfaz: Cancelar, Regreso a punto seguro y Detención operativa requieren **mantener presionado 1 s** (barra de progreso), sin diálogos de confirmación repetitivos. Iniciar misión muestra un resumen previo (checklist de condiciones).
+  - Interfaz: Cancelar, Regresar a la base y Detención operativa requieren **mantener presionado 1 s** (`HoldToConfirm`, con barra de progreso), sin diálogos de confirmación repetitivos. Iniciar misión muestra un resumen previo (checklist de condiciones).
   - Interfaz: los botones destructivos están separados físicamente de los de uso habitual y con otro tratamiento visual (rayado de señalización).
   - Lógica: un solo comando de misión pendiente a la vez; la matriz de habilitación (`CommandPolicy`) deshabilita lo que no corresponde con el motivo escrito.
   - Recuperación: tras una detención operativa, "Reanudar" queda disponible si no hay alerta crítica sin reconocer.
@@ -80,7 +80,7 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 - **Medidas.**
   - Lógica: el contrato JSON (propuesta propia del grupo, no el protocolo oficial de Unitree) transporta una única foto por incidente, solo para que el operador decida (D9). La foto **se muestra y no se guarda**: no entra en el historial ni en la base local, y se descarta al resolverse el incidente. El evento registra solo "persona detectada, PC5, 02:14, decisión del operador". No hay grabación continua ni video.
   - Procedimiento: retención de eventos de 30 días; acceso al historial solo para el rol supervisor; aviso en el edificio de que existe un robot de ronda. El plazo y los roles son propuestas del grupo, a validar con el área legal del edificio.
-  - Interfaz: la foto aparece solo en la hoja de decisión del incidente activo, con su hora de captura; el historial y la pantalla de alertas resueltas no muestran imágenes; no hay función para guardar ni compartir la foto.
+  - Interfaz: la foto aparece solo en la hoja de decisión y en la miniatura de la alerta, y únicamente mientras la alerta no está reconocida y el incidente sigue activo, con su hora de captura; el historial y las alertas reconocidas no muestran imágenes; no hay función para guardar ni compartir la foto.
 - **Verificación.** Revisión del esquema Room (ninguna columna de imagen) y del contrato JSON propuesto, que no es el protocolo oficial de Unitree (la foto viaja solo en el evento del incidente). E5: el registro del evento contiene solo los campos listados y la foto deja de mostrarse una vez tomada la decisión.
 
 ## RG6. Dos operadores con órdenes contradictorias
@@ -88,8 +88,12 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 - **Descripción.** Dos personas con la app abierta envían órdenes distintas al mismo robot.
 - **Causa.** Sin noción de quién tiene el control.
 - **Consecuencia.** Estados inconsistentes (uno pausa, otro reanuda).
-- **Medidas.** Sesión exclusiva por robot: en la selección se muestra "RONDA-01 controlado por: Garita PB" y la acción "Tomar control"; el otro cliente queda en solo lectura. El manual además advierte no mezclar comandos de alto nivel con control remoto (GO2-8), lo que refuerza la regla de un único origen de órdenes.
-- **Verificación.** Revisión de la pantalla de selección en el Figma; en la app, el robot muestra quién tiene el control.
+- **Medidas.** Implementadas (D11 en `docs/decisiones.md`):
+  - Interfaz y lógica: control exclusivo por robot con `ControlSession`. En Selección el operador toma el control; sin control propio las órdenes quedan deshabilitadas con el motivo "Tomá el control del robot en Selección" (`ControlSession.gate`). Selección muestra además un robot en uso por otra garita (dato de ejemplo) y uno no compatible.
+  - Detener siempre gana: la detención operativa (software) no depende del control, y reconocer una alerta tampoco. Frenar al robot no queda bloqueado por una regla de permisos. Sigue sin reemplazar la parada física.
+  - Procedimiento: el manual advierte no mezclar comandos de alto nivel con control remoto (GO2-8), lo que refuerza la regla de un único origen de órdenes.
+- **Límite.** La exclusividad es una regla local de la app: con un solo cliente simulado no hay arbitraje real entre dos celulares. Un gateway real tendría que aplicarla del lado del robot.
+- **Verificación.** Pruebas de `SupervisionViewModelTest` y `ControlViewModelTest` con y sin control propio (órdenes deshabilitadas con el motivo; detención operativa habilitada). Revisión manual: en el APK, sin tomar el control, Control y Supervisión muestran el motivo.
 
 ## RG7. Escalones fuera del rango del robot
 
