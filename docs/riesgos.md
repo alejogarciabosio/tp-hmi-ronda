@@ -64,18 +64,18 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 ## R4. Batería insuficiente para volver a la base
 
 - **Descripción.** El robot se queda sin energía lejos de la base, en un piso distinto o en una escalera.
-- **Causa.** Se subestima el consumo (el fabricante indica 2-4 h con 15000 mAh, y que baja con velocidad alta, carga, posturas bruscas y terreno irregular, GO2-1, GO2-8). El manual indica detener el robot cuando queda un solo bloque de batería.
+- **Causa.** Se subestima el consumo (el fabricante indica 2-4 h con 15000 mAh, equivalentes a 432 Wh, medidas sin carga y alternando reposo y marcha; baja con velocidad alta, carga, posturas bruscas y terreno irregular, GO2-1, GO2-8 y GO2-9; no hay medición independiente). Los coeficientes del simulador y su fundamento están en `docs/supuestos-simulacion.md`. El manual indica detener el robot cuando queda un solo bloque de batería.
 - **Consecuencia.** Caída en una escalera, robot detenido en un lugar de paso, ronda sin terminar.
 - **Medidas.**
   - Lógica: no se inicia una ronda con menos de 40 % de batería ni si no alcanza para la ruta; "alcanza para volver" se calcula con la distancia restante.
   - Interfaz: advertencia a 25 %, con acción destacada "Regresar a base"; a 15 % el robot propone regreso automático y el operador lo confirma. "Continuar igual" se deshabilita si no alcanza.
-  - Procedimiento: punto seguro alternativo en el descanso de la escalera E si la base queda lejos. La base de carga es compatible con el EDU (GO2-1); el acople autónomo por API no se confirmó.
+  - Procedimiento: punto seguro alternativo en el descanso de la escalera E si la base queda lejos. La base de carga es compatible con el EDU (GO2-1) y el manual dice que la EDU soporta carga autónoma (GO2-8); no se pudo confirmar una llamada equivalente en el SDK, y los antecedentes de patrullaje con Go2 resuelven el acople por fuera del firmware (ver `docs/fuentes.md`, ampliación del 2026-11-20).
 - **Verificación.** Escenario E2 (arranca con 34 %, cruza 25 %). Tests de `BatteryPolicy` y de `CommandPolicy` (iniciar con batería insuficiente devuelve rechazo con motivo).
 
 ## R5. Privacidad de las personas detectadas
 
 - **Descripción.** El robot lleva cámara y puede registrar a personas autorizadas o no (estudiantes, docentes, personal).
-- **Causa.** La detección de personas se apoya en la cámara frontal y el LiDAR; guardar imágenes crearía datos personales sin necesidad.
+- **Causa.** La detección de personas no figura como función nativa del Go2 en las fuentes leídas; habría que desarrollarla sobre la cámara frontal y el LiDAR (un proyecto comunitario lo hace con un detector YOLO propio, GO2-12). Guardar imágenes crearía datos personales sin necesidad.
 - **Consecuencia.** Exposición de datos personales, incumplimiento de normas de protección de datos, rechazo del servicio.
 - **Medidas.**
   - Lógica: la app y el contrato JSON (propuesta propia del grupo, no el protocolo oficial de Unitree) no transportan ni guardan imágenes de personas. El evento registra solo "persona detectada, PC5, 02:14, decisión del operador".
