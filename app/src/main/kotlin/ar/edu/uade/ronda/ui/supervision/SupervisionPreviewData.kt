@@ -22,7 +22,7 @@ internal object SupervisionPreviewData {
         CheckpointUi(
             i + 1, s.name, states.getOrElse(i) { CheckpointState.PENDING },
             if (states.getOrNull(i).let { it == CheckpointState.VERIFIED || it == CheckpointState.WITH_ISSUE }) "23:${41 + i}" else null,
-            s.floor, BuildingPlan.normX(s.xM), BuildingPlan.normY(s.yM),
+            s.floor, BuildingPlan.normX(s.x), BuildingPlan.normY(s.y),
         )
     }
 

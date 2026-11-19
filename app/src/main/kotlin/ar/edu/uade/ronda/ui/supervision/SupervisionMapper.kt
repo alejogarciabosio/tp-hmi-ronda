@@ -188,7 +188,7 @@ internal object SupervisionMapper {
             }
             CheckpointUi(
                 n, stop.name, state, resolved?.takeIf { it.state != CheckpointState.SKIPPED }?.let { clockFormat.format(Instant.ofEpochMilli(it.at)) },
-                stop.floor, BuildingPlan.normX(stop.xM), BuildingPlan.normY(stop.yM),
+                stop.floor, BuildingPlan.normX(stop.x), BuildingPlan.normY(stop.y),
             )
         }
     }
