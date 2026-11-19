@@ -385,6 +385,23 @@ class RobotSimulatorTest {
     }
 
     @Test
+    fun `a escala x8 el regreso por enlace caido sigue esperando 60 segundos reales`() {
+        val h = SimHarness(); h.tick()
+        h.sim.setTimeScale(h.now, 8.0)
+        h.start()
+        h.runUntil { it.operationalState == OperationalState.EN_RONDA }
+        h.sim.setLinkUp(h.now, false)
+        // 15 s reales son 120 s de simulación: igual no regresa, el plazo es de comunicación.
+        h.run(15_000)
+        assertEquals(OperationalState.DETENIDO, h.last!!.operationalState)
+        h.run(43_000)
+        assertEquals(OperationalState.DETENIDO, h.last!!.operationalState)
+        // Cumplidos los 60 s reales arranca el regreso (cerca de la base, a x8 llega enseguida).
+        h.run(3_000)
+        assertTrue(h.last!!.operationalState in setOf(OperationalState.REGRESANDO, OperationalState.EN_BASE))
+    }
+
+    @Test
     fun `si el enlace vuelve antes de 60 segundos el robot espera la orden del operador`() {
         val h = SimHarness(); h.tick(); h.start()
         h.runUntil { it.operationalState == OperationalState.EN_RONDA }

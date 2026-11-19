@@ -60,9 +60,10 @@ data class SimOutput(val kind: OutputKind, val json: String)
  * No es thread-safe: el transporte serializa los accesos.
  *
  * Lleva dos relojes. La hora real (`nowMs` de cada llamada) estampa los mensajes y decide si una
- * orden llegó vencida. El reloj de simulación ([simNowMs]) avanza la hora real multiplicada por
- * [timeScale] y gobierna todo lo físico: desplazamiento, fases (preparación, verificación, espera
- * de 30 s, regreso a los 60 s sin enlace), batería y temperatura.
+ * orden llegó vencida, y también cuenta los 60 s sin enlace antes de regresar solo (es un plazo de
+ * comunicación, no del movimiento). El reloj de simulación ([simNowMs]) avanza la hora real
+ * multiplicada por [timeScale] y gobierna todo lo físico: desplazamiento, fases (preparación,
+ * verificación, espera de 30 s), batería y temperatura.
  */
 class RobotSimulator(
     private val random: Random = Random(1),
@@ -246,7 +247,9 @@ class RobotSimulator(
     fun setLinkUp(nowMs: Long, up: Boolean): List<SimOutput> {
         syncClock(nowMs)
         if (!up) {
-            if (linkDownSince == null) linkDownSince = simNowMs
+            // Hora real: los 60 s sin enlace son un plazo de comunicación que el operador lee en
+            // Desconexión, no un tiempo físico del robot; el modo acelerado no lo acorta.
+            if (linkDownSince == null) linkDownSince = nowMs
             // Supuesto declarado: ante pérdida de enlace el robot se detiene y espera.
             if (state.inMotion) {
                 if (state != REQUIERE_DECISION) {
@@ -463,7 +466,7 @@ class RobotSimulator(
             COMPLETADA, CANCELADA -> if (sim >= phaseUntil) startReturn(SimMap.base)
             DETENIDO -> {
                 val down = linkDownSince
-                if (linkHold && down != null && sim - down >= LINK_LOSS_RETURN_MS) {
+                if (linkHold && down != null && now - down >= LINK_LOSS_RETURN_MS) {
                     linkHold = false
                     startReturn(SimMap.base)
                 }
