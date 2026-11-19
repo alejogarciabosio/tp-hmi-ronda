@@ -44,7 +44,15 @@ La tarea corre solo `SupervisionDemoRecorder` (Robolectric con gráficos nativos
 
 ## Capturas de la app completa
 
-Faltan: **[PENDIENTE]**. Se toman del APK en el emulador (Pixel, API 35) con el botón de captura del emulador o con `adb exec-out screencap -p > archivo.png`. Van en `capturas/` con estos nombres:
+`capturas/app-*.png` (una por pantalla) y `capturas/escenario-*.png` (el momento clave de cada escenario) salen de la app real: ViewModels reales contra el simulador, con tiempo virtual y semilla fija (42), renderizadas con Robolectric (gráficos nativos, 411x891 dp a xxhdpi) sin emulador. Cada pantalla se captura en su primer viewport: las que scrollean (Misiones, Control, Desconexión, Panel de simulación) quedan cortadas abajo, como en el teléfono. Además de la tabla, `app-02-supervision.png` muestra Supervisión en ronda.
+
+### Cómo regenerarlas
+
+```bash
+./gradlew :app:recordCapturas
+```
+
+La tarea corre solo `CapturasRecorder` y reescribe los PNG en `capturas/`. Ese test está excluido de `:app:testDebugUnitTest`. Es la app contra el simulador, no contra un robot real. Para el APK real en un emulador se pueden tomar las mismas con `adb exec-out screencap -p > archivo.png`.
 
 | Archivo | Cómo llegar |
 |---|---|
@@ -63,4 +71,4 @@ Faltan: **[PENDIENTE]**. Se toman del APK en el emulador (Pixel, API 35) con el 
 | `escenario-4-obstaculo.png` | Escenario 4, hoja de decisión con la foto |
 | `escenario-5-persona.png` | Escenario 5, hoja de decisión con la foto |
 
-El guion de cada escenario está en `docs/entregas/guion-video.md`. Las capturas de los escenarios pueden salir del mismo video.
+El guion de cada escenario está en `docs/entregas/guion-video.md`.
