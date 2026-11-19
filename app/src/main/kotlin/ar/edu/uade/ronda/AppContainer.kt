@@ -16,6 +16,7 @@ import ar.edu.uade.ronda.data.local.RoomHistoryRepository
 import ar.edu.uade.ronda.data.local.toOutcomes
 import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
 import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
+import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,6 +50,7 @@ class AppContainer(
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
         initializer { SupervisionViewModel(robotRepository, clock) }
         initializer { SeleccionViewModel(robotRepository) }
+        initializer { TelemetriaViewModel(robotRepository, clock) }
     }
 
     init {
