@@ -88,7 +88,14 @@ fun ControlScreen(
                 SectionTitle("ÓRDENES")
                 CommandButton(state.pause, onPause)
                 CommandButton(state.resume, onResume)
-                CommandButton(state.returnToBase, onReturnToBase)
+                HoldToConfirm(
+                    state.returnToBase.label, onReturnToBase,
+                    enabled = state.returnToBase.state != CommandUiState.DISABLED && state.returnToBase.state != CommandUiState.PENDING,
+                    disabledReason = state.returnToBase.reason,
+                )
+                if (state.returnToBase.state != CommandUiState.DISABLED) {
+                    state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                }
                 CommandButton(state.safePoint, onSafePoint)
                 CommandButton(state.skipCheckpoint, onSkipCheckpoint)
                 HoldToConfirm(

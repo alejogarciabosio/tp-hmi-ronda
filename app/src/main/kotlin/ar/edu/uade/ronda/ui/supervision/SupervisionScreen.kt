@@ -40,6 +40,7 @@ import ar.edu.uade.ronda.ui.components.StateStrip
 import ar.edu.uade.ronda.ui.components.StateSymbol
 import ar.edu.uade.ronda.ui.components.TelemetryReadout
 import ar.edu.uade.ronda.ui.components.color
+import ar.edu.uade.ronda.ui.model.CommandUiState
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.model.StatusLevel
@@ -150,7 +151,14 @@ fun SupervisionScreen(
                     CommandButton(state.pause, onPause, Modifier.weight(1f))
                     CommandButton(state.resume, onResume, Modifier.weight(1f))
                 }
-                CommandButton(state.returnToBase, onReturnToBase)
+                HoldToConfirm(
+                    state.returnToBase.label, onReturnToBase,
+                    enabled = state.returnToBase.state != CommandUiState.DISABLED && state.returnToBase.state != CommandUiState.PENDING,
+                    disabledReason = state.returnToBase.reason,
+                )
+                if (state.returnToBase.state != CommandUiState.DISABLED) {
+                    state.returnToBase.reason?.let { Text(it, style = RondaType.textoNota, color = RondaColors.bone400) }
+                }
                 HoldToConfirm(
                     OperationalStopTexts.LABEL, onOperationalStop,
                     enabled = state.stop.enabled, disabledReason = state.stop.reason,
