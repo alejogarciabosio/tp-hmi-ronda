@@ -34,9 +34,15 @@ class ContrasteTest {
         assertAtLeast(4.5, RondaColors.stateOk, RondaColors.ink950, "normal")
     }
 
-    @Test fun datoViejoYDeshabilitadoSuperanElMinimoNoTextual() {
-        // Gris a propósito (dato no vigente / control deshabilitado). Se exige 3:1 y no 4,5:1 porque
-        // nunca va solo: lo acompañan el símbolo de estado, el tachado y el texto del motivo.
-        assertAtLeast(3.0, RondaColors.stateStale, RondaColors.ink950, "dato viejo / deshabilitado")
+    @Test fun datoViejoYDeshabilitadoCumpleAAMantenidoseAtenuado() {
+        // Gris más claro que antes (3,4:1 no alcanzaba para texto) pero más apagado que el texto secundario;
+        // además lo acompañan el símbolo de estado, el tachado y el texto del motivo.
+        assertAtLeast(4.5, RondaColors.stateStale, RondaColors.ink950, "dato viejo sobre fondo")
+        assertAtLeast(4.5, RondaColors.stateStale, RondaColors.ink900, "dato viejo sobre panel")
+        assertAtLeast(4.5, RondaColors.stateStale, RondaColors.ink850, "dato viejo sobre tarjeta elegida")
+        val viejo = ratio(RondaColors.stateStale, RondaColors.ink950)
+        val secundario = ratio(RondaColors.bone400, RondaColors.ink950)
+        println("contraste dato viejo = ${"%.2f".format(viejo)}:1 (secundario ${"%.2f".format(secundario)}:1)")
+        assertTrue("el dato viejo debe verse más atenuado que el texto secundario", viejo < secundario)
     }
 }

@@ -15,6 +15,6 @@ object RondaColors {
     val stateOk = Color(0xFF5FA77A)
     val stateWarn = Color(0xFFF2A900)
     val stateError = Color(0xFFE5482D)
-    val stateStale = Color(0xFF6E6A5E)
+    val stateStale = Color(0xFF908B7C)
     val scrim = Color(0xFF0B0A08)
 }
