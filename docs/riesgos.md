@@ -78,10 +78,10 @@ Severidad y probabilidad son estimaciones del grupo para el caso de estudio, no 
 - **Causa.** La detección de personas se apoya en la cámara frontal y el LiDAR; guardar imágenes crearía datos personales sin necesidad.
 - **Consecuencia.** Exposición de datos personales, incumplimiento de normas de protección de datos, rechazo del servicio.
 - **Medidas.**
-  - Lógica: la app y el contrato no transportan ni guardan imágenes de personas. El evento registra solo "persona detectada, PC5, 02:14, decisión del operador".
+  - Lógica: la app y el contrato JSON (propuesta propia del grupo, no el protocolo oficial de Unitree) no transportan ni guardan imágenes de personas. El evento registra solo "persona detectada, PC5, 02:14, decisión del operador".
   - Procedimiento: retención de eventos de 30 días; acceso al historial solo para el rol supervisor; aviso en el edificio de que existe un robot de ronda. El plazo y los roles son propuestas del grupo, a validar con el área legal del edificio.
   - Interfaz: la pantalla de alertas no muestra imágenes; no hay función de captura en la app.
-- **Verificación.** Revisión del esquema Room (ninguna columna de imagen) y del contrato JSON (ningún campo de imagen). E5: el registro del evento contiene solo los campos listados.
+- **Verificación.** Revisión del esquema Room (ninguna columna de imagen) y del contrato JSON propuesto, que no es el protocolo oficial de Unitree (ningún campo de imagen). E5: el registro del evento contiene solo los campos listados.
 
 ## R6. Dos operadores con órdenes contradictorias
 
