@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -117,26 +118,36 @@ fun HoldToConfirm(
 ) {
     var progress by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
+    // El gesto vive más que una composición: siempre se llama a la última acción recibida.
+    val confirm by rememberUpdatedState(onConfirmed)
     HoldToConfirmContent(
         label, progress,
         modifier
             .semantics {
                 contentDescription = if (enabled) "$label. Mantené presionado ${holdSeconds(holdMillis)} para confirmar."
                 else "$label. No disponible. ${disabledReason.orEmpty()}"
-                if (enabled) onLongClick(label = "Confirmar $label") { onConfirmed(); true }
+                if (enabled) onLongClick(label = "Confirmar $label") { confirm(); true }
             }
             .pointerInput(enabled, holdMillis) {
                 detectTapGestures(onPress = {
                     if (!enabled) return@detectTapGestures
+                    var released = false
                     val job = scope.launch {
                         val anim = Animatable(0f)
                         anim.animateTo(1f, tween(holdMillis, easing = LinearEasing)) { progress = value }
-                        onConfirmed()
+                        // Si el dedo se levantó o el gesto se canceló mientras terminaba, no se confirma.
+                        if (!released) confirm()
                         progress = 0f
                     }
-                    tryAwaitRelease()
-                    job.cancel()
-                    progress = 0f
+                    // finally: si el gesto se cancela (p. ej. cambia `enabled`), tryAwaitRelease lanza
+                    // CancellationException y el llenado no debe seguir hasta confirmar solo.
+                    try {
+                        tryAwaitRelease()
+                    } finally {
+                        released = true
+                        job.cancel()
+                        progress = 0f
+                    }
                 })
             },
         enabled,
