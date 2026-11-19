@@ -12,6 +12,9 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.view.drawToBitmap
 import ar.edu.uade.ronda.core.Clock
 import ar.edu.uade.ronda.core.control.SimScenario
+import ar.edu.uade.ronda.core.model.AlertResolution
+import ar.edu.uade.ronda.core.model.AlertType
+import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.CommandParams
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.RouteId
@@ -177,7 +180,9 @@ class CapturasRecorder {
     @Test fun escenario2() {
         control.loadScenario(SimScenario.LOW_BATTERY); advance(1_000)
         startRound()
-        runUntil("decisión de batería", maxMs = 900_000) { repo.activeIncident.value != null }
+        runUntil("alerta de batería baja", maxMs = 900_000) {
+            repo.telemetry.value?.unacknowledgedAlerts?.any { it.type == AlertType.LOW_BATTERY } == true
+        }
         advance(1_500)
         show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-2-bateria-baja")
@@ -206,6 +211,17 @@ class CapturasRecorder {
         advance(1_500)
         show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
         shot("escenario-5-persona")
+    }
+
+    @Test fun escenario5Vigilante() {
+        control.loadScenario(SimScenario.PERSON_IN_RESTRICTED_ZONE); advance(1_000)
+        startRound(); runUntil("incidente", maxMs = 900_000) { repo.activeIncident.value != null }
+        val alerta = repo.telemetry.value!!.unacknowledgedAlerts.first { it.type == AlertType.PERSON_DETECTED }
+        repo.send(CommandType.ACKNOWLEDGE_ALERT, CommandParams(alertId = alerta.id, resolution = AlertResolution.SEND_GUARD))
+        runUntil("robot pausado") { repo.telemetry.value?.operationalState == OperationalState.PAUSADA }
+        advance(3_000)
+        show { SupervisionRoute(SupervisionViewModel(repo, clock, session, history.log), {}) }
+        shot("escenario-5b-vigilante-en-camino")
     }
 
     private fun verified() = repo.telemetry.value?.service?.checkpointsVerified ?: 0
