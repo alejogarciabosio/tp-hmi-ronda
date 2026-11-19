@@ -91,3 +91,27 @@ Se **mantiene en 40 %**. Con los coeficientes propuestos la ronda cuesta ~7,4 % 
 | Los 432 Wh | Salen de distribuidores (28,8 V nominal x 15 Ah); no los publica Unitree |
 
 Nada de esto se probó con un Go2 real. Medir el consumo de una ronda real (con la telemetría de batería del propio robot) reemplazaría este modelo.
+
+## 5. Cámara, foto del incidente y detección de personas
+
+Fuentes: ampliación del 2026-11-19 de `docs/fuentes.md` (CAM-1, CAM-2, GO2-1, GO2-6, GO2-15, JET-1, JET-2, YOL-1, YOL-2, HIL-1).
+
+**Qué se confirmó**
+
+- El SDK trae un cliente de video: `VideoClient` con `GetImageSample()` en C++ (`example/go2/go2_video_client.cpp`) y en Python (`example/go2/front_camera/capture_image.py` y `camera_opencv.py`). Devuelve una imagen por llamada (una foto, no un stream); los ejemplos guardan los bytes como `.jpg` (CAM-1, CAM-2). Eso respalda el planteo de adjuntar una foto al incidente. El formato exacto, la resolución y la latencia no están declarados en el código leído.
+- Unitree no nombra el módulo de cómputo de la EDU: dice "Orin (40-100 TOPS)" (GO2-1). Los distribuidores lo concretan como Jetson Orin Nano 8 GB de 40 TOPS (GO2-6) y Orin NX 16 GB de 100 TOPS en la EDU Plus (GO2-15). Se toma el caso menos favorable, 40 TOPS.
+- El Go2 no detecta personas de forma nativa (ver §1). Se propone un modelo propio: YOLO preentrenado en COCO, clase `person` (clase 0, YOL-2), sobre la foto de la cámara frontal, a bordo (módulo Orin) o en una computadora acompañante. Para YOLOv8n hay un benchmark en Orin Nano de 4,4 ms por imagen con TensorRT FP16 a 640 px, ~225 FPS en modo MAXN_SUPER (JET-2); otro con YOLO26n da 4,6 ms en Orin Nano Super (JET-1). Son kits de desarrollo y mediciones de GPU, no del robot. Aun con un margen de 10 veces, un detector liviano alcanza de sobra para una foto por incidente o para pocos cuadros por segundo. El rendimiento en el módulo real del Go2 no se midió.
+
+**Criterio de diseño: la máquina propone, la persona decide**
+
+Un detector tiene falsos positivos; un proveedor de videovigilancia lo plantea como "pista, no decisión" y pide triaje con verificación humana (HIL-1; no es una norma). Por eso, ante una posible persona (o un obstáculo o una falla) el robot se detiene a 2 m, adjunta una foto de la cámara frontal al evento y el operador decide mirándola. El robot no concluye "intruso".
+
+**Foto y no video**
+
+La foto pesa mucho menos que un stream y se manda una sola vez, por lo que tolera conexiones degradadas (Wi-Fi o 4G, GO2-1). Si la conexión está degradada, la foto puede llegar tarde o no llegar: la app debe seguir mostrando el incidente y las opciones sin ella. El peso real de la foto no se midió.
+
+**Qué es supuesto del simulador**
+
+- La imagen del simulador es un recurso de ejemplo, no una captura de la cámara del Go2. La detección de personas del simulador es un dato generado, no un modelo corriendo.
+- Los falsos positivos y negativos no se simulan salvo que un escenario los inyecte.
+- Privacidad: una foto con personas es un dato personal. Retención, acceso y si se guarda en el historial se resuelven en `docs/decisiones.md` (D9), no acá.

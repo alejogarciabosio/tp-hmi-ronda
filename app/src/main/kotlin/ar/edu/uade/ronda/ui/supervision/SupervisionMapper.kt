@@ -6,6 +6,7 @@ import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.ExitStatus
 import ar.edu.uade.ronda.core.model.Incident
+import ar.edu.uade.ronda.core.model.Snapshot
 import ar.edu.uade.ronda.core.model.IncidentType
 import ar.edu.uade.ronda.core.model.OperationalState
 import ar.edu.uade.ronda.core.model.RejectReason
@@ -347,7 +348,15 @@ internal object SupervisionMapper {
                 val a = av(type)
                 DecisionOptionUi(o.id, o.label, o.id == SupervisionViewModel.OPTION_RETURN, a.enabled, a.reason)
             },
+            inc.snapshot?.let { snapshotUi(it, title, i) },
         )
+    }
+
+    private fun snapshotUi(s: Snapshot, title: String, i: SupervisionInputs): SnapshotUi {
+        // Sin enlace o con datos viejos no se insinúa que la foto es en vivo.
+        val caption = if (i.connection.isStale) "Imagen del momento del incidente"
+        else "Cámara frontal · ${ageText(i.nowMs - s.capturedAt)}"
+        return SnapshotUi(s.id, s.data, caption, "Foto de la cámara frontal del robot: $title")
     }
 
     // ---- Formato ----

@@ -8,7 +8,14 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import ar.edu.uade.ronda.core.model.Alert
+import ar.edu.uade.ronda.core.model.AlertType
+import ar.edu.uade.ronda.core.model.RobotEvent
+import ar.edu.uade.ronda.core.model.Severity
+import ar.edu.uade.ronda.core.model.Snapshot
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventRecorderTest {
@@ -44,5 +51,23 @@ class EventRecorderTest {
         recorder.recordTelemetry(telemetry(1, OperationalState.EN_RONDA, progress("m9")))
         recorder.recordEvent(alertEvent())
         assertEquals("m9", repo.events.getValue("e1").missionId)
+    }
+
+    @Test fun noPersisteLaFotoDelIncidente() = runTest {
+        val repo = FakeHistory()
+        val recorder = EventRecorder(repo, TestScope(testScheduler))
+        val marca = "QUJDREVGR0hJSktMTU5PUA=="
+        val snap = Snapshot("foto-privada-1", "image/jpeg", 2000, marca)
+        recorder.recordEvent(
+            RobotEvent.AlertRaised(
+                "e7", "RONDA-01", 2000, Severity.CRITICAL,
+                Alert("a7", AlertType.PERSON_DETECTED, Severity.CRITICAL, "Persona detectada", 2000, false, snap),
+            ),
+        )
+        val fila = repo.events.getValue("e7").toString()
+        assertFalse(fila.contains(marca))
+        assertFalse(fila.contains("foto-privada-1"))
+        assertFalse(fila.contains("image/jpeg"))
+        assertTrue(EventRecord::class.java.declaredFields.none { it.name.contains("snapshot", ignoreCase = true) })
     }
 }

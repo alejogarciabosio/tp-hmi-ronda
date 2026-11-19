@@ -43,7 +43,7 @@ fun CommandChip(ui: CommandChipUi, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         StateSymbol(look.level, size = 12.dp)
-        Text(look.text, style = RondaType.rotuloChico, color = look.level.color())
+        Text(look.text, style = RondaType.rotuloChico, color = look.level.color(), maxLines = 1, softWrap = false)
     }
 }
 

@@ -189,6 +189,42 @@ class SupervisionViewModelTest {
     }
 
     @Test
+    fun `la decision con foto arma el pie con la antiguedad y la descripcion accesible`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 4))
+        repo.activeIncident.value = incident().copy(snapshot = Snapshot("sim-obstaculo", "image/jpeg", 0))
+        advanceTimeBy(4_000); runCurrent()
+        repo.publish(tele(4_000, OperationalState.REQUIERE_DECISION, index = 4)); runCurrent()
+        val snap = vm.uiState.value.decision?.snapshot
+        assertEquals("sim-obstaculo", snap?.id)
+        assertEquals("Cámara frontal · hace 4,0 s", snap?.caption)
+        assertEquals("Foto de la cámara frontal del robot: Obstáculo en el pasillo", snap?.contentDescription)
+    }
+
+    @Test
+    fun `con el enlace caido la foto se marca como del momento del incidente`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 4))
+        repo.activeIncident.value = incident().copy(snapshot = Snapshot("sim-obstaculo", "image/jpeg", 0))
+        runCurrent()
+        repo.connection.value = ConnectionState.NO_DATA
+        advanceTimeBy(20_000); runCurrent()
+        assertEquals("Imagen del momento del incidente", vm.uiState.value.decision?.snapshot?.caption)
+    }
+
+    @Test
+    fun `un incidente sin foto no inventa una`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 4))
+        repo.activeIncident.value = incident()
+        runCurrent()
+        assertNull(vm.uiState.value.decision?.snapshot)
+    }
+
+    @Test
     fun `con un incidente abre la decision y bloquea reanudar a secas`() = runTest(dispatcher) {
         val vm = viewModel()
         repo.availability.value = enabledAll()

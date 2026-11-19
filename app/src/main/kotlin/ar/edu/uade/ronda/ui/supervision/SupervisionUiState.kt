@@ -26,7 +26,22 @@ data class DecisionOptionUi(
     val reason: String? = null,
 )
 
-data class DecisionUi(val title: String, val message: String, val options: List<DecisionOptionUi>)
+/** Foto adjunta al incidente, ya con el pie de foto armado. */
+data class SnapshotUi(
+    val id: String,
+    /** JPEG en base64; null con el simulador, que usa ilustraciones locales. */
+    val data: String?,
+    /** "Cámara frontal · hace 12 s" o, con datos viejos, "Imagen del momento del incidente". */
+    val caption: String,
+    val contentDescription: String,
+)
+
+data class DecisionUi(
+    val title: String,
+    val message: String,
+    val options: List<DecisionOptionUi>,
+    val snapshot: SnapshotUi? = null,
+)
 
 data class SupervisionUiState(
     val strip: StateStripUi,
