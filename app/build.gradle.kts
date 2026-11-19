@@ -63,4 +63,31 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// El video de demostración se graba con un test de Robolectric que no corre en testDebugUnitTest:
+// solo `./gradlew :app:recordDemo` lo activa (y entonces corre solo ese test).
+val recordingDemo = gradle.startParameter.taskNames.any { it.endsWith("recordDemo") }
+val demoFramesDir = layout.buildDirectory.dir("demo-frames").get().asFile
+
+tasks.withType<Test>().configureEach {
+    if (recordingDemo) {
+        filter { includeTestsMatching("*SupervisionDemoRecorder*") }
+        systemProperty("ronda.demo.frames", demoFramesDir.absolutePath)
+        outputs.upToDateWhen { false }
+    } else {
+        filter { excludeTestsMatching("*SupervisionDemoRecorder*") }
+    }
+}
+
+tasks.register("recordDemo") {
+    group = "verification"
+    description = "Graba la pantalla Supervisión contra el simulador y arma docs/evidencias/video/supervision-demo.mp4"
+    dependsOn("testDebugUnitTest")
+    doLast {
+        val out = rootProject.file("docs/evidencias")
+        exec { commandLine("bash", rootProject.file("docs/evidencias/armar-demo.sh").absolutePath, demoFramesDir.absolutePath, out.absolutePath) }
+    }
 }
