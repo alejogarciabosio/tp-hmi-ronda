@@ -23,6 +23,8 @@ import ar.edu.uade.ronda.ui.components.PreviewSurface
 import ar.edu.uade.ronda.ui.model.CommandButtonUi
 import ar.edu.uade.ronda.ui.model.CommandKind
 import ar.edu.uade.ronda.ui.components.CommandButton
+import ar.edu.uade.ronda.ui.alertas.AlertasRoute
+import ar.edu.uade.ronda.ui.alertas.AlertasViewModel
 import ar.edu.uade.ronda.ui.control.ControlRoute
 import ar.edu.uade.ronda.ui.control.ControlViewModel
 import ar.edu.uade.ronda.ui.misiones.MisionesRoute
@@ -43,7 +45,7 @@ fun RondaNavHost(
     modifier: Modifier = Modifier,
     startDestination: Route = Route.SUPERVISION,
 ) {
-    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL)
+    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS)
     NavHost(navController, startDestination.path, modifier) {
         val go: (Route) -> Unit = { navController.navigate(it.path) { launchSingleTop = true } }
         val back: () -> Unit = { navController.popBackStack() }
@@ -66,6 +68,10 @@ fun RondaNavHost(
         composable(Route.CONTROL.path) {
             val vm: ControlViewModel = viewModel(factory = viewModelFactory)
             ControlRoute(vm, go, back)
+        }
+        composable(Route.ALERTAS.path) {
+            val vm: AlertasViewModel = viewModel(factory = viewModelFactory)
+            AlertasRoute(vm, go)
         }
         Route.entries.filter { it !in implemented }.forEach { route ->
             composable(route.path) { PlaceholderScreen(route, go) }
