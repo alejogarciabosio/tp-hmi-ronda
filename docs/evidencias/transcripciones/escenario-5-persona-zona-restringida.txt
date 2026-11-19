@@ -15,19 +15,19 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 00:01.0  TELEMETRIA PREPARANDO | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 100 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 00:01.0  COMANDO  2c74ff92-e086-4298-9cf0-37f0aff89ed0 START_MISSION -> VERIFICADA (la telemetría refleja el efecto)
 00:03.5  TELEMETRIA EN_RONDA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 100 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-00:33.5  TELEMETRIA EN_RONDA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 98 % | Hall PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-00:40.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 98 % | Hall PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-01:10.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 96 % | Salida de emergencia PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-01:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 95 % | Salida de emergencia PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-01:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 94 % | Salida de emergencia PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-02:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 93 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-02:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 92 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-03:03.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 92 % | Escalera E (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-03:33.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 90 % | Pasillo A (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-03:37.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 89 % | Pasillo A (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+00:33.5  TELEMETRIA EN_RONDA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 100 % | Hall PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+00:40.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 99 % | Hall PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+01:10.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 99 % | Salida de emergencia PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+01:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 99 % | Salida de emergencia PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+01:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 98 % | Salida de emergencia PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+02:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 98 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+02:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 98 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+03:03.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 98 % | Escalera E (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+03:33.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 97 % | Pasillo A (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+03:37.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 97 % | Pasillo A (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 04:07.0  EVENTO   alerta PERSON_DETECTED CRITICAL (emitida a 04:07.0): Persona detectada en Sala técnica. El robot mantiene 2 m y se identificó por parlante.
 04:07.0  EVENTO   decisión requerida PERSON_IN_RESTRICTED_ZONE en PC 5 (emitida a 04:07.0): Persona en zona restringida (Sala técnica) fuera de horario. Opciones: Persona autorizada (registrar), Enviar vigilante, Continuar ronda
-04:07.0  TELEMETRIA REQUIERE_DECISION | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 88 % | Sala técnica (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+04:07.0  TELEMETRIA REQUIERE_DECISION | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 97 % | Sala técnica (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
 04:07.0  OPERADOR elige "Enviar vigilante"
 04:07.0  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f ACKNOWLEDGE_ALERT -> PENDIENTE
 04:07.2  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f ACKNOWLEDGE_ALERT -> CONFIRMADA (el robot aceptó la orden)
@@ -35,19 +35,19 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 04:27.3  OPERADOR el vigilante confirma: elige "Persona autorizada (registrar)"
 04:27.3  COMANDO  7f0d1edd-44ae-436c-abe5-1907286408ca ACKNOWLEDGE_ALERT -> PENDIENTE
 04:27.5  COMANDO  7f0d1edd-44ae-436c-abe5-1907286408ca ACKNOWLEDGE_ALERT -> CONFIRMADA (el robot aceptó la orden)
-04:27.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 87 % | Sala técnica (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+04:27.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 97 % | Sala técnica (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 04:27.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f ACKNOWLEDGE_ALERT -> VERIFICADA (la telemetría refleja el efecto)
 04:27.5  COMANDO  7f0d1edd-44ae-436c-abe5-1907286408ca ACKNOWLEDGE_ALERT -> VERIFICADA (la telemetría refleja el efecto)
-04:32.5  TELEMETRIA EN_RONDA | PC 6/8 (Salida de emergencia 1°) | PC verificados 5, con observación 0 | batería 87 % | Sala técnica (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-05:00.5  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 86 % | Salida de emergencia 1° (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-05:30.5  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 84 % | Pasillo B (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-05:41.0  TELEMETRIA EN_RONDA | PC 8/8 (Escalera O (bajada)) | PC verificados 7, con observación 0 | batería 83 % | Pasillo B (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-06:11.0  TELEMETRIA EN_RONDA | PC 8/8 (Escalera O (bajada)) | PC verificados 7, con observación 0 | batería 81 % | Escalera O (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-06:30.0  TELEMETRIA COMPLETADA | PC 8/8 (Ronda completa) | PC verificados 8, con observación 0 | batería 80 % | Escalera O (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-06:32.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 80 % | Escalera O (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-07:02.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 79 % | Escalera O (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-07:32.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 78 % | Escalera O (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-08:02.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 77 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-08:32.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 76 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-08:55.5  TELEMETRIA EN_BASE | sin misión | PC verificados 8, con observación 0 | batería 75 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+04:32.5  TELEMETRIA EN_RONDA | PC 6/8 (Salida de emergencia 1°) | PC verificados 5, con observación 0 | batería 97 % | Sala técnica (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+05:00.5  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 96 % | Salida de emergencia 1° (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+05:30.5  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 96 % | Pasillo B (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+05:41.0  TELEMETRIA EN_RONDA | PC 8/8 (Escalera O (bajada)) | PC verificados 7, con observación 0 | batería 96 % | Pasillo B (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+06:11.0  TELEMETRIA EN_RONDA | PC 8/8 (Escalera O (bajada)) | PC verificados 7, con observación 0 | batería 95 % | Escalera O (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+06:30.0  TELEMETRIA COMPLETADA | PC 8/8 (Ronda completa) | PC verificados 8, con observación 0 | batería 95 % | Escalera O (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+06:32.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 95 % | Escalera O (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+07:02.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 95 % | Escalera O (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+07:32.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 94 % | Escalera O (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+08:02.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 94 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+08:32.0  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 8, con observación 0 | batería 94 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+08:55.5  TELEMETRIA EN_BASE | sin misión | PC verificados 8, con observación 0 | batería 93 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 ```
