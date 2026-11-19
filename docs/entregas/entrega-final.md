@@ -7,7 +7,7 @@ subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 
 Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
 
-Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado figura con el marcador **[PENDIENTE — Iñaki]** y no se describen resultados que no existan.
+Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. Lo que todavía no está terminado figura con el marcador **[PENDIENTE]** y no se describen resultados que no existan.
 
 Nota sobre el alcance: el edificio, los horarios y los umbrales son un caso de estudio armado por el grupo (referencia: una sede universitaria en CABA), no un relevamiento real. Los datos técnicos del robot salen de fuentes citadas en §18 y detalladas en `docs/fuentes.md`.
 
@@ -181,7 +181,7 @@ Evidencias:
 
 - Transcripciones de los cinco escenarios en [`docs/evidencias/transcripciones/`](../evidencias/transcripciones/): salida de `ScenarioTranscriptsTest`, que corre cada escenario contra el repositorio simulado con tiempo virtual y semilla fija. Demuestran el comportamiento del simulador y del contrato propio, no el de un robot real. Se regeneran con `./gradlew :core:scenarioTranscripts`; instrucciones en [`docs/evidencias/README.md`](../evidencias/README.md).
 - Capturas de la pantalla de supervisión en [`docs/evidencias/capturas/`](../evidencias/capturas/) (ronda normal, obstáculo con decisión, sin datos, enlace restaurado, comando rechazado) y una grabación en [`docs/evidencias/video/supervision-demo.mp4`](../evidencias/video/supervision-demo.mp4).
-- Capturas y evidencia de los cinco escenarios corridos sobre la app completa: **[PENDIENTE — Iñaki]**. Va una captura o secuencia por escenario tomada del APK, con su transcripción al lado.
+- Capturas y evidencia de los cinco escenarios corridos sobre la app completa: **[PENDIENTE]**. Va una captura o secuencia por escenario tomada del APK, con su transcripción al lado.
 
 ## 13. Riesgos
 
@@ -199,7 +199,7 @@ Detalle completo (causa, consecuencia, medida y verificación) en [`docs/riesgos
 
 ## 14. Decisiones y limitaciones
 
-Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6) y `messageId` como UUID v4 (D7).
+Registro completo en [`docs/decisiones.md`](../decisiones.md). Decisiones principales: `:core` JVM puro (D1), simulador que habla JSON (D2), inyección manual con `AppContainer` en lugar de Hilt (D3), Room para el historial (D4), progreso por puntos de control y no por porcentaje (D5), mantener presionado para los comandos críticos (D6) `messageId` como UUID v4 (D7), coeficientes de batería y celda degradada en el escenario 2 (D8), foto adjunta al incidente (D9) y panel de simulación con los cinco escenarios del plan (D10).
 
 Limitaciones que importan para evaluar el trabajo:
 
@@ -209,6 +209,8 @@ Limitaciones que importan para evaluar el trabajo:
 - El acople autónomo a la base se simula; la llamada equivalente en el SDK no se pudo confirmar.
 - Los umbrales de temperatura (27 y 32 °C), la retención de 30 días y el mínimo de 40 % de batería son propuestas del grupo.
 - El Document Center de Unitree no se pudo leer; lo que se afirma del SDK sale de los README de GitHub.
+- El simulador corre a velocidad real: no hay selector ×4 y una ronda completa dura unos 8 minutos y medio. En la demo se usan las inyecciones del panel para llegar a cada situación (L3).
+- La app difiere del Figma en tres puntos menores: batería mínima de las rutas cortas (35 % y 34 % en la app, 20 % y 15 % en el Figma), posición del cuadro BASE en el plano y botones del panel de simulación (L4).
 
 ## 15. Prototipo en Figma
 
@@ -234,16 +236,44 @@ Foto del incidente: cuando el robot pide una decisión (obstáculo, persona en z
 
 ## 16. Aplicación Android
 
-El requisito es que el APK funcione sin robot, servidor ni internet. Lo que sigue depende de las fases F6 a F9 y no está redactado todavía; no se afirma ningún resultado de compilación o de tests de `:app` hasta que Iñaki los ejecute.
+El requisito es que el APK funcione sin robot, servidor ni internet. No se afirma ningún resultado de compilación o de tests de `:app` que no se haya ejecutado.
 
-- **Pantallas restantes de la app** (selección de robot, misiones, control, alertas, historial, desconexión): **[PENDIENTE — Iñaki]**. Va una captura por pantalla y su relación con el Figma.
-- **Panel de simulación** (cortar enlace, forzar rechazo, demorar respuestas, inyectar incidentes, cargar escenarios): **[PENDIENTE — Iñaki]**. Va la descripción de los controles y cómo se usan en la demo.
-- **APK instalable** (ruta del archivo, versión, cómo instalarlo): **[PENDIENTE — Iñaki]**.
-- **Tests de UI y resultado de la suite completa** (`:app:testDebugUnitTest`, pruebas manuales en emulador): **[PENDIENTE — Iñaki]**. Va la lista de tests y su resultado real.
+La app tiene las nueve rutas del Figma implementadas. Cada pantalla sigue el mismo esquema: un `ViewModel` arma un único `StateFlow` de estado a partir del `RobotRepository`, un mapper puro traduce ese estado a textos, niveles y motivos, y el composable solo dibuja. Ninguna pantalla importa el simulador.
+
+| Pantalla | Qué resuelve | Referencia en el Figma |
+|---|---|---|
+| Selección de robot | Elegir el robot y tomar el control exclusivo (riesgo R6). RONDA-02 figura como no compatible y RONDA-03 como en uso por otra garita | `01-seleccion-de-robot.png` |
+| Supervisión | Estado, progreso por puntos de control, plano, lecturas, órdenes principales, detención operativa y hoja de decisión con foto | `02-supervision-*.png` |
+| Telemetría | Todas las lecturas del robot y del servicio, con su antigüedad. Con el enlace caído quedan como último dato conocido | `03-telemetria.png` |
+| Misiones | Elegir la ruta y revisar el preflight: batería suficiente para la ruta, enlace, alertas críticas y control propio. "Iniciar" se deshabilita con el motivo | `04-misiones.png`, `04b-misiones-preflight-fallido.png` |
+| Control | Pausar, reanudar, regresar a base o a un punto seguro, saltar un punto ante un obstáculo, cancelar (mantener presionado) y registro de órdenes con su estado | `05-control.png` |
+| Alertas | Alertas activas por severidad, reconocimiento y miniatura de la foto. La alerta de persona abre la decisión en vez de reconocerse sola | `06-alertas.png` |
+| Historial | Misiones y eventos guardados en Room, con filtros por tipo, severidad y período. Retención de 30 días | `07-historial.png` |
+| Desconexión | Último dato conocido marcado como viejo, política declarada del robot sin enlace, órdenes sin respuesta y eventos que llegaron tarde con su hora original | `08-desconexion.png` |
+| Panel de simulación | Herramienta de la demo, separada de la operación (ver abajo) | `09-panel-simulacion.png` |
+
+Capturas de cada pantalla tomadas del APK: **[PENDIENTE]**. Van en `docs/evidencias/capturas/` con el mismo nombre que el export del Figma.
+
+**Panel de simulación.** Se abre desde "Simulación", arriba a la derecha de Selección, Supervisión, Misiones, Alertas e Historial. Está marcado con franjas de señalización y el rótulo SIMULACIÓN para que no se confunda con la interfaz de operación. Tiene tres grupos de controles:
+
+- **Escenarios:** carga uno de los cinco escenarios de §12. Reinicia el robot en la base y explica qué hacer a continuación, por ejemplo: "Iniciá la ronda: al llegar al PC4 un objeto bloquea el pasillo y el robot pide decisión".
+- **Fallas a inyectar:** cortar el enlace (interruptor o corte de 15 s que se restaura solo), rechazar la próxima orden, demorar las respuestas 5 s (la orden pasa por PENDIENTE y termina SIN RESPUESTA), inyectar un obstáculo, una persona en zona restringida o una falla del robot. Las inyecciones de incidente solo se habilitan durante una ronda y sin otra decisión abierta.
+- **Batería:** sube o baja 10 puntos para llegar a los umbrales de 25 % y 15 % sin esperar la descarga.
+
+Decisiones y límites del panel en D10 y L3 de `docs/decisiones.md`.
+- **APK instalable** (ruta del archivo, versión, cómo instalarlo): **[PENDIENTE]**.
+- **Tests de `:app`.** Hay un test por pantalla sobre su mapper o ViewModel con un repositorio falso: `SupervisionViewModelTest`, `SeleccionMapperTest`, `TelemetriaMapperTest`, `MisionesViewModelTest`, `ControlViewModelTest`, `AlertasViewModelTest`, `HistorialMapperTest`, `DesconexionMapperTest` y `SimulacionViewModelTest`. Hay tests de Room (`HistoryDaoTest`) y tests de interfaz con Compose sobre Robolectric:
+  - `CommandButtonUiTest`: con la orden deshabilitada se ve el motivo y el toque no hace nada. Una orden pendiente no se repite. Una orden rechazada o sin respuesta se puede reintentar.
+  - `HoldToConfirmUiTest`: un toque corto no detiene el robot y mantener presionado 1 s sí. La aclaración de que no reemplaza la parada física está siempre visible, y TalkBack confirma con la acción de mantener.
+  - `PantallasAccesibilidadTest`: todo lo que se puede tocar mide al menos 48 dp y tiene texto para el lector de pantalla, en nueve estados de pantalla.
+  - `ContrasteTest`: contraste WCAG de la paleta.
+
+  Detalle de accesibilidad y checklist de requisitos en [`docs/checklist-requisitos.md`](../checklist-requisitos.md). Resultado de `./gradlew :core:test :app:testDebugUnitTest` (cantidad de tests y fallas): **[PENDIENTE]**.
+- **Prueba manual en emulador (Pixel, API 35):** se recorrieron Selección, Supervisión, Misiones, Control, Alertas, Historial y Telemetría sin cierres inesperados. La prueba encontró cuatro detalles que se corrigieron: la tendencia de batería en Telemetría, la posición de BASE en el plano, el margen inferior de Supervisión y un test de Room intermitente.
 
 ## 17. Video de demostración
 
-**[PENDIENTE — Iñaki]** Video final con los cinco escenarios sobre la app instalada: enlace o ruta, duración y guion por escenario. Hoy existe solo la grabación parcial mencionada en §12.
+Guion por escenario, con tiempos y lo que se dice en cada toma, en [`docs/entregas/guion-video.md`](guion-video.md). Video grabado sobre el APK (enlace o ruta y duración): **[PENDIENTE]**. Hoy existe solo la grabación parcial mencionada en §12.
 
 ## 18. Fuentes
 

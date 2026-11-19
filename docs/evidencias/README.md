@@ -41,3 +41,26 @@ Las transcripciones salen del simulador: demuestran el comportamiento de la app 
 ```
 
 La tarea corre solo `SupervisionDemoRecorder` (Robolectric con gráficos nativos, sin emulador), escribe los cuadros en `app/build/demo-frames` y `docs/evidencias/armar-demo.sh` arma el MP4 y copia las capturas con ffmpeg (hay que tenerlo instalado). Ese test está excluido de `:app:testDebugUnitTest`. Es la app corriendo contra el simulador, no contra un robot real.
+
+## Capturas de la app completa
+
+Faltan: **[PENDIENTE]**. Se toman del APK en el emulador (Pixel, API 35) con el botón de captura del emulador o con `adb exec-out screencap -p > archivo.png`. Van en `capturas/` con estos nombres:
+
+| Archivo | Cómo llegar |
+|---|---|
+| `app-01-seleccion.png` | Al abrir la app |
+| `app-03-telemetria.png` | Supervisión en ronda, tocar una lectura |
+| `app-04-misiones.png` | Pestaña Misiones con el robot en base |
+| `app-04b-misiones-preflight-fallido.png` | Panel: "Batería −10 %" hasta 30 %, volver a Misiones |
+| `app-05-control.png` | En ronda, "Más controles" |
+| `app-06-alertas.png` | Con una alerta activa (por ejemplo, después de inyectar un obstáculo) |
+| `app-07-historial.png` | Después de terminar o cancelar una ronda |
+| `app-08-desconexion.png` | Panel: "Cortar enlace", tocar el aviso de sin datos en Supervisión |
+| `app-09-panel-simulacion.png` | "Simulación", arriba a la derecha |
+| `escenario-1-ronda-normal.png` | Escenario 1, Supervisión en ronda |
+| `escenario-2-bateria-baja.png` | Escenario 2, alerta de batería baja con "Regresar a base" |
+| `escenario-3-desconexion.png` | Escenario 3, durante el corte de 15 s |
+| `escenario-4-obstaculo.png` | Escenario 4, hoja de decisión con la foto |
+| `escenario-5-persona.png` | Escenario 5, hoja de decisión con la foto |
+
+El guion de cada escenario está en `docs/entregas/guion-video.md`. Las capturas de los escenarios pueden salir del mismo video.

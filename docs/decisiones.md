@@ -60,6 +60,13 @@ Registro corto de decisiones de diseño (formato ADR) y limitaciones conocidas.
 - **Simulador.** Manda `data = null` y ids fijos (`sim-obstaculo`, `sim-persona`, `sim-falla`); la app resuelve la imagen por `id`. `BATTERY_RETURN` no lleva foto.
 - **Consecuencias.** En un robot real el JPEG saldría del servicio de video de la cámara frontal del SDK, vía el gateway. Una foto es un instante: no muestra cómo evoluciona la situación ni reemplaza la inspección en sitio.
 
+## D10. Panel de simulación
+
+- **Contexto.** El enunciado pide forzar desconexiones y rechazos (R19) y demostrar cinco escenarios (R21). El Figma propone cinco botones distintos (ronda normal, obstáculo, enlace cortado, enlace restaurado, pausa rechazada).
+- **Decisión.** El panel carga los cinco escenarios del plan (`SimScenario`: ronda normal, batería baja, desconexión, obstáculo y persona en zona restringida), que son los que exige R21. Cargar un escenario reinicia el robot en la base y muestra qué hacer a continuación; el operador inicia la ronda desde Misiones como en una ronda real. Las fallas (cortar enlace, cortar 15 s, rechazar la próxima orden, demorar respuestas, inyectar obstáculo, persona o falla, batería ±10 %) se pueden combinar con cualquier escenario.
+- **Detalles.** La demora es de 5 s y no de 3 s como en el Figma: las órdenes vencen a los 4 s, y con 3 s la respuesta llegaba a tiempo y nunca se veía SIN RESPUESTA. El rechazo armado no se puede desarmar desde el simulador: se consume con la próxima orden, y el interruptor lo refleja. El ViewModel del panel recibe la interfaz `SimulationControl` (`core.control`), nunca la implementación de `core.sim`.
+- **Consecuencias.** El panel es una herramienta de demo, marcada con franjas y el rótulo SIMULACIÓN. En una instalación real no existe.
+
 ## Limitaciones
 
 ### L1. Escalones mayores a 16 cm (riesgo R7)
@@ -69,3 +76,17 @@ El Go2 declara un escalón máximo de unos 16 cm. Esto no se puede simular: depe
 ### L2. Contrato JSON propio
 
 El contrato de `docs/contrato/` es una propuesta del grupo y no el protocolo oficial de Unitree. Un gateway real traduciría estos mensajes a llamadas del SDK.
+
+### L3. Sin velocidad de simulación ×4
+
+El plan preveía un selector ×1/×4 en el panel. No se implementó: el simulador avanza con el reloj real y acelerarlo exige un reloj propio en `core`. Una ronda completa dura unos 8 minutos y medio, así que la demo usa las inyecciones del panel (batería, obstáculo, persona, corte de enlace) para llegar a cada situación sin esperar la ronda entera.
+
+### L4. Diferencias entre la app y el Figma
+
+- **Batería mínima por ruta:** la app exige 40 % para la ronda completa, 35 % para la sala técnica y 34 % para las salidas de emergencia (`BatteryPolicy`, D8). El Figma muestra 20 % y 15 % para las rutas cortas, valores anteriores al recálculo de D8.
+- **Posición de la base:** la app dibuja la base donde la ubica `BuildingLayout.base`, arriba a la izquierda de PB, para que el robot en base quede sobre el cuadro BASE. El Figma y `recorrido.svg` la ubican abajo a la izquierda, en la garita (ver `design/FIGMA.md`).
+- **Panel de simulación:** botones de escenario y demora distintos (ver D10) y sin selector de velocidad (L3).
+
+### L5. Contraste del gris de dato viejo
+
+El gris que marca un dato no vigente o un control deshabilitado tiene un contraste de 3,4:1 sobre el fondo, por debajo del 4,5:1 de WCAG para texto. Es intencional: el dato viejo no tiene que leerse como vigente. Nunca va solo, porque lo acompañan el símbolo de estado, el tachado y el motivo escrito (`ContrasteTest`).
