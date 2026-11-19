@@ -80,7 +80,7 @@ fun CommandButton(ui: CommandButtonUi, onClick: () -> Unit, modifier: Modifier =
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     ui.label.uppercase(), style = RondaType.botonEtiqueta, color = content,
                     textDecoration = if (disabled) TextDecoration.LineThrough else null,
