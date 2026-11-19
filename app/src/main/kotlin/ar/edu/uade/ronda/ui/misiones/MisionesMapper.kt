@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.misiones
 
+import ar.edu.uade.ronda.ui.model.ConnectionView
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
@@ -44,7 +45,8 @@ internal object MisionesMapper {
     private val battery = BatteryPolicy()
     private val policy = CommandPolicy(battery)
 
-    fun map(i: MisionesInputs): MisionesUiState {
+    fun map(raw: MisionesInputs): MisionesUiState {
+        val i = raw.copy(connection = ConnectionView.effective(raw.connection, raw.lastTelemetryAt, raw.telemetry?.latencyMs, raw.nowMs))
         val t = i.telemetry
         val base = SupervisionMapper.map(
             SupervisionInputs(

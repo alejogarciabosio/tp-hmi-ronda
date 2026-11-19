@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.supervision
 
+import ar.edu.uade.ronda.ui.model.ConnectionView
 import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.Alert
 import ar.edu.uade.ronda.core.model.AlertResolution
@@ -59,7 +60,8 @@ internal object SupervisionMapper {
     private val battery = BatteryPolicy()
     private val clockFormat = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
 
-    fun map(i: SupervisionInputs): SupervisionUiState {
+    fun map(raw: SupervisionInputs): SupervisionUiState {
+        val i = raw.copy(connection = ConnectionView.effective(raw.connection, raw.lastTelemetryAt, raw.telemetry?.latencyMs, raw.nowMs))
         val t = i.telemetry
         val stale = t == null || i.connection.isStale
         val ageMs = i.lastTelemetryAt?.let { (i.nowMs - it).coerceAtLeast(0) }

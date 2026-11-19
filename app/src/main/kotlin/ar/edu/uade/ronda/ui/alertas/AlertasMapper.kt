@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.alertas
 
+import ar.edu.uade.ronda.ui.model.ConnectionView
 import ar.edu.uade.ronda.ui.model.Etiquetas
 import ar.edu.uade.ronda.core.model.Alert
 import ar.edu.uade.ronda.core.model.AlertType
@@ -37,7 +38,8 @@ internal data class AlertasInputs(
 internal object AlertasMapper {
     private val timeFormat = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
 
-    fun map(i: AlertasInputs, notice: String? = null): AlertasUiState {
+    fun map(raw: AlertasInputs, notice: String? = null): AlertasUiState {
+        val i = raw.copy(connection = ConnectionView.effective(raw.connection, raw.lastTelemetryAt, raw.telemetry?.latencyMs, raw.nowMs))
         val sup = SupervisionMapper.map(
             SupervisionInputs(
                 i.telemetry, i.connection, i.lastTelemetryAt, i.incident, i.commands,

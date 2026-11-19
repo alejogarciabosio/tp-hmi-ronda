@@ -96,7 +96,8 @@ class SupervisionViewModelTest {
         repo.connection.value = ConnectionState.NO_DATA
         advanceTimeBy(11_500); runCurrent()
         val s = vm.uiState.value
-        assertEquals("Sin datos · hace 12 s", s.strip.connectionLabel)
+        // Pasados 10 s sin datos, la antigüedad ya lo da por desconectado aunque el repositorio diga SIN DATOS.
+        assertEquals("Desconectado · hace 12 s", s.strip.connectionLabel)
         assertEquals(StatusLevel.STALE, s.strip.level)
         assertEquals("En ronda (último conocido)", s.strip.stateLabel)
         assertEquals(12, s.staleBanner?.secondsWithoutData)
@@ -619,5 +620,18 @@ class SupervisionViewModelTest {
         again.uiState.onEach { }.launchIn(backgroundScope)
         runCurrent()
         assertTrue(again.uiState.value.decisionDismissed)
+    }
+
+    @Test
+    fun `nunca dice conectado con datos de mas de 1,5 s aunque el repositorio no se haya refrescado`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(ts = testScheduler.currentTime))
+        advanceTimeBy(2_000); runCurrent()
+        // El repositorio todavía informa CONNECTED; la antigüedad ya pasó el umbral de degradado.
+        val s = vm.uiState.value
+        assertFalse(s.strip.connectionLabel.startsWith("Conectado"), s.strip.connectionLabel)
+        assertEquals("Enlace degradado · 2,0 s", s.strip.connectionLabel)
+        assertEquals(StatusLevel.WARNING, s.strip.connectionLevel)
     }
 }

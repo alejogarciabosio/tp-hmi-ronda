@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.telemetria
 
+import ar.edu.uade.ronda.ui.model.ConnectionView
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.ConnectionState
 import ar.edu.uade.ronda.core.model.ExitStatus
@@ -24,7 +25,8 @@ import ar.edu.uade.ronda.ui.supervision.SupervisionMapper
 internal object TelemetriaMapper {
     private val battery = BatteryPolicy()
 
-    fun map(telemetry: RobotTelemetry?, connection: ConnectionState, lastAt: Long?, nowMs: Long): TelemetriaUiState {
+    fun map(telemetry: RobotTelemetry?, reported: ConnectionState, lastAt: Long?, nowMs: Long): TelemetriaUiState {
+        val connection = ConnectionView.effective(reported, lastAt, telemetry?.latencyMs, nowMs)
         val base = SupervisionMapper.map(
             SupervisionInputs(
                 telemetry, connection, lastAt, null, emptyList(),
