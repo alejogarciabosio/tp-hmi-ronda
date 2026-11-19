@@ -20,12 +20,18 @@ class ControlSession(initial: String? = null) {
     companion object {
         const val NO_CONTROL_REASON = "Tomá el control del robot en Selección"
 
-        /** Sin control propio ninguna orden sale, sea cual sea lo que diga la política del robot. */
+        /**
+         * Sin control propio las órdenes no salen, salvo la detención operativa: detener siempre gana,
+         * cualquier operador conectado puede hacerlo tenga o no el control.
+         */
         fun gate(
             availability: Map<CommandType, CommandAvailability>,
             controlledId: String?,
         ): Map<CommandType, CommandAvailability> =
             if (controlledId != null) availability
-            else CommandType.entries.associateWith { CommandAvailability.disabled(NO_CONTROL_REASON) }
+            else CommandType.entries.associateWith {
+                if (it == CommandType.OPERATIONAL_STOP) availability[it] ?: CommandAvailability.disabled(NO_CONTROL_REASON)
+                else CommandAvailability.disabled(NO_CONTROL_REASON)
+            }
     }
 }

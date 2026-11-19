@@ -105,6 +105,16 @@ class ControlViewModelTest {
         assertEquals(CommandType.PAUSE_MISSION, repo.sent.single().first)
     }
 
+    @Test fun sinControlPropioLaDetencionOperativaSigueHabilitada() {
+        val repo = FakeRobotRepository()
+        repo.publish(tele(1_000, state = OperationalState.EN_RONDA))
+        repo.availability.value = enabledAll()
+        val vm = ControlViewModel(repo, Clock { 1_200L }, ControlSession())
+        assertTrue(vm.uiState.value.stop.enabled)
+        vm.onOperationalStop()
+        assertEquals(CommandType.OPERATIONAL_STOP, repo.sent.single().first)
+    }
+
     @Test fun deshabilitadoNoEnvia() {
         val repo = FakeRobotRepository()
         repo.publish(tele(1_000))
