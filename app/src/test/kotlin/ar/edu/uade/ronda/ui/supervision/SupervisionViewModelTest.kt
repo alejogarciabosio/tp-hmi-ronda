@@ -141,6 +141,8 @@ class SupervisionViewModelTest {
     @Test
     fun `los eventos de la pantalla envian los comandos correspondientes`() = runTest(dispatcher) {
         val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0))
         vm.onPause(); vm.onResume(); vm.onReturnToBase(); vm.onOperationalStop()
         assertEquals(
             listOf(CommandType.PAUSE_MISSION, CommandType.RESUME_MISSION, CommandType.RETURN_TO_SAFE_POINT, CommandType.OPERATIONAL_STOP),
@@ -518,5 +520,104 @@ class SupervisionViewModelTest {
         repo.publish(tele(1_000, OperationalState.REGRESANDO, batteryPct = 24, alerts = listOf(lowBatteryAlert())))
         runCurrent()
         assertNull(vm.uiState.value.lowBatteryReturn, "con regresar deshabilitado no se ofrece")
+    }
+
+    @Test
+    fun `las ordenes se revalidan contra la disponibilidad antes de enviarse`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.publish(tele(0))
+        repo.availability.value = enabledAll(
+            CommandType.PAUSE_MISSION to "Hay una orden pendiente de respuesta",
+            CommandType.RESUME_MISSION to "No hay una misión pausada o detenida para reanudar",
+            CommandType.RETURN_TO_SAFE_POINT to "El robot ya está regresando",
+            CommandType.OPERATIONAL_STOP to "El robot no está en movimiento",
+        )
+        // Sin runCurrent: el estado observado sigue viejo, pero la orden se evalúa con el actual.
+        vm.onPause(); vm.onResume(); vm.onReturnToBase(); vm.onOperationalStop()
+        assertTrue(repo.sent.isEmpty())
+    }
+
+    @Test
+    fun `una orden pendiente del mismo tipo no se reenvia`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0))
+        repo.commands.value = listOf(tracked("c1", CommandType.RETURN_TO_SAFE_POINT, CommandStatus.PENDING, sentAt = 0))
+        vm.onReturnToBase()
+        assertTrue(repo.sent.isEmpty())
+    }
+
+    @Test
+    fun `sin el control solo sale la deteccion operativa`() = runTest(dispatcher) {
+        val vm = SupervisionViewModel(repo, Clock { testScheduler.currentTime }, ControlSession(), history().log)
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0))
+        vm.onPause(); vm.onResume(); vm.onReturnToBase(); vm.onOperationalStop()
+        assertEquals(listOf(CommandType.OPERATIONAL_STOP), repo.sent.map { it.first })
+    }
+
+    @Test
+    fun `reanudar muestra la causa real cuando la orden no se puede enviar`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repo.availability.value = enabledAll(CommandType.RESUME_MISSION to "Sin conexión con el robot: no se pueden enviar órdenes")
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 4))
+        repo.activeIncident.value = incident()
+        runCurrent()
+        assertEquals("Sin conexión con el robot: no se pueden enviar órdenes", vm.uiState.value.resume.reason)
+        repo.availability.value = enabledAll()
+        runCurrent()
+        assertEquals(SupervisionMapper.DECISION_PENDING_REASON, vm.uiState.value.resume.reason)
+    }
+
+    @Test
+    fun `una resolucion de persona enviada deshabilita las opciones y el doble toque no reenvia`() = runTest(dispatcher) {
+        val vm = viewModel()
+        val alert = Alert("a7", AlertType.PERSON_DETECTED, Severity.CRITICAL, "Persona detectada", 0, false)
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION, index = 5, alerts = listOf(alert)))
+        repo.activeIncident.value = Incident(
+            "i2", IncidentType.PERSON_IN_RESTRICTED_ZONE, 5, "Persona en zona restringida",
+            listOf(IncidentOption("AUTHORIZED_PERSON", "Es personal autorizado"), IncidentOption("SEND_GUARD", "Enviar vigilante")),
+        )
+        runCurrent()
+        vm.onDecisionOption("SEND_GUARD")
+        // El repositorio ya registró la orden como pendiente.
+        repo.commands.value = listOf(
+            TrackedCommand(
+                Command("c1", "RONDA-01", 0, "garita", CommandType.ACKNOWLEDGE_ALERT,
+                    CommandParams(alertId = "a7", resolution = AlertResolution.SEND_GUARD)),
+                CommandStatus.PENDING, 0, 0,
+            ),
+        )
+        vm.onDecisionOption("SEND_GUARD")
+        vm.onDecisionOption("AUTHORIZED_PERSON")
+        assertEquals(1, repo.sent.size)
+        runCurrent()
+        val options = vm.uiState.value.decision!!.options
+        assertTrue(options.all { !it.enabled && it.pending })
+        repo.commands.value = repo.commands.value.map { it.copy(status = CommandStatus.CONFIRMED) }
+        runCurrent()
+        val confirmed = vm.uiState.value.decision!!.options
+        assertTrue(confirmed.all { !it.enabled && !it.pending })
+        assertTrue(confirmed.first().reason!!.startsWith("Ya enviaste"))
+        vm.onDecisionOption("AUTHORIZED_PERSON")
+        assertEquals(1, repo.sent.size)
+    }
+
+    @Test
+    fun `la hoja cerrada sigue cerrada al recrear la pantalla con el mismo estado guardado`() = runTest(dispatcher) {
+        val saved = androidx.lifecycle.SavedStateHandle()
+        val clock = Clock { testScheduler.currentTime }
+        val vm = SupervisionViewModel(repo, clock, ControlSession("RONDA-01"), history().log, savedState = saved)
+        vm.uiState.onEach { }.launchIn(backgroundScope)
+        repo.availability.value = enabledAll()
+        repo.publish(tele(0, OperationalState.REQUIERE_DECISION))
+        repo.activeIncident.value = incident()
+        runCurrent()
+        vm.onDismissDecision(); runCurrent()
+        val again = SupervisionViewModel(repo, clock, ControlSession("RONDA-01"), history().log, savedState = saved)
+        again.uiState.onEach { }.launchIn(backgroundScope)
+        runCurrent()
+        assertTrue(again.uiState.value.decisionDismissed)
     }
 }

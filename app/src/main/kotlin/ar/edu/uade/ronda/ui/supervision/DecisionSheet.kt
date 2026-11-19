@@ -56,7 +56,11 @@ fun DecisionSheetContent(ui: DecisionUi, onOption: (String) -> Unit, modifier: M
                     CommandButtonUi(
                         o.label,
                         if (idx == 0) CommandKind.PRIMARY else CommandKind.SECONDARY,
-                        if (o.enabled) CommandUiState.ENABLED else CommandUiState.DISABLED,
+                        when {
+                            o.pending -> CommandUiState.PENDING
+                            o.enabled -> CommandUiState.ENABLED
+                            else -> CommandUiState.DISABLED
+                        },
                         o.reason,
                     ),
                     { onOption(o.id) },

@@ -1,5 +1,6 @@
 package ar.edu.uade.ronda.ui.supervision
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ar.edu.uade.ronda.core.Clock
@@ -12,6 +13,8 @@ import ar.edu.uade.ronda.core.model.SafePointId
 import ar.edu.uade.ronda.core.policy.CommandAvailability
 import ar.edu.uade.ronda.core.repository.CheckpointLog
 import ar.edu.uade.ronda.core.repository.RobotRepository
+import ar.edu.uade.ronda.ui.model.CommandButtonUi
+import ar.edu.uade.ronda.ui.model.CommandUiState
 import ar.edu.uade.ronda.ui.session.ControlSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -35,10 +38,18 @@ class SupervisionViewModel(
     private val session: ControlSession,
     private val checkpoints: StateFlow<CheckpointLog>,
     tickMs: Long = 500,
+    private val savedState: SavedStateHandle = SavedStateHandle(),
 ) : ViewModel() {
 
     private val selectedFloor = MutableStateFlow<Int?>(null)
-    private val dismissedIncidentId = MutableStateFlow<String?>(null)
+
+    /**
+     * Hoja de decisión cerrada por el operador. Vive en [SavedStateHandle] para que volver a
+     * Supervisión desde otra pestaña (o recrear la actividad) no la haga reaparecer.
+     */
+    private val dismissedIncidentId: StateFlow<String?> = savedState.getStateFlow(KEY_DISMISSED, null)
+
+    private fun setDismissed(id: String?) { savedState[KEY_DISMISSED] = id }
     private val notice = MutableStateFlow<String?>(null)
 
     /** Hace que las antigüedades ("hace 12 s") sigan corriendo aunque no llegue telemetría. */
@@ -83,29 +94,53 @@ class SupervisionViewModel(
         ),
     )
 
-    fun onPause() { repository.send(CommandType.PAUSE_MISSION) }
+    /** Estado recalculado en el momento: el observado puede tener medio segundo de atraso. */
+    private fun current(): SupervisionUiState = SupervisionMapper.map(
+        SupervisionInputs(
+            repository.telemetry.value, repository.connection.value, repository.lastTelemetryAt.value,
+            repository.activeIncident.value, repository.commands.value,
+            ControlSession.gate(repository.availability.value, session.controlledId.value),
+            checkpoints.value, selectedFloor.value, dismissedIncidentId.value, clock.nowMs(),
+        ),
+    )
 
-    fun onResume() { repository.send(CommandType.RESUME_MISSION) }
-
-    fun onReturnToBase() {
-        repository.send(CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE))
+    /** Como `ControlViewModel.sendIf`: solo sale si el botón sigue habilitado o se puede reintentar. */
+    private fun sendIf(button: (SupervisionUiState) -> CommandButtonUi, type: CommandType, params: CommandParams = CommandParams()) {
+        val state = button(current()).state
+        if (state == CommandUiState.DISABLED || state == CommandUiState.PENDING) return
+        repository.send(type, params)
     }
 
-    /** La pantalla lo llama recién cuando se completó el mantener apretado. */
-    fun onOperationalStop() { repository.send(CommandType.OPERATIONAL_STOP) }
+    fun onPause() = sendIf({ it.pause }, CommandType.PAUSE_MISSION)
+
+    fun onResume() = sendIf({ it.resume }, CommandType.RESUME_MISSION)
+
+    fun onReturnToBase() =
+        sendIf({ it.returnToBase }, CommandType.RETURN_TO_SAFE_POINT, CommandParams(safePointId = SafePointId.BASE))
+
+    /** La pantalla lo llama recién cuando se completó el mantener apretado. No depende del control. */
+    fun onOperationalStop() {
+        if (current().stop.enabled) repository.send(CommandType.OPERATIONAL_STOP)
+    }
 
     fun onSelectFloor(floor: Int) { selectedFloor.value = floor }
 
-    fun onDismissDecision() { dismissedIncidentId.value = repository.activeIncident.value?.id }
+    fun onDismissDecision() { setDismissed(repository.activeIncident.value?.id) }
 
     fun onNoticeDismissed() { notice.value = null }
 
-    fun onReopenDecision() { dismissedIncidentId.value = null }
+    fun onReopenDecision() { setDismissed(null) }
 
     fun onDecisionOption(optionId: String) {
         notice.value = null
         val incident = repository.activeIncident.value ?: run {
             notice.value = "La decisión ya no está pendiente: el robot no espera una respuesta."
+            return
+        }
+        // Guarda ante el doble toque: la opción tiene que seguir habilitada en el estado actual.
+        val option = current().decision?.options?.firstOrNull { it.id == optionId }
+        if (option != null && !option.enabled) {
+            if (!option.pending) notice.value = "No se envió la orden: ${option.reason ?: "la opción no está disponible"}."
             return
         }
         val params = when (optionId) {
@@ -139,7 +174,7 @@ class SupervisionViewModel(
         repository.send(commandFor(optionId), params)
         // Cualquier decisión cierra la hoja: no se vuelve a ofrecer lo mismo. Si el robot rechaza
         // la orden, el incidente sigue abierto y "Decidir cómo seguir" permite reabrirla.
-        dismissedIncidentId.value = incident.id
+        setDismissed(incident.id)
     }
 
     private data class Inputs1(
@@ -158,6 +193,7 @@ class SupervisionViewModel(
     )
 
     companion object {
+        private const val KEY_DISMISSED = "dismissedIncidentId"
         const val OPTION_WAIT = "WAIT_30S"
         const val OPTION_SKIP = "SKIP_CHECKPOINT"
         const val OPTION_RETURN = "RETURN_TO_SAFE_POINT"

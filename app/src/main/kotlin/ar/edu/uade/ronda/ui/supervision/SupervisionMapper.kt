@@ -84,10 +84,7 @@ internal object SupervisionMapper {
             readouts = if (t != null) readouts(t, i.connection, stale, ageMs ?: 0) else emptyList(),
             alerts = t?.unacknowledgedAlerts.orEmpty().sortedByDescending { it.severity.ordinal }.map { alertRow(it, i.nowMs) },
             pause = button("Pausar", CommandKind.SECONDARY, CommandType.PAUSE_MISSION, i),
-            resume = button("Reanudar", CommandKind.SECONDARY, CommandType.RESUME_MISSION, i).let {
-                // Con una decisión abierta, reanudar sin elegir opción lo rechaza el robot.
-                if (i.incident != null) it.copy(state = CommandUiState.DISABLED, reason = "Elegí una opción de la decisión pendiente") else it
-            },
+            resume = resumeButton(i),
             returnToBase = returnToBase,
             stop = i.availability[CommandType.OPERATIONAL_STOP].let { StopButtonUi(it?.enabled ?: false, it?.reason) },
             lastCommand = lastCommand(i),
@@ -284,7 +281,22 @@ internal object SupervisionMapper {
 
     // ---- Comandos ----
 
-    private fun button(label: String, kind: CommandKind, type: CommandType, i: SupervisionInputs): CommandButtonUi {
+    /**
+     * Con una decisión abierta, reanudar sin elegir opción lo rechaza el robot. Ese motivo solo
+     * reemplaza al de la política cuando la orden se podría enviar: si no, se ve la causa real
+     * (sin conexión, orden pendiente, sin control).
+     */
+    fun resumeButton(i: SupervisionInputs, label: String = "Reanudar", kind: CommandKind = CommandKind.SECONDARY): CommandButtonUi {
+        val b = button(label, kind, CommandType.RESUME_MISSION, i)
+        val av = i.availability[CommandType.RESUME_MISSION]
+        return if (i.incident != null && av?.enabled == true && b.state != CommandUiState.PENDING) {
+            b.copy(state = CommandUiState.DISABLED, reason = DECISION_PENDING_REASON)
+        } else b
+    }
+
+    const val DECISION_PENDING_REASON = "Elegí una opción de la decisión pendiente"
+
+    fun button(label: String, kind: CommandKind, type: CommandType, i: SupervisionInputs): CommandButtonUi {
         val av = i.availability[type] ?: CommandAvailability.disabled("Sin información de disponibilidad")
         val last = i.commands.lastOrNull { it.command.type == type }
         if (last?.status == CommandStatus.PENDING) {
@@ -349,10 +361,31 @@ internal object SupervisionMapper {
             inc.options.map { o ->
                 val type = SupervisionViewModel.commandFor(o.id)
                 val a = av(type)
-                DecisionOptionUi(o.id, o.label, o.id == SupervisionViewModel.OPTION_RETURN, a.enabled, a.reason)
+                val sent = if (type == CommandType.ACKNOWLEDGE_ALERT) personResolutionSent(i) else null
+                when {
+                    sent?.status == CommandStatus.PENDING ->
+                        DecisionOptionUi(o.id, o.label, false, false, "Esperando respuesta del robot", pending = true)
+                    sent != null -> DecisionOptionUi(
+                        o.id, o.label, false, false,
+                        "Ya enviaste: ${sent.command.params.resolution?.let { Etiquetas.opcion(it.name) } ?: "una respuesta"}",
+                    )
+                    else -> DecisionOptionUi(o.id, o.label, o.id == SupervisionViewModel.OPTION_RETURN, a.enabled, a.reason)
+                }
             },
             inc.snapshot?.let { snapshotUi(it, title, i) },
         )
+    }
+
+    /**
+     * Resolución de la persona ya enviada (pendiente o aceptada) para la alerta de persona activa.
+     * Evita que un doble toque mande dos reconocimientos; si fue rechazada o no hubo respuesta se puede reintentar.
+     */
+    private fun personResolutionSent(i: SupervisionInputs): TrackedCommand? {
+        val ids = i.telemetry?.alerts.orEmpty().filter { it.type == AlertType.PERSON_DETECTED }.map { it.id }.toSet()
+        return i.commands.lastOrNull { c ->
+            c.command.type == CommandType.ACKNOWLEDGE_ALERT && c.command.params.alertId in ids &&
+                c.status in setOf(CommandStatus.PENDING, CommandStatus.CONFIRMED, CommandStatus.VERIFIED)
+        }
     }
 
     private fun snapshotUi(s: Snapshot, title: String, i: SupervisionInputs): SnapshotUi {

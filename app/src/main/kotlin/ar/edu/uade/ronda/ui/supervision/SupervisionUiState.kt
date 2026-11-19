@@ -24,6 +24,8 @@ data class DecisionOptionUi(
     val requiresHold: Boolean,
     val enabled: Boolean,
     val reason: String? = null,
+    /** La orden de esta decisión ya salió y espera respuesta: no se ofrece de nuevo. */
+    val pending: Boolean = false,
 )
 
 /** Foto adjunta al incidente, ya con el pie de foto armado. */

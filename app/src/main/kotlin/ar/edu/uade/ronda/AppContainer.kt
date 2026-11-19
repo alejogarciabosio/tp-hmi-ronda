@@ -2,6 +2,7 @@ package ar.edu.uade.ronda
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import ar.edu.uade.ronda.core.Clock
@@ -65,7 +66,7 @@ class AppContainer(
     val eventRecorder = EventRecorder(historyRepository, appScope)
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
-        initializer { SupervisionViewModel(robotRepository, clock, controlSession, checkpointHistory.log) }
+        initializer { SupervisionViewModel(robotRepository, clock, controlSession, checkpointHistory.log, savedState = createSavedStateHandle()) }
         initializer { SeleccionViewModel(robotRepository, controlSession) }
         initializer { TelemetriaViewModel(robotRepository, clock) }
         initializer { MisionesViewModel(robotRepository, clock, controlSession) }
