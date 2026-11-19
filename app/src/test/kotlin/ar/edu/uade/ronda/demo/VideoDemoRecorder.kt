@@ -16,8 +16,10 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.core.view.drawToBitmap
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import ar.edu.uade.ronda.AppContainer
+import ar.edu.uade.ronda.data.local.RondaDatabase
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import ar.edu.uade.ronda.core.Clock
@@ -25,39 +27,16 @@ import ar.edu.uade.ronda.core.control.SimScenario
 import ar.edu.uade.ronda.core.model.CommandStatus
 import ar.edu.uade.ronda.core.model.CommandType
 import ar.edu.uade.ronda.core.model.OperationalState
-import ar.edu.uade.ronda.core.sim.SimulatedRobotRepository
-import ar.edu.uade.ronda.data.local.EventKind
-import ar.edu.uade.ronda.data.local.EventRecord
-import ar.edu.uade.ronda.data.local.EventRecorder
-import ar.edu.uade.ronda.data.local.HistoryRepository
-import ar.edu.uade.ronda.data.local.MissionRecord
-import ar.edu.uade.ronda.data.local.toOutcomes
-import ar.edu.uade.ronda.ui.alertas.AlertasViewModel
-import ar.edu.uade.ronda.ui.control.ControlViewModel
-import ar.edu.uade.ronda.ui.desconexion.DesconexionViewModel
-import ar.edu.uade.ronda.ui.historial.HistorialViewModel
-import ar.edu.uade.ronda.ui.misiones.MisionesViewModel
 import ar.edu.uade.ronda.ui.navigation.RondaNavHost
 import ar.edu.uade.ronda.ui.navigation.Route
-import ar.edu.uade.ronda.ui.seleccion.SeleccionViewModel
-import ar.edu.uade.ronda.data.LinkMonitor
-import ar.edu.uade.ronda.ui.operacion.OperationalBarViewModel
-import ar.edu.uade.ronda.ui.session.ControlSession
-import ar.edu.uade.ronda.ui.simulacion.SimulacionViewModel
-import ar.edu.uade.ronda.ui.supervision.SupervisionViewModel
-import ar.edu.uade.ronda.ui.telemetria.TelemetriaViewModel
 import ar.edu.uade.ronda.ui.theme.RondaTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import ar.edu.uade.ronda.core.repository.CheckpointHistory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.resetMain
@@ -89,13 +68,16 @@ class VideoDemoRecorder {
     private val scheduler = TestCoroutineScheduler()
     private val dispatcher = StandardTestDispatcher(scheduler)
     private val clock = Clock { START_MS + scheduler.currentTime }
-    private val repoScope = CoroutineScope(dispatcher)
-    private val repo = SimulatedRobotRepository.create(repoScope, clock, seed = 42)
-    private val checkpointHistory = CheckpointHistory(repo.telemetry, repoScope)
-    private val control = repo.control
-    private val session = ControlSession()
-    private val linkMonitor = LinkMonitor(repo, clock, repoScope)
-    private val history = MemoryHistory()
+
+    /** El mismo contenedor de la app (ViewModels, historial, rótulo ×N), con tiempo virtual y Room en memoria. */
+    private val container = AppContainer(
+        ApplicationProvider.getApplicationContext(), clock, CoroutineScope(SupervisorJob() + dispatcher),
+        db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), RondaDatabase::class.java)
+            .allowMainThreadQueries().setQueryExecutor { it.run() }.setTransactionExecutor { it.run() }.build(),
+        seed = 42,
+    )
+    private val repo = container.robotRepository
+    private val control = container.simulationControl
 
     private lateinit var out: File
     private lateinit var nav: NavHostController
@@ -117,19 +99,7 @@ class VideoDemoRecorder {
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test fun grabar() {
-        EventRecorder(history, repoScope).start(repo.telemetry.filterNotNull(), repo.events, repo.commands.toOutcomes())
-        val factory = viewModelFactory {
-            initializer { SupervisionViewModel(repo, clock, session, checkpointHistory.log) }
-            initializer { SeleccionViewModel(repo, session) }
-            initializer { TelemetriaViewModel(repo, clock) }
-            initializer { MisionesViewModel(repo, clock, session) }
-            initializer { ControlViewModel(repo, clock, session) }
-            initializer { AlertasViewModel(repo, clock) }
-            initializer { HistorialViewModel(repo, history, clock) }
-            initializer { DesconexionViewModel(repo, clock, linkMonitor.log) }
-            initializer { SimulacionViewModel(control, repo) }
-            initializer { OperationalBarViewModel(repo, clock) }
-        }
+        val factory = container.viewModelFactory
         advance(3_000)
         rule.mainClock.autoAdvance = false
         rule.setContent {
@@ -166,6 +136,17 @@ class VideoDemoRecorder {
         say("Supervisión: estado, enlace, plano del edificio y progreso por puntos de control. El robot está en la base.")
         live(frames = 20, virtualMs = 500)
         shot(3.0)
+        click("Simulación")
+        say("Antes del primer escenario, en el panel de simulación se elige la velocidad ×8: el robot camina ocho veces más rápido para que la ronda entre en el video.")
+        scrollToText("VELOCIDAD")
+        shot(4.5)
+        click("×8")
+        say("Queda marcada «×8 · actual». El enlace y el vencimiento de las órdenes siguen en tiempo real.")
+        shot(3.5)
+        back()
+        say("Supervisión lo avisa en la franja de estado: «SIMULACIÓN ×8».")
+        live(frames = 4, virtualMs = 500)
+        shot(3.0)
     }
 
     private fun misionNormal() {
@@ -184,10 +165,10 @@ class VideoDemoRecorder {
         shot(3.5)
 
         go(Route.SUPERVISION)
-        say("La ronda avanza en cámara rápida. Cada punto de control se marca recién cuando el robot lo verifica.")
-        lapse(msPerFrame = 4_000, maxFrames = 50) { verified() >= 3 }
+        say("A ×8 la ronda avanza ocho veces más rápido. Cada punto de control se marca recién cuando el robot lo verifica.")
+        lapse(msPerFrame = 4_000 / ESCALA, maxFrames = 50) { verified() >= 3 }
         scrollToText("RONDA COMPLETA")
-        lapse(msPerFrame = 4_000, maxFrames = 25) { verified() >= 4 }
+        lapse(msPerFrame = 4_000 / ESCALA, maxFrames = 25) { verified() >= 4 }
         shot(1.5)
 
         go(Route.TELEMETRIA)
@@ -198,13 +179,13 @@ class VideoDemoRecorder {
         go(Route.SUPERVISION)
         say("La ronda sigue hasta el último punto de control.")
         scrollToText("RONDA COMPLETA")
-        lapse(msPerFrame = 7_000, maxFrames = 60) { state() == OperationalState.COMPLETADA }
+        lapse(msPerFrame = 7_000 / ESCALA, maxFrames = 60) { state() == OperationalState.COMPLETADA }
         say("Ronda completada: 8 de 8 puntos verificados.")
         shot(3.0)
         scrollTop()
         say("Estado COMPLETADA. Después el robot vuelve solo a la base.")
         shot(2.5)
-        lapse(msPerFrame = 2_000, maxFrames = 6) { false }
+        lapse(msPerFrame = 2_000 / ESCALA, maxFrames = 6) { false }
         shot(1.5)
     }
 
@@ -219,7 +200,7 @@ class VideoDemoRecorder {
         advance(2_000)
         say("Se inicia la ronda con el mínimo operativo. La batería baja rápido.")
         repoStartRound()
-        lapse(msPerFrame = 6_000, maxFrames = 80) { battery() <= 25 && repo.telemetry.value?.unacknowledgedAlerts?.isNotEmpty() == true }
+        lapse(msPerFrame = 6_000 / ESCALA, maxFrames = 80) { battery() <= 25 && repo.telemetry.value?.unacknowledgedAlerts?.isNotEmpty() == true }
         settle()
         scrollTop()
         say("A 25 % aparece la alerta y arriba se destaca “Regresar a base” como acción principal: todavía alcanza para volver.")
@@ -229,7 +210,7 @@ class VideoDemoRecorder {
         shot(3.5)
         scrollTop()
         say("La ronda continúa mientras la batería sigue bajando.")
-        lapse(msPerFrame = 6_000, maxFrames = 80) { repo.activeIncident.value != null }
+        lapse(msPerFrame = 6_000 / ESCALA, maxFrames = 80) { repo.activeIncident.value != null }
         settle()
         say("A 15 % el robot propone volver a la base. La máquina propone y la persona decide.")
         shot(4.5)
@@ -250,18 +231,18 @@ class VideoDemoRecorder {
         back()
         advance(2_000)
         repoStartRound()
-        lapse(msPerFrame = 6_000, maxFrames = 60) { verified() >= 2 }
-        // La alerta de temperatura salta durante el corte: queda retenida hasta que vuelve el enlace.
-        control.setTechRoomTempC(29.0)
-        lapse(msPerFrame = 4_000, maxFrames = 12) { false }
+        lapse(msPerFrame = 6_000 / ESCALA, maxFrames = 60) { verified() >= 2 }
         control.setResponseDelayMs(4_000)
         scrollToText("ÓRDENES")
         say("El operador pausa la ronda. La orden sale y queda PENDIENTE…")
         click("Pausar")
-        live(frames = 2, virtualMs = 200)
+        // Sin avanzar el reloj: el enlace se corta antes de la próxima telemetría, que ya diría PAUSADA.
+        live(frames = 2, virtualMs = 0)
         shot(2.5)
         say("…y justo ahí se corta el enlace. La respuesta del robot no llega.")
         control.setLinkUp(false)
+        // La sala técnica se calienta durante el corte: la alerta queda retenida hasta que vuelve el enlace.
+        control.setTechRoomTempC(29.0)
         live(frames = 10, virtualMs = 500)
         say("Sin respuesta a tiempo, la orden queda SIN RESPUESTA: la app no sabe si se ejecutó y lo dice.")
         live(frames = 6, virtualMs = 500)
@@ -286,7 +267,7 @@ class VideoDemoRecorder {
         scrollTop()
         shot(3.5)
         go(Route.ALERTAS)
-        say("La alerta que el robot emitió durante el corte llega ahora, con su hora original.")
+        say("La alerta de temperatura que el robot emitió durante el corte llega ahora, con la hora en que ocurrió y no la de llegada.")
         live(frames = 2, virtualMs = 500)
         shot(5.0)
     }
@@ -301,8 +282,8 @@ class VideoDemoRecorder {
         go(Route.SUPERVISION)
         advance(2_000)
         repoStartRound()
-        say("Ronda en curso, en cámara rápida.")
-        lapse(msPerFrame = 8_000, maxFrames = 80) { repo.activeIncident.value != null }
+        say("Ronda en curso, a ×8.")
+        lapse(msPerFrame = 8_000 / ESCALA, maxFrames = 80) { repo.activeIncident.value != null }
         settle()
         say("REQUIERE DECISIÓN: el robot se detiene a 2 m y manda una foto de la cámara frontal.")
         shot(5.0)
@@ -314,8 +295,8 @@ class VideoDemoRecorder {
         live(frames = 4, virtualMs = 500)
         settle()
         scrollToText("RONDA COMPLETA")
-        say("El PC4 queda con observación, no como verificado. La ronda sigue hacia el PC5.")
-        lapse(msPerFrame = 3_000, maxFrames = 10) { false }
+        say("El PC4 queda salteado (con observación), no como verificado. La ronda sigue hacia el PC5.")
+        lapse(msPerFrame = 3_000 / ESCALA, maxFrames = 10) { false }
         shot(4.0)
     }
 
@@ -329,8 +310,8 @@ class VideoDemoRecorder {
         go(Route.SUPERVISION)
         advance(2_000)
         repoStartRound()
-        say("Ronda en curso, en cámara rápida.")
-        lapse(msPerFrame = 9_000, maxFrames = 80) { repo.activeIncident.value != null }
+        say("Ronda en curso, a ×8.")
+        lapse(msPerFrame = 9_000 / ESCALA, maxFrames = 80) { repo.activeIncident.value != null }
         settle()
         say("Alerta crítica: hay una persona en la sala técnica. El robot mantiene 2 m y se identifica por parlante.")
         shot(5.0)
@@ -360,7 +341,7 @@ class VideoDemoRecorder {
         live(frames = 4, virtualMs = 750)
         scrollTop()
         say("La ronda sigue: el PC5 queda con observación por la persona detectada.")
-        lapse(msPerFrame = 3_000, maxFrames = 6) { verified() >= 5 }
+        lapse(msPerFrame = 3_000 / ESCALA, maxFrames = 6) { verified() >= 5 }
         shot(3.5)
     }
 
@@ -510,19 +491,10 @@ class VideoDemoRecorder {
         File(out, "frames.json").writeText(json)
     }
 
-    /** Historial en memoria: el de Room necesita su propio executor y acá alcanza con el mismo contrato. */
-    private class MemoryHistory : HistoryRepository {
-        private val missions = MutableStateFlow<Map<String, MissionRecord>>(emptyMap())
-        private val events = MutableStateFlow<Map<String, EventRecord>>(emptyMap())
-        override fun observeMissions(): Flow<List<MissionRecord>> = missions.map { it.values.sortedByDescending { m -> m.startedAt } }
-        override fun observeEvents(kind: EventKind?): Flow<List<EventRecord>> =
-            events.map { all -> all.values.filter { kind == null || it.kind == kind.name }.sortedByDescending { it.timestamp } }
-        override fun observeMissionEvents(missionId: String): Flow<List<EventRecord>> =
-            events.map { all -> all.values.filter { it.missionId == missionId }.sortedByDescending { it.timestamp } }
-        override suspend fun saveMission(mission: MissionRecord) { missions.value = missions.value + (mission.id to mission) }
-        override suspend fun saveEvent(event: EventRecord) { events.value = events.value + (event.sourceId to event) }
-        override suspend fun purgeOlderThan(before: Long) = 0
-    }
+    private companion object {
+        const val START_MS = 1_763_500_000_000L
 
-    private companion object { const val START_MS = 1_763_500_000_000L }
+        /** Velocidad elegida en el panel antes del escenario 1: la cámara rápida avanza un octavo del reloj. */
+        const val ESCALA = 8L
+    }
 }
