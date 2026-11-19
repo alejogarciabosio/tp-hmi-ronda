@@ -19,32 +19,30 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 00:40.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 37 % | Hall PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 01:10.5  TELEMETRIA EN_RONDA | PC 2/8 (Salida de emergencia PB) | PC verificados 1, con observación 0 | batería 34 % | Salida de emergencia PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
 01:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 33 % | Salida de emergencia PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-01:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 31 % | Salida de emergencia PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-02:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 29 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-02:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 27 % | Escalera E (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-03:03.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 26 % | Escalera E (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-03:19.0  EVENTO   alerta LOW_BATTERY WARNING (emitida a 03:19.0): Batería baja (25 %): alcanza para volver a la base desde acá.
-03:19.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 25 % | Pasillo A (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
-03:37.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 23 % | Pasillo A (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
-04:07.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 21 % | Sala técnica (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
-04:12.0  TELEMETRIA EN_RONDA | PC 6/8 (Salida de emergencia 1°) | PC verificados 5, con observación 0 | batería 21 % | Sala técnica (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
-04:40.0  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 18 % | Salida de emergencia 1° (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
-05:10.0  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 16 % | Pasillo B (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
-05:16.0  EVENTO   alerta LOW_BATTERY CRITICAL (emitida a 05:16.0): Batería crítica (15 %).
-05:16.0  EVENTO   decisión requerida BATTERY_RETURN en PC 7 (emitida a 05:16.0): Batería crítica. El robot propone regresar a la base. Opciones: Regresar a la base
-05:16.0  TELEMETRIA REQUIERE_DECISION | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 15 % | Pasillo B (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-05:16.0  NOTA     el robot pide decisión: Batería crítica. El robot propone regresar a la base.
-05:16.0  OPERADOR elige "Regresar a la base"
-05:16.0  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> PENDIENTE
-05:16.2  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> CONFIRMADA (el robot aceptó la orden)
-05:16.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 15 % | Pasillo B (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-05:16.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> VERIFICADA (la telemetría refleja el efecto)
-05:46.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 13 % | Pasillo B (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-06:16.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 11 % | Pasillo B (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-06:46.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 9 % | Pasillo B (piso 1) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-07:16.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 7 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-07:46.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 5 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-08:16.5  TELEMETRIA REGRESANDO | PC 7/8 (Regreso a la base) | PC verificados 6, con observación 0 | batería 3 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
-08:34.5  TELEMETRIA EN_BASE | sin misión | PC verificados 6, con observación 0 | batería 2 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
-08:34.5  NOTA     el robot llegó a la base con 2 % de batería
+01:57.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 30 % | Salida de emergencia PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+02:27.5  TELEMETRIA EN_RONDA | PC 3/8 (Escalera E (subida)) | PC verificados 2, con observación 0 | batería 28 % | Escalera E (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+02:32.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 28 % | Escalera E (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+03:02.0  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 25 % | Pasillo A (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+03:02.5  EVENTO   alerta LOW_BATTERY WARNING (emitida a 03:02.5): Batería baja (25 %): alcanza para volver a la base desde acá.
+03:02.5  TELEMETRIA EN_RONDA | PC 4/8 (Pasillo 1°A) | PC verificados 3, con observación 0 | batería 25 % | Pasillo A (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+03:06.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 25 % | Pasillo A (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+03:36.5  TELEMETRIA EN_RONDA | PC 5/8 (Sala técnica 1°) | PC verificados 4, con observación 0 | batería 22 % | Sala técnica (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+03:41.0  TELEMETRIA EN_RONDA | PC 6/8 (Salida de emergencia 1°) | PC verificados 5, con observación 0 | batería 22 % | Sala técnica (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+04:09.0  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 20 % | Salida de emergencia 1° (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+04:39.0  TELEMETRIA EN_RONDA | PC 7/8 (Pasillo 1°B) | PC verificados 6, con observación 0 | batería 17 % | Pasillo B (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+04:49.5  TELEMETRIA EN_RONDA | PC 8/8 (Escalera O (bajada)) | PC verificados 7, con observación 0 | batería 16 % | Pasillo B (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+05:01.0  EVENTO   alerta LOW_BATTERY CRITICAL (emitida a 05:01.0): Batería crítica (15 %).
+05:01.0  EVENTO   decisión requerida BATTERY_RETURN en PC 8 (emitida a 05:01.0): Batería crítica. El robot propone regresar a la base. Opciones: Regresar a la base
+05:01.0  TELEMETRIA REQUIERE_DECISION | PC 8/8 (Escalera O (bajada)) | PC verificados 7, con observación 0 | batería 15 % | Pasillo B (piso 1) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
+05:01.0  NOTA     el robot pide decisión: Batería crítica. El robot propone regresar a la base.
+05:01.0  OPERADOR elige "Regresar a la base"
+05:01.0  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> PENDIENTE
+05:01.2  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> CONFIRMADA (el robot aceptó la orden)
+05:01.5  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 7, con observación 0 | batería 15 % | Pasillo B (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
+05:01.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f RETURN_TO_SAFE_POINT -> VERIFICADA (la telemetría refleja el efecto)
+05:31.5  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 7, con observación 0 | batería 12 % | Pasillo B (piso 1) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
+06:01.5  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 7, con observación 0 | batería 10 % | Garita PB (piso 0) ESCALERA 0.4 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
+06:31.5  TELEMETRIA REGRESANDO | PC 8/8 (Regreso a la base) | PC verificados 7, con observación 0 | batería 8 % | Garita PB (piso 0) CAMINANDO 0.8 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
+06:47.5  TELEMETRIA EN_BASE | sin misión | PC verificados 7, con observación 0 | batería 6 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 0
+06:47.5  NOTA     el robot llegó a la base con 6 % de batería
 ```

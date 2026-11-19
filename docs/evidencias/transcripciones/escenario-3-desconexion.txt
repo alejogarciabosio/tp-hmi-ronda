@@ -1,6 +1,6 @@
 # Escenario 3: desconexión
 
-Con la ronda en curso se corta el enlace 15 s. La app marca los datos como viejos, la orden enviada queda sin respuesta, y al volver el enlace se entregan los eventos ocurridos durante el corte con su hora original. El robot se detuvo solo y espera al operador.
+Con la ronda en curso se corta el enlace 15 s. La app marca los datos como viejos, la orden enviada queda sin respuesta, y al volver el enlace se entregan los eventos ocurridos durante el corte con su hora original: el aviso del robot "Enlace perdido: me detuve en <zona>" y una falla inyectada durante el corte. Inyectar un obstáculo sin enlace se rechaza con motivo.
 
 Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hora es el tiempo transcurrido desde el inicio del escenario (mm:ss.s).
 
@@ -19,12 +19,15 @@ Generado por `ScenarioTranscriptsTest` con tiempo virtual y semilla fija. La hor
 00:15.3  CONEXION DEGRADED
 00:15.5  OPERADOR intenta pausar la ronda sin enlace
 00:15.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f PAUSE_MISSION -> PENDIENTE
+00:15.5  PANEL DE SIMULACION intenta inyectar un obstáculo sin enlace
+00:15.5  NOTA     el panel rechaza la inyección: Sin enlace con el robot: no se puede inyectar un obstáculo ni una persona.
 00:15.5  PANEL DE SIMULACION inyecta una falla del robot mientras no hay enlace
 00:16.8  CONEXION NO_DATA
 00:19.5  COMANDO  c88a5d4b-a2b9-4504-b560-43557767606f PAUSE_MISSION -> SIN RESPUESTA
 00:23.8  CONEXION DISCONNECTED
+00:28.5  EVENTO   alerta LINK_DEGRADED WARNING (emitida a 00:13.5): Enlace perdido: me detuve en Garita PB
 00:28.5  EVENTO   alerta ROBOT_FAULT CRITICAL (emitida a 00:15.5): Falla del robot. Requiere técnico. [foto adjunta: sim-falla, image/jpeg, por id]
-00:28.5  TELEMETRIA FALLA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 100 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 1
+00:28.5  TELEMETRIA FALLA | PC 1/8 (Hall PB) | PC verificados 0, con observación 0 | batería 100 % | Garita PB (piso 0) DETENIDO 0.0 m/s | sala técnica 24.5 °C | alertas sin reconocer 2
 00:28.5  CONEXION CONNECTED
 00:30.5  NOTA     la orden de pausa quedó en estado NO_RESPONSE; el evento de falla llegó con su hora original
 ```

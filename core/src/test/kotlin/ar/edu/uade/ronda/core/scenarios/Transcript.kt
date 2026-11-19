@@ -39,7 +39,7 @@ class Transcript(private val scope: TestScope, private val rig: ScenarioRig, tit
             rig.repo.commands.collect { list ->
                 for (c in list) if (seen[c.id] != c.status) {
                     val motivo = c.reasonText?.let { " - motivo: $it" }.orEmpty()
-                    log("COMANDO  ${c.id} ${c.command.type} -> ${label(c.status)}$motivo")
+                    log("COMANDO  ${c.id} ${c.command.type} -> ${if (c.verifiedWithoutAck) "VERIFICADA POR TELEMETRÍA (sin confirmación del robot)" else label(c.status)}$motivo")
                 }
                 seen = list.associate { it.id to it.status }
             }

@@ -74,7 +74,7 @@ class ScenarioTranscriptsTest {
     fun `transcripcion escenario 3 desconexion`() = runTest {
         val (rig, tr) = rigAndTranscript(
             "Escenario 3: desconexión",
-            "Con la ronda en curso se corta el enlace 15 s. La app marca los datos como viejos, la orden enviada queda sin respuesta, y al volver el enlace se entregan los eventos ocurridos durante el corte con su hora original. El robot se detuvo solo y espera al operador.",
+            "Con la ronda en curso se corta el enlace 15 s. La app marca los datos como viejos, la orden enviada queda sin respuesta, y al volver el enlace se entregan los eventos ocurridos durante el corte con su hora original: el aviso del robot \"Enlace perdido: me detuve en <zona>\" y una falla inyectada durante el corte. Inyectar un obstáculo sin enlace se rechaza con motivo.",
             SimScenario.DISCONNECTION,
         )
         rig.until(what = "telemetría") { rig.repo.telemetry.value != null }
@@ -84,6 +84,8 @@ class ScenarioTranscriptsTest {
         tr.operatorPanel("corta el enlace por 15 s") { rig.control.cutLinkFor(15_000) }
         rig.advance(2_000)
         val pausa = tr.operator("intenta pausar la ronda sin enlace", CommandType.PAUSE_MISSION, CommandParams(missionId = rig.missionId))
+        tr.operatorPanel("intenta inyectar un obstáculo sin enlace") { rig.control.injectObstacle() }
+        tr.note("el panel rechaza la inyección: ${rig.control.settings.value.lastInjectionRejection}")
         tr.operatorPanel("inyecta una falla del robot mientras no hay enlace") { rig.control.injectFault() }
         rig.advance(14_000)
         rig.until(what = "reconexión") { rig.repo.connection.value == ConnectionState.CONNECTED }
@@ -92,6 +94,7 @@ class ScenarioTranscriptsTest {
         tr.save("escenario-3-desconexion.txt")
         assertEquals(CommandStatus.NO_RESPONSE, rig.statusOf(pausa))
         assertEquals(OperationalState.FALLA, rig.state)
+        assertTrue(rig.events.any { it is ar.edu.uade.ronda.core.model.RobotEvent.AlertRaised && it.alert.type == AlertType.LINK_DEGRADED })
     }
 
     @Test
