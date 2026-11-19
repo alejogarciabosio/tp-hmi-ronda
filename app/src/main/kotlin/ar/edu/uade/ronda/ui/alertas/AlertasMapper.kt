@@ -78,7 +78,8 @@ internal object AlertasMapper {
             message = a.message,
             time = timeFormat.format(Instant.ofEpochMilli(a.raisedAt)),
             code = codeFor(a.type),
-            snapshot = a.snapshot?.let {
+            // La foto es de una persona o de una zona: solo mientras el incidente sigue activo y la alerta sin reconocer.
+            snapshot = a.snapshot?.takeIf { !a.acknowledged && i.incident != null }?.let {
                 val caption = if (i.connection.isStale) "Imagen del momento de la alerta"
                 else "Cámara frontal · ${SupervisionMapper.ageText(i.nowMs - it.capturedAt)}"
                 SnapshotUi(it.id, it.data, caption, "Foto de la cámara frontal del robot: ${titleFor(a.type)}")

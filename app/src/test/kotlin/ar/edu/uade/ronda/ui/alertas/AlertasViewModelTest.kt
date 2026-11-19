@@ -42,6 +42,23 @@ class AlertasViewModelTest {
             emptyList(), enabledAll(), 1_400,
         )
 
+    private val snap = ar.edu.uade.ronda.core.model.Snapshot("s1", "image/jpeg", 950, "AAAA")
+
+    @Test fun laFotoSeMuestraConAlertaActivaEIncidenteAbierto() {
+        val s = AlertasMapper.map(inputs(person.copy(snapshot = snap), personIncident = true))
+        assertTrue(s.active.single().snapshot != null)
+    }
+
+    @Test fun laFotoNoSeMuestraSiLaAlertaEstaReconocida() {
+        val s = AlertasMapper.map(inputs(person.copy(snapshot = snap, acknowledged = true), personIncident = true))
+        assertNull(s.acknowledged.single().snapshot)
+    }
+
+    @Test fun laFotoNoSeMuestraSiElIncidenteYaSeResolvio() {
+        val s = AlertasMapper.map(inputs(person.copy(snapshot = snap), personIncident = false))
+        assertNull(s.active.single().snapshot)
+    }
+
     @Test fun separaActivasDeReconocidasYOrdenaPorSeveridad() {
         val s = AlertasMapper.map(inputs(battery, person, old))
         assertEquals(listOf("a2", "a1"), s.active.map { it.id })
