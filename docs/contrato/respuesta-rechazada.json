@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "type": "COMMAND_ACK",
+  "messageId": "r-0003",
+  "correlationId": "c-0003",
+  "robotId": "RONDA-01",
+  "receivedAt": 1763500000180,
+  "receivedAtIso": "2025-11-18T21:06:40.180Z",
+  "status": "REJECTED",
+  "reasonCode": "INVALID_STATE",
+  "reasonText": "La misión ya está en curso; no hay nada que reanudar."
+}

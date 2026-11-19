@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "type": "COMMAND_ACK",
+  "messageId": "r-0002",
+  "correlationId": "c-0002",
+  "robotId": "RONDA-01",
+  "receivedAt": 1763500000180,
+  "receivedAtIso": "2025-11-18T21:06:40.180Z",
+  "status": "CONFIRMED"
+}
