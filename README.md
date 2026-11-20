@@ -1,6 +1,6 @@
 # Ronda: supervisión de un robot de servicio (TP HMI/HRI)
 
-Trabajo práctico de Desarrollo de Aplicaciones I (UADE). Aplicación Android que supervisa y comanda un robot de servicio en una ronda de inspección nocturna. El APK funciona sin robot, sin servidor y sin internet: el robot está simulado dentro de la app.
+Trabajo práctico de Desarrollo de Aplicaciones I (UADE). Integrantes: Alejo Garcia Bosio e Iñaki Courtinade. Aplicación Android que supervisa y comanda un robot de servicio en una ronda de inspección nocturna. El APK funciona sin robot, sin servidor y sin internet: el robot está simulado dentro de la app.
 
 El contrato JSON de telemetría, comandos y eventos es una propuesta propia del proyecto; no es un protocolo oficial de Unitree.
 

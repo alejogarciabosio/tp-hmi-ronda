@@ -5,7 +5,11 @@ subtitle: "Entrega final · Desarrollo de Aplicaciones I · UADE"
 
 # RONDA: HMI de supervisión de un Unitree Go2 en rondas nocturnas
 
-Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio". Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
+Informe final del TP grupal "Interfaz HMI/HRI para robots de servicio".
+
+**Integrantes:** Alejo Garcia Bosio e Iñaki Courtinade.
+
+ Prototipo en Figma: <https://www.figma.com/design/13dj5SYTN8of0MSQdIshDI> (ver §15).
 
 Entregables: Figma, APK instalable y código fuente (este repositorio), diagrama de arquitectura, repositorio simulado y ejemplos de mensajes, evidencias de los cinco escenarios, registro de decisiones y limitaciones, y video de demostración. No se describen resultados que no existan.
 
@@ -217,7 +221,6 @@ Limitaciones que importan para evaluar el trabajo:
 - Los umbrales de temperatura (27 y 32 °C), la retención de 30 días y el mínimo de 40 % de batería son propuestas del grupo.
 - El Document Center de Unitree no se pudo leer; lo que se afirma del SDK sale de los README de GitHub.
 - A velocidad real una ronda completa dura unos 8 minutos y medio. El panel de simulación ofrece ×1, ×4 y ×8 (D13): con ×8 la ronda completa dura alrededor de 1 minuto. Fuera de ×1, Supervisión muestra el rótulo "SIMULACIÓN ×N" en la franja de estado para que nadie lo confunda con tiempo real.
-- La app difiere del Figma en tres puntos menores: batería mínima de las rutas cortas (35 % y 34 % en la app, 20 % y 15 % en el Figma), posición del cuadro BASE en el plano y botones del panel de simulación (L4).
 
 ## 15. Prototipo en Figma
 
