@@ -54,7 +54,7 @@ class AppContainer(
 
     val robotRepository: RobotRepository = simulated
 
-    /** Controles del panel de simulación (F7). No forman parte de `RobotRepository`. */
+    /** Controles del panel de simulación. No forman parte de `RobotRepository`. */
     val simulationControl: SimulationControl = simulated.control
 
     private val database = db ?: RondaDatabase.create(context)

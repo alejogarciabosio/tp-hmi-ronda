@@ -54,10 +54,9 @@ fun RondaNavHost(
     modifier: Modifier = Modifier,
     startDestination: Route = Route.SUPERVISION,
 ) {
-    val implemented = setOf(Route.SUPERVISION, Route.SELECCION, Route.TELEMETRIA, Route.MISIONES, Route.CONTROL, Route.ALERTAS, Route.HISTORIAL, Route.DESCONEXION, Route.SIMULACION)
     // La barra fija (detención operativa e insignia de alertas) es una sola para todas las pantallas.
     val bar: OperationalBarViewModel = viewModel(factory = viewModelFactory)
-    ProvideOperationalBar(bar) { RondaNavGraph(viewModelFactory, navController, modifier, startDestination, implemented) }
+    ProvideOperationalBar(bar) { RondaNavGraph(viewModelFactory, navController, modifier, startDestination) }
 }
 
 @Composable
@@ -66,7 +65,6 @@ private fun RondaNavGraph(
     navController: NavHostController,
     modifier: Modifier,
     startDestination: Route,
-    implemented: Set<Route>,
 ) {
     NavHost(navController, startDestination.path, modifier) {
         val go: (Route) -> Unit = { navController.navigateTo(it) }
@@ -107,9 +105,6 @@ private fun RondaNavGraph(
             val vm: SimulacionViewModel = viewModel(factory = viewModelFactory)
             SimulacionRoute(vm, back)
         }
-        Route.entries.filter { it !in implemented }.forEach { route ->
-            composable(route.path) { PlaceholderScreen(route, go) }
-        }
     }
 }
 
@@ -129,25 +124,3 @@ fun NavHostController.navigateTo(route: Route) {
     }
 }
 
-/** Pantalla pendiente de F6, con accesos a las demás para poder recorrer la navegación. */
-@Composable
-fun PlaceholderScreen(current: Route, onNavigate: (Route) -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(current.title, style = RondaType.pantallaTitulo, color = RondaColors.bone100, modifier = Modifier.semantics { heading() })
-        Text("Pendiente — F6", style = RondaType.datoNormal, color = RondaColors.signalAmber)
-        Text("Ir a:", style = RondaType.rotuloSeccion, color = RondaColors.bone400)
-        Route.entries.filter { it != current }.forEach { r ->
-            CommandButton(CommandButtonUi(r.title, CommandKind.SECONDARY), { onNavigate(r) })
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF14130F, widthDp = 412, heightDp = 900)
-@Composable
-private fun PlaceholderPreview() = PreviewSurface { PlaceholderScreen(Route.SUPERVISION) {} }
