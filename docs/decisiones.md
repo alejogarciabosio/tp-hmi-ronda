@@ -138,13 +138,6 @@ El contrato de `docs/contrato/` es una propuesta del grupo y no el protocolo ofi
 
 Resuelta: ver D13. El selector ×1/×4/×8 lo ofrece el panel de simulación.
 
-### L4. Diferencias entre la app y el Figma
-
-- **Batería mínima por ruta:** la app exige 40 % para la ronda completa, 35 % para la sala técnica y 34 % para las salidas de emergencia (`BatteryPolicy`, D8). El Figma muestra 20 % y 15 % para las rutas cortas, valores anteriores al recálculo de D8.
-- **Posición de la base:** la app dibuja la base donde la ubica `BuildingLayout.base`, arriba a la izquierda de PB, para que el robot en base quede sobre el cuadro BASE. El Figma y `recorrido.svg` la ubican abajo a la izquierda, en la garita (ver `design/FIGMA.md`).
-- **Panel de simulación:** botones de escenario y demora distintos (ver D10); el selector de velocidad suma ×8 (D13).
-- **Color del dato viejo:** la app usa `#908B7C` (ver L5); el Figma conserva `#6E6A5E` en `estado/sin-datos`.
-
-### L5. Contraste del gris de dato viejo
+### L4. Contraste del gris de dato viejo
 
 El gris que marca un dato no vigente o un control deshabilitado (`stateStale`, `#908B7C`) tiene un contraste de 5,46:1 sobre el fondo principal (`ink950`) y de 4,73:1 sobre la tarjeta elegida (`ink850`), por encima del 4,5:1 de WCAG para texto (`ContrasteTest`). Un valor anterior (`#6E6A5E`, 3,4:1) no pasaba y se aclaró. Sigue siendo más tenue que el texto secundario (6,9:1) para que el dato viejo no se lea como vigente, y nunca va solo: lo acompañan el símbolo de estado, el tachado y el motivo escrito.

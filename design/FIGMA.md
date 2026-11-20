@@ -35,7 +35,7 @@ Colección `Color` (`VariableCollectionId:2:2`), modos `Noche` (principal, `2:0`
 | `estado/ok` | `#5FA77A` | `#2F7A4C` | `stateOk` | + círculo lleno |
 | `estado/advertencia` | `#F2A900` | `#A87500` | `stateWarn` | + triángulo + franjas diagonales |
 | `estado/error` | `#E5482D` | `#C2361E` | `stateError` | + rombo |
-| `estado/sin-datos` | `#6E6A5E` | `#7C7767`* | `stateStale` (la app usa `#908B7C` en modo noche, 5,46:1 sobre el fondo; el Figma conserva `#6E6A5E`, ver L5 en `docs/decisiones.md`) | + círculo punteado + valor tachado |
+| `estado/sin-datos` | `#908B7C` | `#7C7767`* | `stateStale` (5,46:1 sobre el fondo, ver L4 en `docs/decisiones.md`) | + círculo punteado + valor tachado |
 | `velo` | `#0B0A08` | `#1C1B17`* | `scrim` | velo detrás de la hoja de decisión, opacidad 70 % |
 
 \* Valores de Día sin equivalente en la paleta original; son decisión de diseño. `senal/ambar` en Día baja a `#A87500` porque `#F2A900` no se lee sobre papel (contra `texto/sobre-senal` da 4,5:1).
@@ -139,7 +139,7 @@ Las pantallas de Supervisión siguen el orden de `SupervisionScreen.kt`. Las que
 
 Flujo normal (`04`, sección `25:2`): N1 Selección `25:3` → N2 Supervisión en base `25:19` → N3 Misiones `25:53` → N4 Preflight `25:103` → N5 Supervisión PC 3/8 `25:153` → N6 PC 8/8 `25:195` → N7 Ronda completada `25:232` → N8 Historial `25:278`.
 
-Flujo con falla (`05`, sección `26:2`): F1 Supervisión en ronda `26:3` → F2 detecta y se detiene, recibiendo imagen `26:45` → F3 llega la foto, decisión requerida `26:83` → F3b foto ampliada (overlay) `26:121` → F4 regresando a base `26:128` → F5 desconexión con imagen del incidente `26:170` → F6 reconexión `26:198` → F7 en base `26:238` → F8 historial `26:272`.
+Flujo con falla (`05`, sección `26:2`): F1 Supervisión en ronda `26:3` → F2 detecta y se detiene `26:45` → F3 llega la foto, decisión requerida `26:83` → F3b foto ampliada (overlay) `26:121` → F4 regresando a base `26:128` → F5 desconexión con imagen del incidente `26:170` → F6 reconexión `26:198` → F7 en base `26:238` → F8 historial `26:272`.
 
 ## Prototipo (reacciones cargadas en el archivo)
 
@@ -154,9 +154,3 @@ Flujo con falla (`05`, sección `26:2`): F1 Supervisión en ronda `26:3` → F2 
 - Detalles: `02-componente-statestrip.png`, `02-componente-commandbutton.png`, `02-componente-decisionsheet.png`, `02-componente-floorplan.png`.
 - Una por pantalla en `pantallas/` (23 archivos, 412 px de ancho).
 
-## Diferencias con la app
-
-- **BASE:** `recorrido.svg` y `FloorPlanCanvas` dibujan la base en la garita, abajo a la izquierda de PB. `BuildingLayout.base` (0, 0) con `BuildingPlan.normX/normY` da arriba a la izquierda, así que la app pone el robot en base arriba a la izquierda. El Figma sigue a `recorrido.svg`.
-- **NavBar:** el Figma lleva un ícono de 20 dp sobre cada pestaña; la app solo texto.
-- **HoldToConfirm:** en el Figma el texto va sobre una placa `fondo` para leerse encima de las franjas; la app lo dibuja directo sobre las franjas.
-- **DecisionSheet:** el estado `foto = recibiendo` ("Recibiendo imagen…") existe solo en el Figma.
