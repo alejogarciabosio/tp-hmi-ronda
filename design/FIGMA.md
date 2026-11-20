@@ -12,7 +12,7 @@ El archivo anterior (`sHIJRf9HU7ci8PdgY7hmIN`, plan Starter) quedó **obsoleto**
 | `00 Portada` | `0:1` | RONDA · Cuaderno de ronda, materia, integrantes, caso, fecha, índice con links a las páginas y aviso de que el contrato JSON es propuesta propia | frame `Portada` `29:112` |
 | `01 Fundamentos` | `1:2` | Hoja de colores (Noche y Día), tipos, medidas, símbolos, íconos y grilla + primitivos | `Doc/Fundamentos` `4:2`, sección `Primitivos` |
 | `02 Componentes` | `1:3` | 18 component sets + `SimTag` + `Foto/*` | sección `Componentes` `12:297` |
-| `03 Pantallas` | `1:4` | 23 pantallas en 4 filas (Supervisión · Inicio y misiones · Control, alertas e historial · Conexión, decisión y simulación) | sección `Pantallas` `21:2868` |
+| `03 Pantallas` | `1:4` | 22 pantallas en 4 filas (Supervisión · Inicio y misiones · Control, alertas e historial · Conexión, decisión y simulación) | sección `Pantallas` `21:2868` |
 | `04 Flujo normal` | `1:5` | N1–N8 conectados, inicio de flujo "Flujo normal" | sección `25:2` |
 | `05 Flujo con falla` | `1:6` | F1–F8 + F3b, banda "la máquina propone, la persona decide", inicio "Flujo con falla" | sección `26:2` |
 | `06 Mapa de navegación` | `1:7` | Todas las pantallas con flechas y condiciones | sección `29:2` |
@@ -88,7 +88,7 @@ Redundancia de estado: OK = círculo lleno verde · advertencia = triángulo ám
 | `CheckpointRow` | `10:144` | state = pendiente / actual / verificado / con observación / salteado |
 | `AlertRow` | `10:234` | severity = info / warning / critical × acknowledged = sí / no × conFoto = no; conFoto = sí en warning y critical (miniatura tocable) |
 | `StaleDataBanner` | `10:268` | seconds = 4 (SIN DATOS) / 12 (DESCONECTADO) / 30 (+ política declarada) |
-| `DecisionSheet` | `11:157` | opciones = 3 × foto = con foto / sin foto / datos viejos / recibiendo; opciones = 2 × foto = no aplica (propuesta de regreso por batería) |
+| `DecisionSheet` | `11:157` | opciones = 3 × foto = con foto / sin foto / datos viejos; opciones = 2 × foto = no aplica (propuesta de regreso por batería) |
 | `RobotCard` | `11:200` | availability = disponible / ocupado / no compatible |
 | `NavBar` | `11:319` | tab = supervision / misiones / alertas / historial |
 | `FloorPlan` | `12:264` | floor = PB × escena = muestra / ronda-PC3 / base / completa; floor = 1° × escena = muestra / PC4 / PC5 / PC8 / regreso. `robot` anidado (RobotPose) |
@@ -118,7 +118,6 @@ Decisiones visibles en los componentes:
 | P02g Supervisión — ronda completada | `16:1191` | resumen + "Ver en historial" |
 | P02h Supervisión — comando rechazado | `17:1227` | captura 05 |
 | P02i Supervisión — enlace restaurado | `17:1454` | captura 04 |
-| P02j Supervisión — detenido, recibiendo imagen | `23:2724` | hoja con foto = recibiendo |
 | P01 Selección de robot | `18:1784` | |
 | P04 Misiones — rutas y preflight | `18:1861` | |
 | P04b Misiones — preflight con check fallido | `18:1972` | Iniciar ronda deshabilitado con motivo |
@@ -152,5 +151,5 @@ Flujo con falla (`05`, sección `26:2`): F1 Supervisión en ronda `26:3` → F2 
 
 - `00-portada.png`, `01-fundamentos.png`, `02-componentes.png`, `03-pantallas.png`, `04-flujo-normal.png`, `05-flujo-con-falla.png`, `06-mapa-navegacion.png`, `07-recorrido.png`.
 - Detalles: `02-componente-statestrip.png`, `02-componente-commandbutton.png`, `02-componente-decisionsheet.png`, `02-componente-floorplan.png`.
-- Una por pantalla en `pantallas/` (23 archivos, 412 px de ancho).
+- Una por pantalla en `pantallas/` (22 archivos, 412 px de ancho).
 
