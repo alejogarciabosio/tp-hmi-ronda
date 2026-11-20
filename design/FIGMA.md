@@ -146,7 +146,7 @@ Flujo con falla (`05`, sección `26:2`): F1 Supervisión en ronda `26:3` → F2 
 - Flujo normal: Tomar control → N2; pestaña Misiones → N3; ruta "Ronda completa" → N4; Iniciar ronda → N5; N5 y N6 avanzan solos a los 3 s; Ver en historial → N8.
 - Flujo con falla: F1 avanza a los 3 s; F2 a los 2 s; foto de F3 → F3b como overlay y Cerrar vuelve; "Regresar a la base" en F3 → F4 con mantener presionado 1 s (`MOUSE_DOWN`, delay 1); F4 avanza a los 2 s; Reintentar conexión → F6; Confirmar comandos pendientes → F7; pestaña Historial → F8.
 - `03 Pantallas` (inicio "Navegación general" en P01): pestañas de la NavBar, "Simulación" → P09, lecturas de telemetría → P03, Más controles → P05, AlertLine → P06, atrás → volver, Decidir / Ver opciones → P10, foto de P10 → P12a y miniatura de P06 → P12b (overlay), Reintentar → P11, Confirmar → P02e, banner de P02d → P08.
-- Las esperas automáticas están cargadas como 3 y 2 (unidad de la Plugin API); conviene confirmar en Figma que el panel muestre 3 s / 2 s.
+- Las esperas automáticas están cargadas en milisegundos (3000 y 2000 ms).
 
 ## Exports (`design/exports/`)
 
