@@ -1,4 +1,4 @@
-name: core-test
+name: tests
 
 on: [push, pull_request]
 
@@ -12,4 +12,4 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :core:test
+      - run: ./gradlew :core:test :app:assembleDebug :app:testDebugUnitTest
